@@ -61,7 +61,7 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
         }
 
         return Scaffold(
-          backgroundColor: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          backgroundColor: isDark ? Colors.black : Colors.white,
           body: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
@@ -70,15 +70,11 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
                 padding: const EdgeInsets.all(10),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    // 1. Konu Açıklaması
-                    _buildDescriptionSection(topic.description, isDark),
-                    const SizedBox(height: 32),
-
-                    // 2. Gramer Yapısı ve Bilgisi
+                    // Gramer Yapısı ve Bilgisi
                     _buildGrammarStructureSection(topic, isDark),
                     const SizedBox(height: 32),
 
-                    // 3. Örnek Cümleler
+                    // Örnek Cümleler
                     if (topic.examples.isNotEmpty)
                       _buildExamplesSection(topic.examples, isDark),
                     const SizedBox(height: 50),
@@ -94,6 +90,7 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
 
   Widget _buildAppBar(GrammarTopic topic, bool isDark) {
     final color = AppColors.getColorByName(topic.color);
+    final darkColor = isDark ? Colors.black : color;
 
     return SliverAppBar(
       expandedHeight: 200,
@@ -108,7 +105,7 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
         ),
         onPressed: () => Navigator.pop(context),
       ),
-      backgroundColor: color,
+      backgroundColor: darkColor,
       flexibleSpace: FlexibleSpaceBar(
         stretchModes: const [
           StretchMode.zoomBackground,
@@ -118,14 +115,14 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
           padding: const EdgeInsets.only(left: 0),
           child: Text(
             topic.title,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 22,
-              color: Colors.white,
+              color: isDark ? Colors.white.withOpacity(0.95) : Colors.white,
             ),
           ),
         ),
-        titlePadding: const EdgeInsets.only(left: 30, bottom: 15),
+        titlePadding: const EdgeInsets.only(left: 56, bottom: 15),
         centerTitle: false,
         background: Stack(
           fit: StackFit.expand,
@@ -135,41 +132,50 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    color,
-                    color.withOpacity(0.8),
-                  ],
+                  colors: isDark
+                      ? [
+                          const Color(0xFF1A1A1A),
+                          const Color(0xFF0F0F0F),
+                        ]
+                      : [
+                          color,
+                          color.withOpacity(0.8),
+                        ],
                 ),
               ),
             ),
-            Positioned(
-              right: -100,
-              top: -100,
-              child: CircleAvatar(
-                radius: 130,
-                backgroundColor: Colors.white.withOpacity(0.1),
+            if (!isDark) ...[
+              Positioned(
+                right: -100,
+                top: -100,
+                child: CircleAvatar(
+                  radius: 130,
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                ),
               ),
-            ),
-            Positioned(
-              left: -80,
-              bottom: -60,
-              child: CircleAvatar(
-                radius: 100,
-                backgroundColor: Colors.white.withOpacity(0.1),
+              Positioned(
+                left: -80,
+                bottom: -60,
+                child: CircleAvatar(
+                  radius: 100,
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                ),
               ),
-            ),
+            ],
             Positioned(
               right: 30,
               bottom: 100,
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: isDark
+                      ? Colors.white.withOpacity(0.05)
+                      : Colors.white.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.menu_book,
-                  color: Colors.white,
+                  color: isDark ? Colors.white.withOpacity(0.9) : Colors.white,
                   size: 24,
                 ),
               ),
@@ -181,351 +187,25 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
     );
   }
 
-  Widget _buildDescriptionSection(String description, bool isDark) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF242424) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppColors.primary,
-                  AppColors.primary.withOpacity(0.8),
-                ],
-              ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.info_outline,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                const Text(
-                  'Konu Özeti',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 16,
-                    height: 1.5,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildExamplesSection(List<String> examples, bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF00897B) : AppColors.tertiary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.tertiary.withOpacity(isDark ? 0.3 : 0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.format_quote,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Örnek Cümleler',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${examples.length}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF242424) : Colors.white,
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(16),
-              bottomRight: Radius.circular(16),
-            ),
-          ),
-          child: ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            itemCount: examples.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              return _buildExampleCard(examples[index], index, isDark);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildExampleCard(String example, int index, bool isDark) {
-    // İlk parantez içindeki Türkçe kısmını ve İngilizce kısmını ayıralım
-    String turkishExample = '';
-    String englishExample = '';
-
-    // Örnek genellikle "İngilizce → Türkçe" formatında olacaktır
-    if (example.contains('→')) {
-      final parts = example.split('→');
-      englishExample = parts[0].trim();
-      turkishExample = parts[1].trim();
-    } else if (example.contains('(') && example.contains(')')) {
-      // Veya "İngilizce (Türkçe)" formatında olabilir
-      final regex = RegExp(r'^(.*)\s*\((.*)\)');
-      final match = regex.firstMatch(example);
-      if (match != null) {
-        englishExample = match.group(1)?.trim() ?? '';
-        turkishExample = match.group(2)?.trim() ?? '';
-      } else {
-        // Eğer hiçbir format tanınmazsa, tamamını bir örnek olarak kullan
-        englishExample = example;
-      }
-    } else {
-      englishExample = example;
-    }
-
-    final colors = [
-      const Color(0xFF6A81EC), // Mavi
-      const Color(0xFFFF8A65), // Turuncu
-      const Color(0xFF66BB6A), // Yeşil
-      const Color(0xFFBA68C8), // Mor
-      const Color(0xFFFFB74D), // Amber
-      const Color(0xFF4FC3F7), // Açık mavi
-    ];
-    final color = colors[index % colors.length];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF242424) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(isDark ? 0.4 : 0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(isDark ? 0.2 : 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        color,
-                        color.withOpacity(0.7),
-                      ],
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${index + 1}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Örnek ${index + 1}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () {
-                    // Sesli okuma işlevselliği buraya eklenebilir
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.volume_up_rounded,
-                      size: 18,
-                      color: color,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color:
-                    isDark ? color.withOpacity(0.07) : color.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: color.withOpacity(isDark ? 0.3 : 0.2),
-                ),
-              ),
-              child: Text(
-                englishExample,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  height: 1.5,
-                  color: isDark ? Colors.white : AppColors.textPrimary,
-                ),
-              ),
-            ),
-            if (turkishExample.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color:
-                      isDark ? const Color(0xFF1A1A1A) : AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Türkçe Çevirisi:',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: color.withOpacity(0.8),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      turkishExample,
-                      style: TextStyle(
-                        fontSize: 16,
-                        height: 1.5,
-                        color: isDark
-                            ? Colors.white.withOpacity(0.9)
-                            : AppColors.textPrimary.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildGrammarStructureSection(GrammarTopic topic, bool isDark) {
+    final color = AppColors.getColorByName(topic.color);
+    final headingColor = isDark ? const Color(0xFF4F6CFF) : color;
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF242424) : Colors.white,
+        color: isDark ? const Color(0xFF1B1C21) : Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: isDark
+            ? Border.all(
+                color: Colors.white.withOpacity(0.05),
+                width: 1,
+              )
+            : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
-            blurRadius: 10,
+            color: Colors.black.withOpacity(isDark ? 0.5 : 0.05),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
@@ -538,14 +218,7 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.deepPurple,
-                  Colors.deepPurple.withOpacity(0.8),
-                ],
-              ),
+              color: isDark ? const Color(0xFF1E2026) : color,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -556,22 +229,26 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: isDark
+                        ? Colors.black.withOpacity(0.3)
+                        : Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.architecture,
-                    color: Colors.white,
+                    color:
+                        isDark ? Colors.white.withOpacity(0.9) : Colors.white,
                     size: 18,
                   ),
                 ),
                 const SizedBox(width: 10),
-                const Text(
+                Text(
                   'Gramer Yapısı ve Kuralları',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color:
+                        isDark ? Colors.white.withOpacity(0.95) : Colors.white,
                   ),
                 ),
               ],
@@ -584,56 +261,98 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Gramer yapısı başlığı
+                // Genel Tanım ve Açıklama kısmı
                 Text(
-                  '${topic.title} - Temel Bilgiler',
+                  "Genel Tanım ve Açıklama:",
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.deepPurple,
+                    color: headingColor,
                   ),
                 ),
-                const SizedBox(height: 16),
-
-                // Açıklama
+                const SizedBox(height: 12),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? Colors.deepPurple.withOpacity(0.15)
-                        : Colors.deepPurple.withOpacity(0.05),
+                        ? const Color(0xFF1E2026)
+                        : color.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.deepPurple.withOpacity(isDark ? 0.3 : 0.2),
+                    border: isDark
+                        ? null
+                        : Border.all(
+                            color: color.withOpacity(0.2),
+                          ),
+                  ),
+                  child: Text(
+                    "Şimdiki zaman (Present Continuous), şu anda devam eden veya yakın gelecekte planlanan eylemleri ifade etmek için kullanılan bir zaman yapısıdır.",
+                    style: TextStyle(
+                      fontSize: 16,
+                      height: 1.5,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.9)
+                          : AppColors.textPrimary,
                     ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                Text(
+                  '${topic.title} - Temel Bilgiler',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: headingColor,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFF1E2026)
+                        : color.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: isDark
+                        ? null
+                        : Border.all(
+                            color: color.withOpacity(0.2),
+                          ),
                   ),
                   child: Text(
                     topic.description,
                     style: TextStyle(
                       fontSize: 16,
                       height: 1.5,
-                      color: isDark ? Colors.white : AppColors.textPrimary,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.9)
+                          : AppColors.textPrimary,
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 24),
-
-                // Gramer yapısı başlığı
                 Container(
                   width: double.infinity,
                   padding:
                       const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                   decoration: BoxDecoration(
-                    color: Colors.deepPurple.withOpacity(isDark ? 0.3 : 0.1),
+                    color: isDark
+                        ? const Color(0xFF1E2026)
+                        : color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
+                    border: isDark
+                        ? null
+                        : Border.all(
+                            color: Colors.transparent,
+                          ),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.format_list_numbered,
-                        color: Colors.deepPurple,
+                        color: isDark ? headingColor : color,
                         size: 20,
                       ),
                       const SizedBox(width: 10),
@@ -642,84 +361,14 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.deepPurple,
+                          color: isDark ? headingColor : color,
                         ),
                       ),
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
-                // Gramer yapısı detayları - bu bölüm dinamik olarak oluşturuluyor
-                ..._buildGrammarStructureDetails(topic, isDark),
-
-                const SizedBox(height: 24),
-
-                // Dikkat edilmesi gereken noktalar
-                Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(isDark ? 0.3 : 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.warning_amber_rounded,
-                        color: Colors.orange,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Dikkat Edilmesi Gerekenler',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(isDark ? 0.1 : 0.05),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.orange.withOpacity(isDark ? 0.3 : 0.2),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Bu yapıyı kullanırken dikkat edilmesi gerekenler:',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        _getWarningTextForTopic(topic),
-                        style: TextStyle(
-                          fontSize: 15,
-                          height: 1.5,
-                          color: isDark ? Colors.white : AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                ..._buildGrammarStructureDetails(topic, isDark, color),
               ],
             ),
           ),
@@ -728,30 +377,35 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
     );
   }
 
-  // Gramer Yapısı Detaylarını Oluştur
-  List<Widget> _buildGrammarStructureDetails(GrammarTopic topic, bool isDark) {
+  // Gramer yapısı detaylarını oluştur
+  List<Widget> _buildGrammarStructureDetails(
+      GrammarTopic topic, bool isDark, Color color) {
     List<Widget> widgets = [];
+    final headingColor = isDark ? const Color(0xFF4F6CFF) : color;
 
-    // Gramer verilerini doğrudan topic.grammar_structure'dan alıyoruz
     String grammarContent = topic.grammar_structure;
 
-    // Eğer içerik yoksa default bir mesaj göster
     if (grammarContent.isEmpty) {
       grammarContent =
           'Bu konu için detaylı gramer bilgileri henüz eklenmemiştir.';
     }
 
-    // İçeriği formatlı bir şekilde göster
     widgets.add(
       Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E2026) : color.withOpacity(0.05),
           borderRadius: BorderRadius.circular(12),
+          border: isDark
+              ? null
+              : Border.all(
+                  color: color.withOpacity(0.2),
+                ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: _buildFormattedGrammarText(grammarContent, isDark),
+          children: _buildFormattedGrammarText(grammarContent, isDark, color),
         ),
       ),
     );
@@ -759,23 +413,21 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
     return widgets;
   }
 
-  // Gramer metnini formatlamak için yeni fonksiyon
-  List<Widget> _buildFormattedGrammarText(String text, bool isDark) {
+  // Gramer metnini formatla
+  List<Widget> _buildFormattedGrammarText(
+      String text, bool isDark, Color color) {
     List<Widget> widgets = [];
-
-    // Satırları böl
     List<String> lines = text.split('\n');
+    final headingColor = isDark ? const Color(0xFF4F6CFF) : color;
 
     for (int i = 0; i < lines.length; i++) {
       String line = lines[i];
 
-      // Boş satırları atla ve ekstra boşluk ekle
       if (line.trim().isEmpty) {
         widgets.add(const SizedBox(height: 8));
         continue;
       }
 
-      // 1. Olumlu cümleler: gibi başlıkları formatlama
       if (RegExp(r'^\d+\.\s').hasMatch(line)) {
         widgets.add(
           Padding(
@@ -785,14 +437,12 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.deepPurple,
+                color: headingColor,
               ),
             ),
           ),
         );
-      }
-      // - I/you/we/they + V1 gibi alt başlıklar için
-      else if (line.trim().startsWith('-')) {
+      } else if (line.trim().startsWith('-')) {
         widgets.add(
           Padding(
             padding: const EdgeInsets.only(left: 0, top: 4, bottom: 4),
@@ -802,59 +452,14 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
                 height: 1.5,
-                color: isDark ? Colors.white : AppColors.textPrimary,
-              ),
-            ),
-          ),
-        );
-      }
-      // Örnek: gibi örnekler için
-      else if (line.contains('Örnek:')) {
-        widgets.add(
-          Padding(
-            padding: const EdgeInsets.only(left: 20, top: 4, bottom: 4),
-            child: Container(
-              decoration: BoxDecoration(
                 color: isDark
-                    ? Colors.deepPurple.withOpacity(0.1)
-                    : Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Colors.deepPurple.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              margin: const EdgeInsets.only(top: 2, bottom: 2),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.format_quote,
-                    size: 14,
-                    color: Colors.deepPurple.withOpacity(0.6),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      line.trim(),
-                      style: TextStyle(
-                        fontSize: 14,
-                        height: 1.5,
-                        color: isDark
-                            ? Colors.white.withOpacity(0.9)
-                            : AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                ],
+                    ? Colors.white.withOpacity(0.9)
+                    : AppColors.textPrimary,
               ),
             ),
           ),
         );
-      }
-      // Diğer metinler için
-      else {
+      } else {
         widgets.add(
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
@@ -863,7 +468,9 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
               style: TextStyle(
                 fontSize: 15,
                 height: 1.5,
-                color: isDark ? Colors.white : AppColors.textPrimary,
+                color: isDark
+                    ? Colors.white.withOpacity(0.85)
+                    : AppColors.textPrimary,
               ),
             ),
           ),
@@ -918,5 +525,527 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
           '• Use the correct auxiliary verbs\n'
           '• Be mindful of word order in sentence structure';
     }
+  }
+
+  // Örnek cümle için gramer yapısını belirleme
+  String _getGrammarStructureForExample(String example, String topicTitle) {
+    if (topicTitle.contains('present simple') ||
+        topicTitle.contains('geniş zaman')) {
+      if (example.contains("don't") || example.contains("doesn't")) {
+        return "Olumsuz cümle: Subject + don't/doesn't + V1";
+      } else if (example.contains("Do") || example.contains("Does")) {
+        return "Soru cümlesi: Do/Does + subject + V1?";
+      } else {
+        return "Olumlu cümle: Subject + V1 (he/she/it için V1+s/es)";
+      }
+    } else if (topicTitle.contains('present continuous') ||
+        topicTitle.contains('şimdiki zaman')) {
+      if (example.contains("isn't") || example.contains("aren't")) {
+        return "Olumsuz cümle: Subject + am/is/are + not + V-ing";
+      } else if (example.contains("Is") || example.contains("Are")) {
+        return "Soru cümlesi: Am/Is/Are + subject + V-ing?";
+      } else {
+        return "Olumlu cümle: Subject + am/is/are + V-ing";
+      }
+    } else if (topicTitle.contains('past simple') ||
+        topicTitle.contains('geçmiş zaman')) {
+      if (example.contains("didn't")) {
+        return "Olumsuz cümle: Subject + didn't + V1";
+      } else if (example.contains("Did")) {
+        return "Soru cümlesi: Did + subject + V1?";
+      } else {
+        return "Olumlu cümle: Subject + V2 (düzenli fiiller için V1+ed)";
+      }
+    } else if (topicTitle.contains('future') ||
+        topicTitle.contains('gelecek')) {
+      if (example.contains("won't")) {
+        return "Olumsuz cümle: Subject + won't + V1";
+      } else if (example.contains("Will")) {
+        return "Soru cümlesi: Will + subject + V1?";
+      } else {
+        return "Olumlu cümle: Subject + will + V1";
+      }
+    } else if (topicTitle.contains('present perfect') ||
+        topicTitle.contains('yakın geçmiş')) {
+      if (example.contains("haven't") || example.contains("hasn't")) {
+        return "Olumsuz cümle: Subject + haven't/hasn't + V3";
+      } else if (example.contains("Have") || example.contains("Has")) {
+        return "Soru cümlesi: Have/Has + subject + V3?";
+      } else {
+        return "Olumlu cümle: Subject + have/has + V3";
+      }
+    }
+    return "Gramer yapısı: ${topicTitle}";
+  }
+
+  Widget _buildExamplesSection(List<String> examples, bool isDark) {
+    final topic = Provider.of<GrammarProvider>(context, listen: false)
+        .topics
+        .firstWhere((t) => t.id == widget.topicId);
+    final headingColor =
+        isDark ? const Color(0xFF4F6CFF) : const Color(0xFF4F6CFF);
+    final cardBackgroundColor =
+        isDark ? const Color(0xFF1B1C21) : const Color(0xFFF0F3FF);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1B1C21) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: isDark
+            ? Border.all(
+                color: Colors.white.withOpacity(0.05),
+                width: 1,
+              )
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.5 : 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Başlık
+          Text(
+            'Örnekler ve Kullanım',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: headingColor,
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // I am + Ving - Olumlu örnek
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cardBackgroundColor,
+              borderRadius: BorderRadius.circular(12),
+              border: !isDark
+                  ? null
+                  : Border.all(
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Örnek cümle
+                Text(
+                  '"I am reading a book."',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.95)
+                        : AppColors.textPrimary,
+                  ),
+                ),
+                // Anlamı
+                const SizedBox(height: 6),
+                Text(
+                  'Bir kitap okuyorum.',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontStyle: FontStyle.italic,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.8)
+                        : Colors.black.withOpacity(0.7),
+                  ),
+                ),
+                // Kural
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.black.withOpacity(0.2)
+                        : Colors.white.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Kural: I + am + Ving',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.9)
+                          : Colors.black.withOpacity(0.8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // You/They are + Ving - Olumlu örnek
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cardBackgroundColor,
+              borderRadius: BorderRadius.circular(12),
+              border: !isDark
+                  ? null
+                  : Border.all(
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Örnek cümle
+                Text(
+                  '"You are watching TV."',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.95)
+                        : AppColors.textPrimary,
+                  ),
+                ),
+                // Anlamı
+                const SizedBox(height: 6),
+                Text(
+                  'Televizyon izliyorsun.',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontStyle: FontStyle.italic,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.8)
+                        : Colors.black.withOpacity(0.7),
+                  ),
+                ),
+                // Kural
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.black.withOpacity(0.2)
+                        : Colors.white.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Kural: You/We/They + are + Ving',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.9)
+                          : Colors.black.withOpacity(0.8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // He/She/It is + Ving - Olumlu örnek
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cardBackgroundColor,
+              borderRadius: BorderRadius.circular(12),
+              border: !isDark
+                  ? null
+                  : Border.all(
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Örnek cümle
+                Text(
+                  '"She is studying for her exam."',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.95)
+                        : AppColors.textPrimary,
+                  ),
+                ),
+                // Anlamı
+                const SizedBox(height: 6),
+                Text(
+                  'Sınavı için ders çalışıyor.',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontStyle: FontStyle.italic,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.8)
+                        : Colors.black.withOpacity(0.7),
+                  ),
+                ),
+                // Kural
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.black.withOpacity(0.2)
+                        : Colors.white.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Kural: He/She/It + is + Ving',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.9)
+                          : Colors.black.withOpacity(0.8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Olumsuz Örnek
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cardBackgroundColor,
+              borderRadius: BorderRadius.circular(12),
+              border: !isDark
+                  ? null
+                  : Border.all(
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Örnek cümle
+                Text(
+                  '"You aren\'t listening to me."',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.95)
+                        : AppColors.textPrimary,
+                  ),
+                ),
+                // Anlamı
+                const SizedBox(height: 6),
+                Text(
+                  'Beni dinlemiyorsun.',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontStyle: FontStyle.italic,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.8)
+                        : Colors.black.withOpacity(0.7),
+                  ),
+                ),
+                // Kural
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.black.withOpacity(0.2)
+                        : Colors.white.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Kural: Subject + am/is/are + not + Ving',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.9)
+                          : Colors.black.withOpacity(0.8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Soru örneği
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cardBackgroundColor,
+              borderRadius: BorderRadius.circular(12),
+              border: !isDark
+                  ? null
+                  : Border.all(
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Örnek cümle
+                Text(
+                  '"Are you waiting for someone?"',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.95)
+                        : AppColors.textPrimary,
+                  ),
+                ),
+                // Anlamı
+                const SizedBox(height: 6),
+                Text(
+                  'Birini mi bekliyorsun?',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontStyle: FontStyle.italic,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.8)
+                        : Colors.black.withOpacity(0.7),
+                  ),
+                ),
+                // Kural
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.black.withOpacity(0.2)
+                        : Colors.white.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Kural: Am/Is/Are + subject + Ving?',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.9)
+                          : Colors.black.withOpacity(0.8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Kullanım alanları başlığı
+          const SizedBox(height: 12),
+          Text(
+            'Kullanım Alanları:',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: headingColor,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Kullanım örneği 1
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cardBackgroundColor,
+              borderRadius: BorderRadius.circular(12),
+              border: !isDark
+                  ? null
+                  : Border.all(
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Kullanım adı
+                Text(
+                  'Şu anda devam eden eylemler:',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.95)
+                        : AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Örnek
+                Text(
+                  '"I am writing an email right now." (Şu anda bir e-posta yazıyorum.)',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.85)
+                        : AppColors.textPrimary,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Kullanım örneği 2
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cardBackgroundColor,
+              borderRadius: BorderRadius.circular(12),
+              border: !isDark
+                  ? null
+                  : Border.all(
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Kullanım adı
+                Text(
+                  'Planlanmış yakın gelecek:',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.95)
+                        : AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Örnek
+                Text(
+                  '"We are meeting at 6 PM tomorrow." (Yarın saat 6\'da buluşuyoruz.)',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.85)
+                        : AppColors.textPrimary,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
