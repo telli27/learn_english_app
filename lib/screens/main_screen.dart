@@ -6,6 +6,7 @@ import 'home_screen.dart';
 import 'exercises_screen.dart';
 import 'favorites_screen.dart';
 import 'profile_screen.dart';
+import 'sentence_practice_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -20,6 +21,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const ExercisesScreen(),
+    const SentencePracticeScreen(),
     const FavoritesScreen(),
     const ProfileScreen(),
   ];
@@ -64,6 +66,10 @@ class _MainScreenState extends State<MainScreen> {
             BottomNavigationBarItem(
               icon: Icon(Icons.school_rounded),
               label: 'Alıştırmalar',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.text_fields_rounded),
+              label: 'Cümle Kurma',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.bookmark_rounded),
