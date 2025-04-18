@@ -31,22 +31,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70),
-        child: Container(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF181818) : Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.4 : 0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // App Header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF181818) : Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDark ? 0.4 : 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -95,47 +95,54 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-          ),
-        ),
-      ),
-      body: Consumer<GrammarProvider>(
-        builder: (context, grammarProvider, child) {
-          if (grammarProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
 
-          if (grammarProvider.topics.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.menu_book_rounded,
-                    size: 64,
-                    color: isDark ? Colors.white70 : Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Henüz ders bulunmuyor',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: isDark ? Colors.white70 : Colors.grey.shade600,
-                    ),
-                  ),
-                ],
+            // Content
+            Expanded(
+              child: Consumer<GrammarProvider>(
+                builder: (context, grammarProvider, child) {
+                  if (grammarProvider.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (grammarProvider.topics.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.menu_book_rounded,
+                            size: 64,
+                            color:
+                                isDark ? Colors.white70 : Colors.grey.shade400,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Henüz ders bulunmuyor',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: isDark
+                                  ? Colors.white70
+                                  : Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: grammarProvider.topics.length,
+                    itemBuilder: (context, index) {
+                      final topic = grammarProvider.topics[index];
+                      return _buildTopicCard(context, topic, isDark);
+                    },
+                  );
+                },
               ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: grammarProvider.topics.length,
-            itemBuilder: (context, index) {
-              final topic = grammarProvider.topics[index];
-              return _buildTopicCard(context, topic, isDark);
-            },
-          );
-        },
+            ),
+          ],
+        ),
       ),
     );
   }

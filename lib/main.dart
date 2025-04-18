@@ -8,12 +8,11 @@ import 'package:provider/provider.dart';
 
 import 'providers/grammar_provider.dart';
 import 'providers/theme_provider.dart';
-import 'screens/home_screen.dart';
+import 'screens/main_screen.dart';
 import 'utils/constants/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
 
   runApp(const MyApp());
 }
@@ -35,12 +34,12 @@ class MyApp extends StatelessWidget {
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
           return MaterialApp(
-            title: 'İngilizce Grameri',
+            title: 'İngilizce Öğrenme',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.themeMode,
-            home: const HomeScreen(),
+            home: const MainScreen(),
           );
         },
       ),
