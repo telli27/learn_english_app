@@ -33,22 +33,34 @@ class _SentencePracticeScreenState extends State<SentencePracticeScreen> {
       'description': 'Geçmiş zaman cümle kurma alıştırmaları',
     },
     {
+      'title': 'Past Continuous',
+      'icon': Icons.history_toggle_off,
+      'color': const Color(0xFF009688),
+      'description': 'Geçmişte devam eden zaman cümle alıştırmaları',
+    },
+    {
+      'title': 'Present Perfect',
+      'icon': Icons.done_all,
+      'color': const Color(0xFF3F51B5),
+      'description': 'Şimdiki zamana bağlı geçmiş zaman alıştırmaları',
+    },
+    {
+      'title': 'Present Perfect Continuous',
+      'icon': Icons.update,
+      'color': const Color(0xFF673AB7),
+      'description': 'Geçmişten şimdiye devam eden zaman alıştırmaları',
+    },
+    {
       'title': 'Future Tense',
       'icon': Icons.update,
       'color': const Color(0xFFFF375F),
       'description': 'Gelecek zaman cümle kurma alıştırmaları',
     },
     {
-      'title': 'Question Forms',
-      'icon': Icons.help_outline,
-      'color': const Color(0xFF8E44AD),
-      'description': 'Soru cümleleri oluşturma alıştırmaları',
-    },
-    {
-      'title': 'Passive Voice',
-      'icon': Icons.switch_right,
-      'color': const Color(0xFF2E7D32),
-      'description': 'Pasif cümle yapıları alıştırmaları',
+      'title': 'Past Perfect',
+      'icon': Icons.history_edu,
+      'color': const Color(0xFF795548),
+      'description': 'Geçmişte, geçmiş zamandan önce olan alıştırmalar',
     },
   ];
 

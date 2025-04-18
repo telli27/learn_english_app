@@ -41,20 +41,31 @@ class _SentenceExerciseScreenState extends State<SentenceExerciseScreen> {
             '• Olumlu cümle: Özne + Fiil-ed/2. hali\n'
             '• Olumsuz cümle: Özne + did + not + Fiil\n'
             '• Soru cümlesi: Did + Özne + Fiil',
+    'Past Continuous':
+        'Geçmişte belirli bir anda devam etmekte olan eylemleri ifade etmek için kullanılır.\n\n'
+            '• Olumlu cümle: Özne + was/were + Fiil-ing\n'
+            '• Olumsuz cümle: Özne + was/were + not + Fiil-ing\n'
+            '• Soru cümlesi: Was/Were + Özne + Fiil-ing',
+    'Present Perfect':
+        'Geçmişte başlayan ve şu anda etkisi devam eden veya henüz tamamlanmış eylemleri ifade etmek için kullanılır.\n\n'
+            '• Olumlu cümle: Özne + have/has + Fiil (3. hali)\n'
+            '• Olumsuz cümle: Özne + have/has + not + Fiil (3. hali)\n'
+            '• Soru cümlesi: Have/Has + Özne + Fiil (3. hali)',
+    'Present Perfect Continuous':
+        'Geçmişte başlayan ve şu ana kadar devam eden eylemlerin süresini vurgulamak için kullanılır.\n\n'
+            '• Olumlu cümle: Özne + have/has + been + Fiil-ing\n'
+            '• Olumsuz cümle: Özne + have/has + not + been + Fiil-ing\n'
+            '• Soru cümlesi: Have/Has + Özne + been + Fiil-ing',
     'Future Tense':
         'Gelecek zaman (Future Tense), gelecekte gerçekleşecek planları veya tahminleri ifade etmek için kullanılır.\n\n'
             '• Olumlu cümle: Özne + will/be going to + Fiil\n'
             '• Olumsuz cümle: Özne + will/be going to + not + Fiil\n'
             '• Soru cümlesi: Will/Be going to + Özne + Fiil',
-    'Question Forms':
-        'İngilizce\'de soru cümleleri oluşturmak için genellikle yardımcı fiiller kullanılır.\n\n'
-            '• Yes/No soruları: Yardımcı fiil + Özne + Ana fiil\n'
-            '• Wh- soruları: Soru kelimesi + Yardımcı fiil + Özne + Ana fiil\n'
-            '• Subject questions: Soru kelimesi (who/what) + fiil',
-    'Passive Voice':
-        'Pasif yapı (Passive Voice), öznenin eylemi gerçekleştiren değil, eylemden etkilenen olduğu durumlarda kullanılır.\n\n'
-            '• Yapı: Özne (nesne) + to be + past participle (3. hali) + by + fail (isteğe bağlı)\n'
-            '• Zamanlar pasif yapıda to be fiilinin çekimiyle gösterilir',
+    'Past Perfect':
+        'Geçmişte, başka bir eylemden önce tamamlanmış eylemleri ifade etmek için kullanılır.\n\n'
+            '• Olumlu cümle: Özne + had + Fiil (3. hali)\n'
+            '• Olumsuz cümle: Özne + had + not + Fiil (3. hali)\n'
+            '• Soru cümlesi: Had + Özne + Fiil (3. hali)',
   };
 
   // Exercise data for each topic
@@ -78,6 +89,48 @@ class _SentenceExerciseScreenState extends State<SentenceExerciseScreen> {
         'type': 'Olumlu Cümle',
         'meaning': 'Onlar genellikle okula yürüyerek giderler.',
       },
+      {
+        'words': ['he', 'does', 'not', 'meat', 'eat'],
+        'correctSentence': 'he does not eat meat',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'O et yemez.',
+      },
+      {
+        'words': ['English', 'speak', 'fluently', 'I'],
+        'correctSentence': 'I speak English fluently',
+        'type': 'Olumlu Cümle',
+        'meaning': 'İngilizceyi akıcı konuşurum.',
+      },
+      {
+        'words': ['your', 'where', 'does', 'live', 'brother'],
+        'correctSentence': 'where does your brother live',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Kardeşin nerede yaşıyor?',
+      },
+      {
+        'words': ['always', 'on', 'breakfast', 'time', 'we', 'have'],
+        'correctSentence': 'we always have breakfast on time',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Her zaman kahvaltımızı zamanında yaparız.',
+      },
+      {
+        'words': ['they', 'do', 'not', 'understand', 'the', 'problem'],
+        'correctSentence': 'they do not understand the problem',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Onlar problemi anlamazlar.',
+      },
+      {
+        'words': ['does', 'he', 'play', 'football', 'every', 'weekend'],
+        'correctSentence': 'does he play football every weekend',
+        'type': 'Soru Cümlesi',
+        'meaning': 'O her hafta sonu futbol oynar mı?',
+      },
+      {
+        'words': ['my', 'parents', 'travel', 'abroad', 'every', 'summer'],
+        'correctSentence': 'my parents travel abroad every summer',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Ailem her yaz yurtdışına seyahat eder.',
+      },
     ],
     'Present Continuous': [
       {
@@ -97,6 +150,48 @@ class _SentenceExerciseScreenState extends State<SentenceExerciseScreen> {
         'correctSentence': 'she is studying for the exam',
         'type': 'Olumlu Cümle',
         'meaning': 'O, sınav için çalışıyor.',
+      },
+      {
+        'words': ['we', 'are', 'not', 'today', 'working'],
+        'correctSentence': 'we are not working today',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Bugün çalışmıyoruz.',
+      },
+      {
+        'words': ['they', 'are', 'dinner', 'having', 'now'],
+        'correctSentence': 'they are having dinner now',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Onlar şu anda akşam yemeği yiyorlar.',
+      },
+      {
+        'words': ['is', 'the', 'baby', 'crying', 'why'],
+        'correctSentence': 'why is the baby crying',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Bebek neden ağlıyor?',
+      },
+      {
+        'words': ['are', 'you', 'listening', 'to', 'me'],
+        'correctSentence': 'are you listening to me',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Beni dinliyor musun?',
+      },
+      {
+        'words': ['is', 'not', 'she', 'feeling', 'well', 'today'],
+        'correctSentence': 'she is not feeling well today',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'O bugün kendini iyi hissetmiyor.',
+      },
+      {
+        'words': ['I', 'am', 'currently', 'reading', 'a', 'good', 'book'],
+        'correctSentence': 'I am currently reading a good book',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Şu anda iyi bir kitap okuyorum.',
+      },
+      {
+        'words': ['they', 'are', 'planning', 'a', 'vacation', 'next', 'month'],
+        'correctSentence': 'they are planning a vacation next month',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Gelecek ay bir tatil planlıyorlar.',
       },
     ],
     'Past Simple': [
@@ -118,6 +213,262 @@ class _SentenceExerciseScreenState extends State<SentenceExerciseScreen> {
         'type': 'Olumsuz Cümle',
         'meaning': 'Kitabı bitirmedim.',
       },
+      {
+        'words': ['she', 'bought', 'a', 'new', 'car', 'last', 'month'],
+        'correctSentence': 'she bought a new car last month',
+        'type': 'Olumlu Cümle',
+        'meaning': 'O geçen ay yeni bir araba satın aldı.',
+      },
+      {
+        'words': ['did', 'where', 'you', 'go', 'to', 'school'],
+        'correctSentence': 'where did you go to school',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Nerede okula gittin?',
+      },
+      {
+        'words': ['they', 'did', 'not', 'call', 'me', 'yesterday'],
+        'correctSentence': 'they did not call me yesterday',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Dün beni aramadılar.',
+      },
+      {
+        'words': ['we', 'watched', 'a', 'movie', 'last', 'night'],
+        'correctSentence': 'we watched a movie last night',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Dün gece bir film izledik.',
+      },
+      {
+        'words': ['did', 'he', 'enjoy', 'the', 'party'],
+        'correctSentence': 'did he enjoy the party',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Partiden keyif aldı mı?',
+      },
+      {
+        'words': ['I', 'did', 'not', 'hear', 'the', 'doorbell'],
+        'correctSentence': 'I did not hear the doorbell',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Kapı zilini duymadım.',
+      },
+      {
+        'words': ['she', 'wrote', 'a', 'letter', 'to', 'her', 'friend'],
+        'correctSentence': 'she wrote a letter to her friend',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Arkadaşına bir mektup yazdı.',
+      },
+    ],
+    'Past Continuous': [
+      {
+        'words': ['was', 'watching', 'TV', 'I', 'when', 'you', 'called'],
+        'correctSentence': 'I was watching TV when you called',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Sen aradığında TV izliyordum.',
+      },
+      {
+        'words': ['were', 'doing', 'what', 'you', 'at', '8', 'yesterday'],
+        'correctSentence': 'what were you doing at 8 yesterday',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Dün saat 8\'de ne yapıyordun?',
+      },
+      {
+        'words': ['she', 'was', 'not', 'listening', 'to', 'the', 'teacher'],
+        'correctSentence': 'she was not listening to the teacher',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'O öğretmeni dinlemiyordu.',
+      },
+      {
+        'words': ['they', 'were', 'playing', 'football', 'all', 'afternoon'],
+        'correctSentence': 'they were playing football all afternoon',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Onlar bütün öğleden sonra futbol oynuyorlardı.',
+      },
+      {
+        'words': ['was', 'it', 'raining', 'when', 'you', 'left'],
+        'correctSentence': 'was it raining when you left',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Sen ayrıldığında yağmur yağıyor muydu?',
+      },
+      {
+        'words': ['we', 'were', 'not', 'expecting', 'any', 'visitors'],
+        'correctSentence': 'we were not expecting any visitors',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Hiç ziyaretçi beklemiyorduk.',
+      },
+      {
+        'words': ['he', 'was', 'studying', 'while', 'I', 'was', 'cooking'],
+        'correctSentence': 'he was studying while I was cooking',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Ben yemek pişirirken o ders çalışıyordu.',
+      },
+      {
+        'words': ['were', 'they', 'waiting', 'for', 'the', 'bus'],
+        'correctSentence': 'were they waiting for the bus',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Onlar otobüs için bekliyor muydu?',
+      },
+      {
+        'words': ['she', 'was', 'not', 'feeling', 'well', 'yesterday'],
+        'correctSentence': 'she was not feeling well yesterday',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'O dün kendini iyi hissetmiyordu.',
+      },
+      {
+        'words': [
+          'I',
+          'was',
+          'reading',
+          'a',
+          'book',
+          'at',
+          'this',
+          'time',
+          'yesterday'
+        ],
+        'correctSentence': 'I was reading a book at this time yesterday',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Dün bu saatte kitap okuyordum.',
+      },
+    ],
+    'Present Perfect': [
+      {
+        'words': ['I', 'have', 'never', 'been', 'to', 'Paris'],
+        'correctSentence': 'I have never been to Paris',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Hiç Paris\'e gitmedim.',
+      },
+      {
+        'words': ['have', 'you', 'finished', 'your', 'homework', 'yet'],
+        'correctSentence': 'have you finished your homework yet',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Ödevinizi bitirdiniz mi?',
+      },
+      {
+        'words': ['she', 'has', 'not', 'seen', 'the', 'movie'],
+        'correctSentence': 'she has not seen the movie',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'O filmi görmedi.',
+      },
+      {
+        'words': ['they', 'have', 'lived', 'here', 'for', 'ten', 'years'],
+        'correctSentence': 'they have lived here for ten years',
+        'type': 'Olumlu Cümle',
+        'meaning': 'On yıldır burada yaşıyorlar.',
+      },
+      {
+        'words': ['has', 'he', 'ever', 'visited', 'London'],
+        'correctSentence': 'has he ever visited London',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Hiç Londra\'yı ziyaret etti mi?',
+      },
+      {
+        'words': ['we', 'have', 'not', 'received', 'any', 'news'],
+        'correctSentence': 'we have not received any news',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Hiç haber almadık.',
+      },
+      {
+        'words': ['I', 'have', 'already', 'eaten', 'lunch'],
+        'correctSentence': 'I have already eaten lunch',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Çoktan öğle yemeğini yedim.',
+      },
+      {
+        'words': ['have', 'they', 'arrived', 'yet'],
+        'correctSentence': 'have they arrived yet',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Onlar vardı mı?',
+      },
+      {
+        'words': ['she', 'has', 'just', 'left', 'the', 'office'],
+        'correctSentence': 'she has just left the office',
+        'type': 'Olumlu Cümle',
+        'meaning': 'O az önce ofisten ayrıldı.',
+      },
+      {
+        'words': ['we', 'have', 'not', 'met', 'before'],
+        'correctSentence': 'we have not met before',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Daha önce tanışmadık.',
+      },
+    ],
+    'Present Perfect Continuous': [
+      {
+        'words': ['I', 'have', 'been', 'waiting', 'for', 'two', 'hours'],
+        'correctSentence': 'I have been waiting for two hours',
+        'type': 'Olumlu Cümle',
+        'meaning': 'İki saattir bekliyorum.',
+      },
+      {
+        'words': ['have', 'you', 'been', 'feeling', 'okay'],
+        'correctSentence': 'have you been feeling okay',
+        'type': 'Soru Cümlesi',
+        'meaning': 'İyi hissediyor musun?',
+      },
+      {
+        'words': ['she', 'has', 'not', 'been', 'studying', 'enough'],
+        'correctSentence': 'she has not been studying enough',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'O yeterince ders çalışmıyor.',
+      },
+      {
+        'words': ['they', 'have', 'been', 'working', 'since', 'morning'],
+        'correctSentence': 'they have been working since morning',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Sabahtan beri çalışıyorlar.',
+      },
+      {
+        'words': ['how', 'long', 'have', 'you', 'been', 'learning', 'English'],
+        'correctSentence': 'how long have you been learning English',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Ne zamandır İngilizce öğreniyorsun?',
+      },
+      {
+        'words': ['he', 'has', 'not', 'been', 'sleeping', 'well', 'lately'],
+        'correctSentence': 'he has not been sleeping well lately',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Son zamanlarda iyi uyumuyor.',
+      },
+      {
+        'words': [
+          'we',
+          'have',
+          'been',
+          'living',
+          'here',
+          'for',
+          'five',
+          'years'
+        ],
+        'correctSentence': 'we have been living here for five years',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Beş yıldır burada yaşıyoruz.',
+      },
+      {
+        'words': ['has', 'it', 'been', 'raining', 'all', 'day'],
+        'correctSentence': 'has it been raining all day',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Bütün gün yağmur mu yağıyor?',
+      },
+      {
+        'words': ['she', 'has', 'been', 'cooking', 'since', 'early', 'morning'],
+        'correctSentence': 'she has been cooking since early morning',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Sabahın erken saatlerinden beri yemek pişiriyor.',
+      },
+      {
+        'words': [
+          'they',
+          'have',
+          'not',
+          'been',
+          'talking',
+          'to',
+          'each',
+          'other'
+        ],
+        'correctSentence': 'they have not been talking to each other',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Birbiriyle konuşmuyorlar.',
+      },
     ],
     'Future Tense': [
       {
@@ -138,45 +489,151 @@ class _SentenceExerciseScreenState extends State<SentenceExerciseScreen> {
         'type': 'Olumlu Cümle',
         'meaning': 'O bu akşam yemek pişirecek.',
       },
+      {
+        'words': ['I', 'am', 'going', 'to', 'buy', 'a', 'new', 'phone'],
+        'correctSentence': 'I am going to buy a new phone',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Yeni bir telefon satın alacağım.',
+      },
+      {
+        'words': ['will', 'not', 'be', 'we', 'late', 'for', 'the', 'meeting'],
+        'correctSentence': 'we will not be late for the meeting',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Toplantıya geç kalmayacağız.',
+      },
+      {
+        'words': ['when', 'will', 'you', 'return', 'from', 'vacation'],
+        'correctSentence': 'when will you return from vacation',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Tatilden ne zaman döneceksiniz?',
+      },
+      {
+        'words': ['they', 'are', 'going', 'to', 'move', 'next', 'year'],
+        'correctSentence': 'they are going to move next year',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Gelecek yıl taşınacaklar.',
+      },
+      {
+        'words': ['will', 'the', 'train', 'arrive', 'on', 'time'],
+        'correctSentence': 'will the train arrive on time',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Tren zamanında gelecek mi?',
+      },
+      {
+        'words': ['I', 'will', 'not', 'forget', 'your', 'birthday'],
+        'correctSentence': 'I will not forget your birthday',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Doğum gününü unutmayacağım.',
+      },
+      {
+        'words': ['she', 'is', 'going', 'to', 'start', 'a', 'new', 'job'],
+        'correctSentence': 'she is going to start a new job',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Yeni bir işe başlayacak.',
+      },
     ],
-    'Question Forms': [
+    'Past Perfect': [
       {
-        'words': ['do', 'where', 'live', 'you'],
-        'correctSentence': 'where do you live',
-        'type': 'Soru Cümlesi (Wh-)',
-        'meaning': 'Nerede yaşıyorsun?',
+        'words': ['I', 'had', 'already', 'left', 'when', 'you', 'called'],
+        'correctSentence': 'I had already left when you called',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Sen aradığında çoktan ayrılmıştım.',
       },
       {
-        'words': ['is', 'favorite', 'your', 'what', 'color'],
-        'correctSentence': 'what is your favorite color',
-        'type': 'Soru Cümlesi (Wh-)',
-        'meaning': 'En sevdiğin renk nedir?',
+        'words': ['had', 'you', 'ever', 'visited', 'Italy', 'before'],
+        'correctSentence': 'had you ever visited Italy before',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Daha önce hiç İtalya\'yı ziyaret etmiş miydin?',
       },
       {
-        'words': ['how', 'are', 'old', 'you'],
-        'correctSentence': 'how old are you',
-        'type': 'Soru Cümlesi (Wh-)',
-        'meaning': 'Kaç yaşındasın?',
-      },
-    ],
-    'Passive Voice': [
-      {
-        'words': ['book', 'was', 'the', 'by', 'written', 'her'],
-        'correctSentence': 'the book was written by her',
-        'type': 'Pasif Yapı',
-        'meaning': 'Kitap onun tarafından yazıldı.',
+        'words': ['she', 'had', 'not', 'finished', 'her', 'work', 'by', 'then'],
+        'correctSentence': 'she had not finished her work by then',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'O zamana kadar işini bitirmemişti.',
       },
       {
-        'words': ['English', 'in', 'spoken', 'is', 'many', 'countries'],
-        'correctSentence': 'English is spoken in many countries',
-        'type': 'Pasif Yapı',
-        'meaning': 'İngilizce birçok ülkede konuşulur.',
+        'words': [
+          'they',
+          'had',
+          'never',
+          'seen',
+          'such',
+          'a',
+          'beautiful',
+          'sunset'
+        ],
+        'correctSentence': 'they had never seen such a beautiful sunset',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Onlar daha önce böyle güzel bir gün batımı görmemişlerdi.',
       },
       {
-        'words': ['been', 'has', 'car', 'the', 'fixed'],
-        'correctSentence': 'the car has been fixed',
-        'type': 'Pasif Yapı',
-        'meaning': 'Araba tamir edildi.',
+        'words': ['had', 'he', 'finished', 'dinner', 'before', 'the', 'movie'],
+        'correctSentence': 'had he finished dinner before the movie',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Filmden önce akşam yemeğini bitirmiş miydi?',
+      },
+      {
+        'words': [
+          'we',
+          'had',
+          'not',
+          'heard',
+          'the',
+          'news',
+          'until',
+          'yesterday'
+        ],
+        'correctSentence': 'we had not heard the news until yesterday',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Dün sabaha kadar haberi duymamıştık.',
+      },
+      {
+        'words': [
+          'she',
+          'had',
+          'studied',
+          'English',
+          'before',
+          'moving',
+          'abroad'
+        ],
+        'correctSentence': 'she had studied English before moving abroad',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Yurtdışına taşınmadan önce İngilizce çalışmıştı.',
+      },
+      {
+        'words': [
+          'had',
+          'everyone',
+          'arrived',
+          'before',
+          'the',
+          'meeting',
+          'started'
+        ],
+        'correctSentence': 'had everyone arrived before the meeting started',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Toplantı başlamadan önce herkes gelmis miydi?',
+      },
+      {
+        'words': ['I', 'had', 'not', 'expected', 'such', 'a', 'surprise'],
+        'correctSentence': 'I had not expected such a surprise',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Böyle bir sürpriz beklememiştim.',
+      },
+      {
+        'words': [
+          'they',
+          'had',
+          'prepared',
+          'everything',
+          'for',
+          'the',
+          'party'
+        ],
+        'correctSentence': 'they had prepared everything for the party',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Parti için her şeyi hazırlamışlardı.',
       },
     ],
   };
