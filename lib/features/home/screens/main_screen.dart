@@ -1,29 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/theme_provider.dart';
-import '../utils/constants/colors.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers.dart';
+import '../../../core/utils/constants/colors.dart';
+import '../../../screens/sentence_practice_screen.dart';
 import 'home_screen.dart';
-import 'exercises_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
-import 'sentence_practice_screen.dart';
+import '../../../features/grammar/screens/favorites_screen.dart';
+import '../../../features/profile/screens/profile_screen.dart';
 
-class MainScreen extends StatefulWidget {
+class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  ConsumerState<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends ConsumerState<MainScreen> {
   int _selectedIndex = 0;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const ExercisesScreen(),
-    const SentencePracticeScreen(),
-    const FavoritesScreen(),
-    const ProfileScreen(),
+  final List<Widget> _screens = const [
+    HomeScreen(),
+     SentencePracticeScreen(),
+    FavoritesScreen(),
+    ProfileScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -34,8 +32,7 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
+    final isDark = ref.watch(isDarkModeProvider);
 
     return Scaffold(
       body: _screens[_selectedIndex],
@@ -75,10 +72,9 @@ class _MainScreenState extends State<MainScreen> {
             unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w400),
             items: [
               _buildNavItem(Icons.home_rounded, 'Anasayfa', 0),
-              _buildNavItem(Icons.school_rounded, 'Alıştırmalar', 1),
-              _buildNavItem(Icons.text_fields_rounded, 'Cümle Kurma', 2),
-              _buildNavItem(Icons.bookmark_rounded, 'Favoriler', 3),
-              _buildNavItem(Icons.person_rounded, 'Profil', 4),
+              _buildNavItem(Icons.text_fields_rounded, 'Cümle Kurma', 1),
+              _buildNavItem(Icons.bookmark_rounded, 'Favoriler', 2),
+              _buildNavItem(Icons.person_rounded, 'Profil', 3),
             ],
           ),
         ),

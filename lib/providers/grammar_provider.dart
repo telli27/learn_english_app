@@ -1,179 +1,63 @@
 import 'package:flutter/material.dart';
-import '../data/grammar_data.dart';
-import '../models/grammar_topic.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/data/grammar_data.dart';
+import '../features/grammar/repositories/grammar_repository.dart';
+import '../core/models/grammar_topic.dart';
 
-class GrammarProvider extends ChangeNotifier {
-  // State variables
-  bool _isLoading = false;
-  List<GrammarTopic>? _topics;
-  GrammarTopic? _currentTopic;
-  GrammarSubtopic? _currentSubtopic;
-  String? _errorMessage;
+class GrammarState {
+  final List<GrammarTopic> topics;
+  final bool isLoading;
+  final String error;
 
-  // Yükleme kilidi - aynı anda birden fazla yükleme olmasını engeller
-  bool _isLoadLocked = false;
+  GrammarState({
+    this.topics = const [],
+    this.isLoading = false,
+    this.error = '',
+  });
 
-  // Getters
-  bool get isLoading => _isLoading;
-  List<GrammarTopic> get topics => _topics ?? [];
-  GrammarTopic? get currentTopic => _currentTopic;
-  GrammarSubtopic? get currentSubtopic => _currentSubtopic;
-  String? get errorMessage => _errorMessage;
-
-  bool get hasError => _errorMessage != null;
-  bool get hasTopics => _topics != null && _topics!.isNotEmpty;
-  bool get hasTopic => _currentTopic != null;
-  bool get hasSubtopic => _currentSubtopic != null;
-
-  // Load all grammar topics
-  Future<void> loadGrammarTopics() async {
-    // Eğer zaten yükleniyor veya kilit aktifse, çık
-    if (_isLoading || _isLoadLocked) return;
-
-    // Eğer topics zaten yüklenmişse, tekrar yükleme
-    if (hasTopics && !hasError) return;
-
-    try {
-      _setLoadLock(true);
-      _setLoading(true);
-      _clearError();
-
-      // Hafıza önbelleği temizle
-      _topics = null;
-      _currentTopic = null;
-      _currentSubtopic = null;
-      notifyListeners(); // Yükleme başladığını bildir
-
-      // Simulate a short delay for loading animation
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      // Verileri yükle
-      _topics = GrammarData.topics;
-
-      _setLoading(false);
-    } catch (e) {
-      _setError('Konular yüklenirken hata oluştu: ${e.toString()}');
-    } finally {
-      _setLoadLock(false);
-    }
+  GrammarState copyWith({
+    List<GrammarTopic>? topics,
+    bool? isLoading,
+    String? error,
+  }) {
+    return GrammarState(
+      topics: topics ?? this.topics,
+      isLoading: isLoading ?? this.isLoading,
+      error: error ?? this.error,
+    );
   }
+}
 
-  // Load a specific grammar topic by ID
+final grammarProvider =
+    StateNotifierProvider<GrammarNotifier, GrammarState>((ref) {
+  return GrammarNotifier(GrammarRepository());
+});
+
+class GrammarNotifier extends StateNotifier<GrammarState> {
+  GrammarNotifier(this._repository) : super(GrammarState());
+  final GrammarRepository _repository;
+
   Future<void> loadGrammarTopic(String topicId) async {
-    // Eğer zaten yükleniyor veya kilit aktifse, çık
-    if (_isLoading || _isLoadLocked) return;
-
-    // Eğer aynı konu zaten yüklenmişse ve hata yoksa, işlem yapma
-    if (hasTopic && currentTopic!.id == topicId && !hasError) {
-      return;
-    }
+    state = state.copyWith(isLoading: true);
 
     try {
-      _setLoadLock(true);
-      _setLoading(true);
-      _clearError();
+      // Mock implementation - replace with actual data loading
+      await Future.delayed(const Duration(seconds: 1));
 
-      // Önce konuyu temizle
-      _currentTopic = null;
-      _currentSubtopic = null;
-      notifyListeners(); // Yükleme başladığını bildir
+      final topic = _repository.getGrammarTopics().firstWhere(
+            (topic) => topic.id == topicId,
+            orElse: () => throw Exception('Konu bulunamadı'),
+          );
 
-      // Eğer konular yüklü değilse, konuları yükle
-      if (!hasTopics) {
-        _topics = GrammarData.topics;
-      }
-
-      // Simulate a short delay for loading animation
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      // Konu ID'sine göre konuyu bul
-      final topic = _topics!.firstWhere(
-        (topic) => topic.id == topicId,
-        orElse: () => throw Exception('Konu bulunamadı'),
+      state = state.copyWith(
+        topics: [...state.topics, topic],
+        isLoading: false,
       );
-
-      _currentTopic = topic;
-
-      _setLoading(false);
     } catch (e) {
-      _setError('Konu yüklenirken hata oluştu: ${e.toString()}');
-    } finally {
-      _setLoadLock(false);
-    }
-  }
-
-  // Load a specific grammar subtopic by topic ID and subtopic ID
-  Future<void> loadGrammarSubtopic(String topicId, String subtopicId) async {
-    // Eğer zaten yükleniyor veya kilit aktifse, çık
-    if (_isLoading || _isLoadLocked) return;
-
-    // Eğer aynı alt konu zaten yüklenmişse ve hata yoksa, işlem yapma
-    if (hasTopic &&
-        currentTopic!.id == topicId &&
-        hasSubtopic &&
-        currentSubtopic!.id == subtopicId &&
-        !hasError) {
-      return;
-    }
-
-    try {
-      _setLoadLock(true);
-      _setLoading(true);
-      _clearError();
-
-      // Önce alt konuyu temizle
-      _currentSubtopic = null;
-      notifyListeners(); // Yükleme başladığını bildir
-
-      // Eğer konular yüklü değilse veya farklı bir konu ise, konuyu yükle
-      if (!hasTopic || currentTopic!.id != topicId) {
-        // Konuları yükle
-        if (!hasTopics) {
-          _topics = GrammarData.topics;
-        }
-
-        _currentTopic = _topics!.firstWhere(
-          (topic) => topic.id == topicId,
-          orElse: () => throw Exception('Konu bulunamadı'),
-        );
-      }
-
-      // Simulate a short delay for loading animation
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      // Alt konuyu bul
-      final subtopic = _currentTopic!.subtopics.firstWhere(
-        (subtopic) => subtopic.id == subtopicId,
-        orElse: () => throw Exception('Alt konu bulunamadı'),
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
       );
-
-      _currentSubtopic = subtopic;
-
-      _setLoading(false);
-    } catch (e) {
-      _setError('Alt konu yüklenirken hata oluştu: ${e.toString()}');
-    } finally {
-      _setLoadLock(false);
     }
-  }
-
-  // Helper methods
-  void _setLoading(bool loading) {
-    _isLoading = loading;
-    notifyListeners();
-  }
-
-  void _setLoadLock(bool locked) {
-    _isLoadLocked = locked;
-  }
-
-  void _setError(String message) {
-    _errorMessage = message;
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  void _clearError() {
-    _errorMessage = null;
   }
 }

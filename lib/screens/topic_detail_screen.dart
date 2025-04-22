@@ -1,90 +1,86 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart';
 import '../providers/grammar_provider.dart';
 import '../providers/theme_provider.dart';
-import '../models/grammar_topic.dart';
+import '../core/models/grammar_topic.dart';
 import '../screens/subtopic_detail_screen.dart';
 import '../screens/exercise_detail_screen.dart';
 import '../utils/constants/colors.dart';
 
-class TopicDetailScreen extends StatefulWidget {
+class TopicDetailScreen extends ConsumerStatefulWidget {
   final String topicId;
 
   const TopicDetailScreen({Key? key, required this.topicId}) : super(key: key);
 
   @override
-  State<TopicDetailScreen> createState() => _TopicDetailScreenState();
+  ConsumerState<TopicDetailScreen> createState() => _TopicDetailScreenState();
 }
 
-class _TopicDetailScreenState extends State<TopicDetailScreen> {
+class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        Provider.of<GrammarProvider>(context, listen: false)
-            .loadGrammarTopic(widget.topicId);
+        ref.read(grammarProvider.notifier).loadGrammarTopic(widget.topicId);
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
+    final isDark = ref.watch(themeProvider);
+    final grammarState = ref.watch(grammarProvider);
 
-    return Consumer<GrammarProvider>(
-      builder: (context, grammarProvider, child) {
-        if (grammarProvider.isLoading) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+    if (grammarState.isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
-        final topic = grammarProvider.topics.firstWhere(
-          (t) => t.id == widget.topicId,
-          orElse: () => GrammarTopic(
-            id: '',
-            title: 'Konu bulunamadı',
-            description: '',
-            examples: [],
-            color: 'blue',
-            iconPath: '',
+    final topic = grammarState.topics.firstWhere(
+      (t) => t.id == widget.topicId,
+      orElse: () => GrammarTopic(
+        id: '',
+        title: 'Konu bulunamadı',
+        description: '',
+        examples: [],
+        color: 'blue',
+        iconPath: '',
+      ),
+    );
+
+    if (topic.id.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: const Center(child: Text('Konu bulunamadı')),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: isDark ? Colors.black : Colors.white,
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          _buildAppBar(topic, isDark),
+          SliverPadding(
+            padding: const EdgeInsets.all(10),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // Gramer Yapısı ve Bilgisi
+                _buildGrammarStructureSection(topic, isDark),
+                const SizedBox(height: 32),
+
+                // Örnek Cümleler
+                if (topic.examples.isNotEmpty)
+                  _buildExamplesSection(topic.examples, isDark),
+                const SizedBox(height: 50),
+              ]),
+            ),
           ),
-        );
-
-        if (topic.id.isEmpty) {
-          return Scaffold(
-            appBar: AppBar(),
-            body: const Center(child: Text('Konu bulunamadı')),
-          );
-        }
-
-        return Scaffold(
-          backgroundColor: isDark ? Colors.black : Colors.white,
-          body: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              _buildAppBar(topic, isDark),
-              SliverPadding(
-                padding: const EdgeInsets.all(10),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    // Gramer Yapısı ve Bilgisi
-                    _buildGrammarStructureSection(topic, isDark),
-                    const SizedBox(height: 32),
-
-                    // Örnek Cümleler
-                    if (topic.examples.isNotEmpty)
-                      _buildExamplesSection(topic.examples, isDark),
-                    const SizedBox(height: 50),
-                  ]),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+        ],
+      ),
     );
   }
 
@@ -579,9 +575,9 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
   }
 
   Widget _buildExamplesSection(List<String> examples, bool isDark) {
-    final topic = Provider.of<GrammarProvider>(context, listen: false)
-        .topics
-        .firstWhere((t) => t.id == widget.topicId);
+    final grammarState = ref.watch(grammarProvider);
+
+    final topic = grammarState.topics.firstWhere((t) => t.id == widget.topicId);
     final headingColor =
         isDark ? const Color(0xFF4F6CFF) : const Color(0xFF4F6CFF);
     final cardBackgroundColor =

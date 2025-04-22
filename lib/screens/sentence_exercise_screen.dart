@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/theme_provider.dart';
 
-class SentenceExerciseScreen extends StatefulWidget {
+class SentenceExerciseScreen extends ConsumerStatefulWidget {
   final String topic;
   final Color color;
 
@@ -13,10 +13,12 @@ class SentenceExerciseScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<SentenceExerciseScreen> createState() => _SentenceExerciseScreenState();
+  ConsumerState<SentenceExerciseScreen> createState() =>
+      _SentenceExerciseScreenState();
 }
 
-class _SentenceExerciseScreenState extends State<SentenceExerciseScreen> {
+class _SentenceExerciseScreenState
+    extends ConsumerState<SentenceExerciseScreen> {
   int _currentExerciseIndex = 0;
   List<String> _selectedWords = [];
   List<int> _selectedIndices = [];
@@ -688,8 +690,7 @@ class _SentenceExerciseScreenState extends State<SentenceExerciseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
+    final isDark = ref.watch(themeProvider);
     final currentExercise = _exercises[widget.topic]![_currentExerciseIndex];
 
     return Scaffold(

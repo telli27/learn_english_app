@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/grammar_topic.dart';
 import '../utils/constants/colors.dart';
 import '../providers/theme_provider.dart';
 import '../screens/exercise_detail_screen.dart';
 
-class SubtopicDetailScreen extends StatefulWidget {
+class SubtopicDetailScreen extends ConsumerStatefulWidget {
   final GrammarTopic topic;
   final GrammarSubtopic subtopic;
 
@@ -16,10 +16,11 @@ class SubtopicDetailScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<SubtopicDetailScreen> createState() => _SubtopicDetailScreenState();
+  ConsumerState<SubtopicDetailScreen> createState() =>
+      _SubtopicDetailScreenState();
 }
 
-class _SubtopicDetailScreenState extends State<SubtopicDetailScreen> {
+class _SubtopicDetailScreenState extends ConsumerState<SubtopicDetailScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _showAppBarTitle = false;
 
@@ -51,8 +52,7 @@ class _SubtopicDetailScreenState extends State<SubtopicDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final Color topicColor = AppColors.getColorByName(widget.topic.color);
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
+    final isDark = ref.watch(themeProvider);
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF1A1A1A) : Colors.white,
@@ -105,8 +105,7 @@ class _SubtopicDetailScreenState extends State<SubtopicDetailScreen> {
   }
 
   Widget _buildHeader(Color topicColor) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
+    final isDark = ref.watch(themeProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -219,8 +218,7 @@ class _SubtopicDetailScreenState extends State<SubtopicDetailScreen> {
   }
 
   Widget _buildContent(Color topicColor) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
+    final isDark = ref.watch(themeProvider);
 
     return Container(
       color: isDark ? const Color(0xFF1A1A1A) : Colors.white,

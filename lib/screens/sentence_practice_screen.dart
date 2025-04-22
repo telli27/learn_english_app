@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/theme_provider.dart';
 import '../utils/constants/colors.dart';
 import 'sentence_exercise_screen.dart';
 
-class SentencePracticeScreen extends StatefulWidget {
+class SentencePracticeScreen extends ConsumerStatefulWidget {
   const SentencePracticeScreen({Key? key}) : super(key: key);
 
   @override
-  State<SentencePracticeScreen> createState() => _SentencePracticeScreenState();
+  ConsumerState<SentencePracticeScreen> createState() =>
+      _SentencePracticeScreenState();
 }
 
-class _SentencePracticeScreenState extends State<SentencePracticeScreen> {
+class _SentencePracticeScreenState
+    extends ConsumerState<SentencePracticeScreen> {
   // Grammar topics for sentence construction
   final List<Map<String, dynamic>> _topics = [
     {
@@ -66,8 +68,7 @@ class _SentencePracticeScreenState extends State<SentencePracticeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
+    final isDark = ref.watch(themeProvider);
 
     return Scaffold(
       appBar: AppBar(

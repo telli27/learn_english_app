@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../models/grammar_topic.dart';
+import '../core/models/grammar_topic.dart';
 import '../utils/constants/colors.dart';
 
 class TopicCard extends StatelessWidget {

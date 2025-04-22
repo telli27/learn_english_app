@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/theme_provider.dart';
 import 'dart:ui';
 
-class ExerciseDetailScreen extends StatefulWidget {
+class ExerciseDetailScreen extends ConsumerStatefulWidget {
   final String title;
   final String level;
   final Color color;
@@ -18,10 +18,11 @@ class ExerciseDetailScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<ExerciseDetailScreen> createState() => _ExerciseDetailScreenState();
+  ConsumerState<ExerciseDetailScreen> createState() =>
+      _ExerciseDetailScreenState();
 }
 
-class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
+class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
   final TextEditingController _practiceController = TextEditingController();
   final Map<int, List<String>> _exerciseSentences = {};
   int _currentStep = 0;
@@ -44,8 +45,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
+    final isDark = ref.watch(themeProvider);
 
     return Scaffold(
       backgroundColor:
@@ -1860,8 +1860,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
   }
 
   bool isDarkMode(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    return themeProvider.isDarkMode;
+    return ref.read(themeProvider);
   }
 
   Widget _buildLevelDetails(bool isDark) {

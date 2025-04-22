@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/theme_provider.dart';
 import '../utils/constants/colors.dart';
 
-class ExerciseQuizScreen extends StatefulWidget {
+class ExerciseQuizScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> exercise;
   final Color color;
 
@@ -14,10 +14,10 @@ class ExerciseQuizScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<ExerciseQuizScreen> createState() => _ExerciseQuizScreenState();
+  ConsumerState<ExerciseQuizScreen> createState() => _ExerciseQuizScreenState();
 }
 
-class _ExerciseQuizScreenState extends State<ExerciseQuizScreen> {
+class _ExerciseQuizScreenState extends ConsumerState<ExerciseQuizScreen> {
   int _currentQuestionIndex = 0;
   int _correctAnswers = 0;
   bool _answered = false;
@@ -26,8 +26,7 @@ class _ExerciseQuizScreenState extends State<ExerciseQuizScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
+    final isDark = ref.watch(themeProvider);
 
     final questions =
         widget.exercise['questions'] as List<Map<String, dynamic>>;
