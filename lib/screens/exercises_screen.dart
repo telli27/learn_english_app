@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/theme_provider.dart';
+import '../core/providers.dart';
 import '../utils/constants/colors.dart';
 import 'exercise_detail_screen.dart';
 
@@ -255,7 +255,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = ref.watch(themeProvider);
+    final isDark = ref.watch(isDarkModeProvider);
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : Colors.grey[50],

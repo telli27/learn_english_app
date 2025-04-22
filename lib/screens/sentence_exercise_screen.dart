@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/theme_provider.dart';
+import '../core/providers.dart';
 
 class SentenceExerciseScreen extends ConsumerStatefulWidget {
   final String topic;
@@ -690,7 +690,7 @@ class _SentenceExerciseScreenState
 
   @override
   Widget build(BuildContext context) {
-    final isDark = ref.watch(themeProvider);
+    final isDark = ref.watch(isDarkModeProvider);
     final currentExercise = _exercises[widget.topic]![_currentExerciseIndex];
 
     return Scaffold(

@@ -2,7 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/grammar_topic.dart';
 import '../repositories/grammar_repository.dart';
 
-// State class for Grammar
+// Dilbilgisi için durum sınıfı (State class)
+// Riverpod durum yönetimi için değiştirilemez (immutable) bir sınıf kullanır
 class GrammarState {
   final bool isLoading;
   final List<GrammarTopic> topics;
@@ -18,6 +19,8 @@ class GrammarState {
     this.errorMessage,
   });
 
+  // Yeni bir durum nesnesi oluşturmak için copyWith metodu
+  // Riverpod'da state değişmezliğini korumak için kullanılır
   GrammarState copyWith({
     bool? isLoading,
     List<GrammarTopic>? topics,
@@ -35,13 +38,17 @@ class GrammarState {
   }
 }
 
+// Dilbilgisi kontrolcüsü - StateNotifier sınıfı
+// Riverpod'da StateNotifier, uygulamanın durumunu (state) değiştiren asıl sınıftır
 class GrammarController extends StateNotifier<GrammarState> {
   final GrammarRepository _repository;
   bool _isLoadLocked = false;
 
+  // Repository bağımlılığını alır ve varsayılan durumu başlatır
   GrammarController(this._repository) : super(const GrammarState());
 
-  // Load all grammar topics
+  // Tüm dilbilgisi konularını yükler
+  // Riverpod state'ini güncelleyerek UI'nın yeniden oluşturulmasını tetikler
   Future<void> loadGrammarTopics() async {
     // If already loading or lock is active, return
     if (state.isLoading || _isLoadLocked) return;
@@ -51,6 +58,7 @@ class GrammarController extends StateNotifier<GrammarState> {
 
     try {
       _isLoadLocked = true;
+      // Durum güncellenir - Riverpod bağlı widget'ları bilgilendirir
       state = state.copyWith(
         isLoading: true,
         errorMessage: null,
@@ -62,14 +70,16 @@ class GrammarController extends StateNotifier<GrammarState> {
       // Simulate a short delay for loading animation
       await Future.delayed(const Duration(milliseconds: 300));
 
-      // Load data
+      // Verileri repository'den yükle
       final topics = _repository.getGrammarTopics();
 
+      // Başarılı yükleme durumunda state güncellenir
       state = state.copyWith(
         topics: topics,
         isLoading: false,
       );
     } catch (e) {
+      // Hata durumunda state güncellenir
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Konular yüklenirken hata oluştu: ${e.toString()}',
@@ -79,7 +89,8 @@ class GrammarController extends StateNotifier<GrammarState> {
     }
   }
 
-  // Load a specific grammar topic by ID
+  // ID'ye göre belirli bir dilbilgisi konusunu yükler
+  // Riverpod state'ini güncelleyerek UI'nın yeniden oluşturulmasını tetikler
   Future<void> loadGrammarTopic(String topicId) async {
     // If already loading or lock is active, return
     if (state.isLoading || _isLoadLocked) return;
@@ -93,6 +104,7 @@ class GrammarController extends StateNotifier<GrammarState> {
 
     try {
       _isLoadLocked = true;
+      // Durum güncellenir - Riverpod yükleme durumunu bildirir
       state = state.copyWith(
         isLoading: true,
         errorMessage: null,
@@ -115,11 +127,13 @@ class GrammarController extends StateNotifier<GrammarState> {
         throw Exception('Konu bulunamadı');
       }
 
+      // Başarılı yükleme durumunda state güncellenir
       state = state.copyWith(
         currentTopic: topic,
         isLoading: false,
       );
     } catch (e) {
+      // Hata durumunda state güncellenir
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Konu yüklenirken hata oluştu: ${e.toString()}',
@@ -129,7 +143,8 @@ class GrammarController extends StateNotifier<GrammarState> {
     }
   }
 
-  // Load a specific grammar subtopic by topic ID and subtopic ID
+  // Konu ID'si ve alt konu ID'sine göre belirli bir dilbilgisi alt konusunu yükler
+  // Riverpod state'ini güncelleyerek UI'nın yeniden oluşturulmasını tetikler
   Future<void> loadGrammarSubtopic(String topicId, String subtopicId) async {
     // If already loading or lock is active, return
     if (state.isLoading || _isLoadLocked) return;
@@ -145,6 +160,7 @@ class GrammarController extends StateNotifier<GrammarState> {
 
     try {
       _isLoadLocked = true;
+      // Durum güncellenir - Riverpod yükleme durumunu bildirir
       state = state.copyWith(
         isLoading: true,
         errorMessage: null,
@@ -177,11 +193,13 @@ class GrammarController extends StateNotifier<GrammarState> {
         throw Exception('Alt konu bulunamadı');
       }
 
+      // Başarılı yükleme durumunda state güncellenir
       state = state.copyWith(
         currentSubtopic: subtopic,
         isLoading: false,
       );
     } catch (e) {
+      // Hata durumunda state güncellenir
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Alt konu yüklenirken hata oluştu: ${e.toString()}',

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:provider/provider.dart';
-import '../providers/grammar_provider.dart';
-import '../providers/theme_provider.dart';
 import '../core/models/grammar_topic.dart';
+import '../core/providers.dart';
 import '../screens/subtopic_detail_screen.dart';
 import '../screens/exercise_detail_screen.dart';
 import '../utils/constants/colors.dart';
@@ -23,15 +21,17 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        ref.read(grammarProvider.notifier).loadGrammarTopic(widget.topicId);
+        ref
+            .read(grammarControllerProvider.notifier)
+            .loadGrammarTopic(widget.topicId);
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = ref.watch(themeProvider);
-    final grammarState = ref.watch(grammarProvider);
+    final isDark = ref.watch(isDarkModeProvider);
+    final grammarState = ref.watch(grammarControllerProvider);
 
     if (grammarState.isLoading) {
       return const Scaffold(
@@ -575,7 +575,7 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
   }
 
   Widget _buildExamplesSection(List<String> examples, bool isDark) {
-    final grammarState = ref.watch(grammarProvider);
+    final grammarState = ref.watch(grammarControllerProvider);
 
     final topic = grammarState.topics.firstWhere((t) => t.id == widget.topicId);
     final headingColor =

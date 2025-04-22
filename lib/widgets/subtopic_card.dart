@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/grammar_topic.dart';
+import '../core/models/grammar_topic.dart';
 import '../utils/constants/colors.dart';
 
 class SubtopicCard extends StatelessWidget {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/theme_provider.dart';
+import '../core/providers.dart';
 import '../utils/constants/colors.dart';
 
 class FavoritesScreen extends ConsumerWidget {
@@ -8,7 +8,7 @@ class FavoritesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = ref.watch(themeProvider);
+    final isDark = ref.watch(isDarkModeProvider);
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,

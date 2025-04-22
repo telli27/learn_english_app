@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/theme_provider.dart';
+import '../core/providers.dart';
 import 'dart:ui';
 
 class ExerciseDetailScreen extends ConsumerStatefulWidget {
@@ -45,7 +45,7 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = ref.watch(themeProvider);
+    final isDark = ref.watch(isDarkModeProvider);
 
     return Scaffold(
       backgroundColor:
@@ -1860,7 +1860,7 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
   }
 
   bool isDarkMode(BuildContext context) {
-    return ref.read(themeProvider);
+    return ref.read(isDarkModeProvider);
   }
 
   Widget _buildLevelDetails(bool isDark) {

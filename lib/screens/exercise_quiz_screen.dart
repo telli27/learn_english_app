@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/theme_provider.dart';
+import '../core/providers.dart';
 import '../utils/constants/colors.dart';
 
 class ExerciseQuizScreen extends ConsumerStatefulWidget {
@@ -26,7 +26,7 @@ class _ExerciseQuizScreenState extends ConsumerState<ExerciseQuizScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = ref.watch(themeProvider);
+    final isDark = ref.watch(isDarkModeProvider);
 
     final questions =
         widget.exercise['questions'] as List<Map<String, dynamic>>;

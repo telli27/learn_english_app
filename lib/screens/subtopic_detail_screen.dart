@@ -1,8 +1,9 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/grammar_topic.dart';
+import '../core/models/grammar_topic.dart';
 import '../utils/constants/colors.dart';
-import '../providers/theme_provider.dart';
+import '../core/providers.dart';
 import '../screens/exercise_detail_screen.dart';
 
 class SubtopicDetailScreen extends ConsumerStatefulWidget {
@@ -52,7 +53,7 @@ class _SubtopicDetailScreenState extends ConsumerState<SubtopicDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final Color topicColor = AppColors.getColorByName(widget.topic.color);
-    final isDark = ref.watch(themeProvider);
+    final isDark = ref.watch(isDarkModeProvider);
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF1A1A1A) : Colors.white,
@@ -105,7 +106,7 @@ class _SubtopicDetailScreenState extends ConsumerState<SubtopicDetailScreen> {
   }
 
   Widget _buildHeader(Color topicColor) {
-    final isDark = ref.watch(themeProvider);
+    final isDark = ref.watch(isDarkModeProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -218,7 +219,7 @@ class _SubtopicDetailScreenState extends ConsumerState<SubtopicDetailScreen> {
   }
 
   Widget _buildContent(Color topicColor) {
-    final isDark = ref.watch(themeProvider);
+    final isDark = ref.watch(isDarkModeProvider);
 
     return Container(
       color: isDark ? const Color(0xFF1A1A1A) : Colors.white,

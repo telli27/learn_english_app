@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../core/providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/theme_provider.dart';
 import '../utils/constants/colors.dart';
 import 'sentence_exercise_screen.dart';
 
@@ -68,7 +68,7 @@ class _SentencePracticeScreenState
 
   @override
   Widget build(BuildContext context) {
-    final isDark = ref.watch(themeProvider);
+    final isDark = ref.watch(isDarkModeProvider);
 
     return Scaffold(
       appBar: AppBar(
