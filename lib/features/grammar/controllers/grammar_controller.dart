@@ -1,6 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod/riverpod.dart';
 import '../../../core/models/grammar_topic.dart';
 import '../repositories/grammar_repository.dart';
+import '../../../core/data/grammar_data.dart';
 
 // Dilbilgisi için durum sınıfı (State class)
 // Riverpod durum yönetimi için değiştirilemez (immutable) bir sınıf kullanır

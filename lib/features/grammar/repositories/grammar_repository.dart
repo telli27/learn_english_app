@@ -4,7 +4,11 @@ import '../../../core/data/grammar_data.dart';
 class GrammarRepository {
   // Fetch all grammar topics
   List<GrammarTopic> getGrammarTopics() {
-    return GrammarData.topics;
+    // Filter out any topics with empty titles or descriptions
+    return GrammarData.topics.where((topic) {
+      return topic.title.trim().isNotEmpty &&
+          topic.description.trim().isNotEmpty;
+    }).toList();
   }
 
   // Get a specific grammar topic by ID

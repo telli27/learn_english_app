@@ -10,9 +10,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/providers.dart';
 import 'features/home/screens/main_screen.dart';
 import 'core/utils/constants/theme.dart';
+import 'core/data/grammar_data.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Dilbilgisi verilerini JSON dosyasından yükle
+  await GrammarData.loadTopics();
 
   runApp(
     // ProviderScope: Riverpod provider'larını tüm uygulamada erişilebilir kılar

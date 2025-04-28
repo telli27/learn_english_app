@@ -5,6 +5,9 @@ import '../../../core/models/grammar_topic.dart';
 import '../../../core/utils/constants/colors.dart';
 import '../../../features/grammar/screens/grammar_topic_screen.dart';
 import '../../../screens/topic_detail_screen.dart';
+import '../../../core/data/grammar_data.dart';
+import '../../../utils/update_dialog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -18,8 +21,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     // Load grammar topics when the screen loads
-    Future.microtask(
-        () => ref.read(grammarControllerProvider.notifier).loadGrammarTopics());
+    Future.microtask(() {
+      ref.read(grammarControllerProvider.notifier).loadGrammarTopics();
+
+      // Delay showing dialog slightly to ensure screen is fully built
+      Future.delayed(const Duration(milliseconds: 500), () {
+        // Check for updates and show dialog if needed
+        if (mounted) {
+          GrammarData.showUpdateDialogIfNeeded(context);
+        }
+      });
+    });
+  }
+
+  // Method to show the update dialog for testing
+  void _showTestUpdateDialog() {
+    // Show a test update dialog
+    UpdateDialog.showUpdateDialog(
+      context,
+      ['tasarım düzenlendi', 'kullanıcı deneyimi açısından ynilikler yapıldı'],
+    );
+  }
+
+  // Method to force update checking by clearing SharedPreferences
+  void _forceUpdateCheck() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('grammar_version_json');
+    await prefs.remove('grammar_data_json');
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Önbellek temizlendi. Güncelleme kontrolü yapılıyor...'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+
+    // Restart the app or reload grammar data
+    await GrammarData.loadTopics();
+    if (mounted) {
+      GrammarData.showUpdateDialogIfNeeded(context);
+    }
   }
 
   @override
@@ -32,14 +73,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('İngilizce Öğrenme'),
-        actions: [
-          IconButton(
-            icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
-            onPressed: () {
-              ref.read(themeControllerProvider.notifier).toggleTheme();
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -87,7 +120,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 itemCount: topics.length,
                 itemBuilder: (context, index) {
                   final topic = topics[index];
-                  return _buildTopicCard(context, topic,isDark);
+                  return _buildTopicCard(context, topic, isDark);
                 },
               ),
             ),
@@ -95,7 +128,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-
 
   Widget _buildTopicCard(
       BuildContext context, GrammarTopic topic, bool isDark) {

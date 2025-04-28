@@ -32,6 +32,43 @@ class GrammarTopic {
 
   @override
   int get hashCode => id.hashCode ^ title.hashCode ^ description.hashCode;
+
+  factory GrammarTopic.fromJson(Map<String, dynamic> json) {
+    // Debug information to identify problematic fields
+    debugPrint('Parsing grammar topic: ${json['title']}');
+
+    try {
+      return GrammarTopic(
+        id: json['id']?.toString() ?? '',
+        title: json['title']?.toString() ?? '',
+        description: json['description']?.toString() ?? '',
+        examples: json['examples'] != null
+            ? List<String>.from(
+                json['examples'].map((x) => x?.toString() ?? ''))
+            : [],
+        color: json['color']?.toString() ?? '#FFC107',
+        iconPath: json['iconPath']?.toString() ?? 'assets/icons/grammar.svg',
+        grammar_structure: json['grammar_structure']?.toString() ?? '',
+        subtopics: json['subtopics'] != null
+            ? List<GrammarSubtopic>.from(
+                json['subtopics'].map((x) => GrammarSubtopic.fromJson(x)))
+            : [],
+      );
+    } catch (e, stackTrace) {
+      debugPrint('Error parsing GrammarTopic: $e');
+      debugPrint('JSON data: $json');
+      debugPrint('Stack trace: $stackTrace');
+      // Return a placeholder topic instead of throwing an exception
+      return GrammarTopic(
+        id: json['id']?.toString() ?? 'error',
+        title: 'Error loading topic',
+        description: 'There was an error loading this topic',
+        examples: [],
+        color: '#FF0000',
+        iconPath: 'assets/icons/grammar.svg',
+      );
+    }
+  }
 }
 
 class GrammarSubtopic {
@@ -62,4 +99,33 @@ class GrammarSubtopic {
 
   @override
   int get hashCode => id.hashCode ^ title.hashCode ^ description.hashCode;
+
+  factory GrammarSubtopic.fromJson(Map<String, dynamic> json) {
+    try {
+      return GrammarSubtopic(
+        id: json['id']?.toString() ?? '',
+        title: json['title']?.toString() ?? '',
+        description: json['description']?.toString() ?? '',
+        examples: json['examples'] != null
+            ? List<String>.from(
+                json['examples'].map((x) => x?.toString() ?? ''))
+            : [],
+        grammar_structure: json['grammar_structure']?.toString() ?? '',
+        exercises: json['exercises'] != null
+            ? List<String>.from(
+                json['exercises'].map((x) => x?.toString() ?? ''))
+            : [],
+      );
+    } catch (e) {
+      debugPrint('Error parsing GrammarSubtopic: $e');
+      debugPrint('JSON data: $json');
+      // Return a placeholder subtopic instead of throwing an exception
+      return GrammarSubtopic(
+        id: 'error',
+        title: 'Error loading subtopic',
+        description: 'There was an error loading this subtopic',
+        examples: [],
+      );
+    }
+  }
 }
