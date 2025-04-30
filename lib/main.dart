@@ -43,7 +43,7 @@ class MyApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: themeMode, // Provider'dan alınan tema modu
+      themeMode: themeMode, 
       home: const MainScreen(),
     );
   }
