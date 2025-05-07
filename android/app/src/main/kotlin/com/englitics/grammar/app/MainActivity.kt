@@ -1,4 +1,4 @@
-package com.example.learn_english_app
+package com.englitics.grammar.app
 
 import io.flutter.embedding.android.FlutterActivity
 

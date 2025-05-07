@@ -34,12 +34,10 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // ref.watch: Provider'ı dinler ve değişikliklerde UI'ı otomatik günceller
-    // themeControllerProvider'daki değişiklikler widget'ın yeniden yapılanmasını tetikler
-    final themeMode = ref.watch(themeControllerProvider);
+      final themeMode = ref.watch(themeControllerProvider);
 
     return MaterialApp(
-      title: 'İngilizce Öğrenme',
+      title: 'Englitics-İngilizce Öğren',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

@@ -72,7 +72,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('İngilizce Öğrenme'),
+        title: const Text('Englitics'),
       ),
       body: Column(
         children: [
