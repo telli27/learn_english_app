@@ -20,8 +20,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   final List<Widget> _screens = const [
     HomeScreen(),
      SentencePracticeScreen(),
-    FavoritesScreen(),
-    ProfileScreen(),
+   // FavoritesScreen(),
+   // ProfileScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -73,15 +73,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             items: [
               _buildNavItem(Icons.home_rounded, 'Anasayfa', 0),
               _buildNavItem(Icons.text_fields_rounded, 'Cümle Kurma', 1),
-              _buildNavItem(Icons.bookmark_rounded, 'Favoriler', 2),
-              _buildNavItem(Icons.person_rounded, 'Profil', 3),
+             // _buildNavItem(Icons.bookmark_rounded, 'Favoriler', 2),
+             // _buildNavItem(Icons.person_rounded, 'Profil', 3),
             ],
           ),
         ),
       ),
     );
   }
-
   BottomNavigationBarItem _buildNavItem(
       IconData icon, String label, int index) {
     final bool isSelected = _selectedIndex == index;
