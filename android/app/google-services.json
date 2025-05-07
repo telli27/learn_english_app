@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "4700305155",
+    "project_id": "englitics-6a483",
+    "storage_bucket": "englitics-6a483.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:4700305155:android:ac96ef172983372d2c5b36",
+        "android_client_info": {
+          "package_name": "com.englitics.grammar.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2vOzUcdjztG9n3c34jFE4EsnBDFlqfPs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/grammar/controllers/grammar_controller.dart';
 import '../features/grammar/repositories/grammar_repository.dart';
+import '../features/grammar/repositories/exercise_answer_repository.dart';
 import '../features/auth/controllers/theme_controller.dart';
 import '../core/models/grammar_topic.dart';
+import 'providers/exercise_answer_provider.dart';
 
 // Dilbilgisi Providerleri (Grammar providers)
 // Dilbilgisi repository provider - GrammarRepository nesnesini sağlar
@@ -76,3 +78,20 @@ final isDarkModeProvider = Provider<bool>((ref) {
   final themeMode = ref.watch(themeControllerProvider);
   return themeMode == ThemeMode.dark;
 });
+
+// Auth Providers
+// User login state provider - Kullanıcının giriş durumunu yönetir
+final isUserLoggedInProvider = StateProvider<bool>((ref) => false);
+
+// Exercise Answer Providers
+// Re-export the providers from exercise_answer_provider.dart
+final exerciseAnswerRepositoryProvider = Provider<ExerciseAnswerRepository>(
+  (ref) => ExerciseAnswerRepository(),
+);
+
+final exerciseAnswerProvider =
+    StateNotifierProvider<ExerciseAnswerNotifier, ExerciseAnswerState>(
+  (ref) => ExerciseAnswerNotifier(
+    ref.watch(exerciseAnswerRepositoryProvider),
+  ),
+);

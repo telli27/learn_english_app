@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/providers.dart';
+import '../auth/providers/auth_provider.dart';
 
 class SentenceExerciseScreen extends ConsumerStatefulWidget {
   final String topic;
   final Color color;
+  final String topicId;
+  final String subtopicId;
 
   const SentenceExerciseScreen({
     Key? key,
     required this.topic,
     required this.color,
+    required this.topicId,
+    required this.subtopicId,
   }) : super(key: key);
 
   @override
@@ -25,6 +30,8 @@ class _SentenceExerciseScreenState
   bool _showResult = false;
   bool _isCorrect = false;
   bool _showExplanation = true;
+  List<Map<String, dynamic>> _filteredExercises = [];
+  bool _isLoading = true;
 
   // Topic grammar explanations
   final Map<String, String> _grammarExplanations = {
@@ -640,6 +647,78 @@ class _SentenceExerciseScreenState
     ],
   };
 
+  @override
+  void initState() {
+    super.initState();
+    // Use addPostFrameCallback to load exercises after build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadFilteredExercises();
+    });
+  }
+
+  Future<void> _loadFilteredExercises() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Load user's correct exercise answers
+    final authState = ref.read(authProvider);
+    if (authState.isLoggedIn && authState.userId != null) {
+      await ref
+          .read(exerciseAnswerProvider.notifier)
+          .loadUserCorrectExerciseIds(authState.userId!);
+    }
+
+    // Get list of exercise IDs for this topic
+    final allExercisesForTopic = _exercises[widget.topic] ?? [];
+
+    // Create unique IDs for each exercise based on content
+    final exerciseIds = allExercisesForTopic.map((exercise) {
+      // Create a unique ID based on topic, subtopic and content
+      return "${widget.topicId}_${widget.subtopicId}_${exercise['correctSentence']}";
+    }).toList();
+
+    // Filter exercises based on user login status
+    if (authState.isLoggedIn && authState.userId != null) {
+      final correctExerciseIds =
+          ref.read(exerciseAnswerProvider).correctExerciseIds;
+
+      // Create a list of filtered exercises (exclude correctly completed ones)
+      final List<Map<String, dynamic>> filtered = [];
+      for (int i = 0; i < allExercisesForTopic.length; i++) {
+        if (!correctExerciseIds.contains(exerciseIds[i])) {
+          final exercise = Map<String, dynamic>.from(allExercisesForTopic[i]);
+          exercise['id'] = exerciseIds[i]; // Add the ID to the exercise
+          filtered.add(exercise);
+        }
+      }
+
+      setState(() {
+        _filteredExercises = filtered;
+        _isLoading = false;
+      });
+    } else {
+      // User not logged in, show random subset of exercises
+      final List<Map<String, dynamic>> allWithIds = [];
+      for (int i = 0; i < allExercisesForTopic.length; i++) {
+        final exercise = Map<String, dynamic>.from(allExercisesForTopic[i]);
+        exercise['id'] = exerciseIds[i]; // Add the ID to the exercise
+        allWithIds.add(exercise);
+      }
+
+      // Shuffle the exercises and take first 5 (or fewer if there are less than 5)
+      allWithIds.shuffle();
+      final randomExercises = allWithIds
+          .take(allWithIds.length > 5 ? 5 : allWithIds.length)
+          .toList();
+
+      setState(() {
+        _filteredExercises = randomExercises;
+        _isLoading = false;
+      });
+    }
+  }
+
   void _selectWord(int index, String word) {
     setState(() {
       if (!_selectedIndices.contains(index)) {
@@ -657,18 +736,31 @@ class _SentenceExerciseScreenState
   }
 
   void _checkAnswer() {
-    final currentExercise = _exercises[widget.topic]![_currentExerciseIndex];
+    final currentExercise = _filteredExercises[_currentExerciseIndex];
     final correctSentence = currentExercise['correctSentence'];
     final userSentence = _selectedWords.join(' ');
+    final isCorrect = userSentence == correctSentence;
 
     setState(() {
       _showResult = true;
-      _isCorrect = userSentence == correctSentence;
+      _isCorrect = isCorrect;
     });
+
+    // Save answer to Firestore if user is logged in
+    final authState = ref.read(authProvider);
+    if (authState.isLoggedIn && authState.userId != null) {
+      ref.read(exerciseAnswerProvider.notifier).saveExerciseAnswer(
+            userId: authState.userId!,
+            topicId: widget.topicId,
+            subtopicId: widget.subtopicId,
+            exerciseId: currentExercise['id'],
+            isCorrect: isCorrect,
+          );
+    }
   }
 
   void _nextExercise() {
-    if (_currentExerciseIndex < _exercises[widget.topic]!.length - 1) {
+    if (_currentExerciseIndex < _filteredExercises.length - 1) {
       setState(() {
         _currentExerciseIndex++;
         _resetExercise();
@@ -691,7 +783,91 @@ class _SentenceExerciseScreenState
   @override
   Widget build(BuildContext context) {
     final isDark = ref.watch(isDarkModeProvider);
-    final currentExercise = _exercises[widget.topic]![_currentExerciseIndex];
+
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.topic,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          foregroundColor: isDark ? Colors.white : Colors.black,
+          elevation: 0,
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    // No exercises left to show
+    if (_filteredExercises.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.topic,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          foregroundColor: isDark ? Colors.white : Colors.black,
+          elevation: 0,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.check_circle_outline,
+                  size: 64,
+                  color: Colors.green,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Tebrikler!',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Bu konuya ait tüm alıştırmaları başarıyla tamamladınız.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: isDark ? Colors.grey[300] : Colors.grey[700],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: widget.color,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('Geri Dön'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final currentExercise = _filteredExercises[_currentExerciseIndex];
 
     return Scaffold(
       appBar: AppBar(
@@ -715,14 +891,20 @@ class _SentenceExerciseScreenState
                     children: [
                       // Grammar explanation card (collapsible)
                       if (_showExplanation)
-                        Card(
-                          margin: const EdgeInsets.all(16),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                        Container(
+                          margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                            color:
+                                isDark ? const Color(0xFF242424) : Colors.white,
                           ),
-                          color:
-                              isDark ? const Color(0xFF242424) : Colors.white,
                           child: Padding(
                             padding: const EdgeInsets.all(16),
                             child: Column(
@@ -756,7 +938,7 @@ class _SentenceExerciseScreenState
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 12),
                                 Text(
                                   _grammarExplanations[widget.topic] ?? '',
                                   style: TextStyle(
@@ -764,9 +946,84 @@ class _SentenceExerciseScreenState
                                     color: isDark
                                         ? Colors.grey[300]
                                         : Colors.black87,
-                                    height: 1.5,
+                                    height: 1.6,
                                   ),
                                 ),
+                                // Past Perfect için örnek ekleyelim
+                                if (widget.topic == 'Past Perfect')
+                                  Container(
+                                    margin: const EdgeInsets.only(top: 16),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: widget.color.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: widget.color.withOpacity(0.3),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Örnek:',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: widget.color,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        RichText(
+                                          text: TextSpan(
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              height: 1.5,
+                                              color: isDark
+                                                  ? Colors.white
+                                                  : Colors.black87,
+                                            ),
+                                            children: [
+                                              TextSpan(
+                                                text: 'When I arrived, ',
+                                                style: TextStyle(
+                                                  color: isDark
+                                                      ? Colors.grey[300]
+                                                      : Colors.black87,
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: 'she had already left',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: widget.color,
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: '.',
+                                                style: TextStyle(
+                                                  color: isDark
+                                                      ? Colors.grey[300]
+                                                      : Colors.black87,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Ben vardığımda, o çoktan ayrılmıştı.',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontStyle: FontStyle.italic,
+                                            color: isDark
+                                                ? Colors.grey[400]
+                                                : Colors.grey[800],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
@@ -795,7 +1052,7 @@ class _SentenceExerciseScreenState
                             ),
                             const Spacer(),
                             Text(
-                              'Alıştırma ${_currentExerciseIndex + 1}/${_exercises[widget.topic]!.length}',
+                              'Alıştırma ${_currentExerciseIndex + 1}/${_filteredExercises.length}',
                               style: TextStyle(
                                 color: isDark
                                     ? Colors.grey[400]
@@ -838,10 +1095,17 @@ class _SentenceExerciseScreenState
                                 : isDark
                                     ? Colors.grey.shade800
                                     : Colors.grey.shade300,
-                            width: 1,
+                            width: _showResult ? 2 : 1,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                        constraints: const BoxConstraints(minHeight: 80),
+                        constraints: const BoxConstraints(minHeight: 100),
                         width: double.infinity,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -854,52 +1118,71 @@ class _SentenceExerciseScreenState
                                     isDark ? Colors.grey : Colors.grey.shade700,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children:
-                                  List.generate(_selectedWords.length, (index) {
-                                return InkWell(
-                                  onTap: () => _removeWord(index),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: widget.color.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: widget.color.withOpacity(0.3),
-                                        width: 1,
+                            const SizedBox(height: 12),
+                            _selectedWords.isEmpty
+                                ? Center(
+                                    child: Text(
+                                      'Aşağıdan kelime seçerek cümle oluşturun',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontStyle: FontStyle.italic,
+                                        color: isDark
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600],
                                       ),
                                     ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          _selectedWords[index],
-                                          style: TextStyle(
-                                            color: isDark
-                                                ? Colors.white
-                                                : Colors.black87,
+                                  )
+                                : Wrap(
+                                    spacing: 8,
+                                    runSpacing: 10,
+                                    children: List.generate(
+                                        _selectedWords.length, (index) {
+                                      return InkWell(
+                                        onTap: () => _removeWord(index),
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 14,
+                                            vertical: 10,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                widget.color.withOpacity(0.1),
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            border: Border.all(
+                                              color:
+                                                  widget.color.withOpacity(0.3),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                _selectedWords[index],
+                                                style: TextStyle(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: isDark
+                                                      ? Colors.white
+                                                      : Colors.black87,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Icon(
+                                                Icons.close,
+                                                size: 16,
+                                                color: isDark
+                                                    ? Colors.grey[400]
+                                                    : Colors.grey[600],
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                        const SizedBox(width: 4),
-                                        Icon(
-                                          Icons.close,
-                                          size: 14,
-                                          color: isDark
-                                              ? Colors.grey
-                                              : Colors.grey.shade700,
-                                        ),
-                                      ],
-                                    ),
+                                      );
+                                    }),
                                   ),
-                                );
-                              }),
-                            ),
                             if (_showResult)
                               Padding(
                                 padding: const EdgeInsets.only(top: 16.0),
@@ -1037,129 +1320,100 @@ class _SentenceExerciseScreenState
                         ),
                       ),
 
-                      // Words to select
+                      // Words selection area
                       Container(
-                        margin: const EdgeInsets.all(8),
-                        child: !_showResult
-                            ? Card(
-                                elevation: 2,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                color: isDark
-                                    ? const Color(0xFF242424)
-                                    : Colors.white,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              'Kelimeleri seçerek cümle oluşturun:',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: isDark
-                                                    ? Colors.white
-                                                    : Colors.black87,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 3),
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  widget.color.withOpacity(0.2),
+                        margin: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color:
+                              isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        width: double.infinity,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Kelimeleri seçerek cümle oluşturun:',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Wrap(
+                              spacing: 10,
+                              runSpacing: 12,
+                              children: List.generate(
+                                _filteredExercises[_currentExerciseIndex]
+                                        ['words']
+                                    .length,
+                                (index) {
+                                  final word =
+                                      _filteredExercises[_currentExerciseIndex]
+                                          ['words'][index] as String;
+                                  final isSelected =
+                                      _selectedIndices.contains(index);
+                                  return AnimatedOpacity(
+                                    duration: const Duration(milliseconds: 300),
+                                    opacity: isSelected ? 0.0 : 1.0,
+                                    child: isSelected
+                                        ? const SizedBox.shrink()
+                                        : Material(
+                                            color: Colors.transparent,
+                                            child: InkWell(
+                                              onTap: () =>
+                                                  _selectWord(index, word),
                                               borderRadius:
-                                                  BorderRadius.circular(6),
-                                              border: Border.all(
-                                                color: widget.color
-                                                    .withOpacity(0.3),
-                                                width: 1,
-                                              ),
-                                            ),
-                                            child: Text(
-                                              '${currentExercise['type']}',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                                color: widget.color,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Wrap(
-                                        spacing: 8,
-                                        runSpacing: 8,
-                                        children: List.generate(
-                                          currentExercise['words'].length,
-                                          (index) {
-                                            final word =
-                                                currentExercise['words'][index];
-                                            final isSelected = _selectedIndices
-                                                .contains(index);
-
-                                            return InkWell(
-                                              onTap: isSelected
-                                                  ? null
-                                                  : () =>
-                                                      _selectWord(index, word),
+                                                  BorderRadius.circular(10),
                                               child: Container(
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                  horizontal: 12,
-                                                  vertical: 8,
-                                                ),
+                                                        horizontal: 16,
+                                                        vertical: 12),
                                                 decoration: BoxDecoration(
-                                                  color: isSelected
-                                                      ? Colors.grey
-                                                          .withOpacity(0.5)
-                                                      : widget.color
-                                                          .withOpacity(0.15),
+                                                  color: isDark
+                                                      ? const Color(0xFF3B3B3B)
+                                                      : const Color(0xFFF0F0FF),
                                                   borderRadius:
-                                                      BorderRadius.circular(8),
-                                                  border: Border.all(
-                                                    color: isSelected
-                                                        ? Colors.grey
-                                                            .withOpacity(0.7)
-                                                        : widget.color
-                                                            .withOpacity(0.5),
-                                                    width: 1,
-                                                  ),
+                                                      BorderRadius.circular(10),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black
+                                                          .withOpacity(0.05),
+                                                      blurRadius: 3,
+                                                      offset:
+                                                          const Offset(0, 1),
+                                                    ),
+                                                  ],
                                                 ),
                                                 child: Text(
                                                   word,
                                                   style: TextStyle(
                                                     fontSize: 15,
-                                                    fontWeight: isSelected
-                                                        ? FontWeight.normal
-                                                        : FontWeight.bold,
-                                                    color: isSelected
-                                                        ? (isDark
-                                                            ? Colors.grey[350]
-                                                            : Colors.grey[700])
-                                                        : isDark
-                                                            ? Colors.white
-                                                            : Colors.black87,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: isDark
+                                                        ? Colors.white
+                                                        : Colors.black87,
                                                   ),
                                                 ),
                                               ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            : const SizedBox.shrink(),
+                                            ),
+                                          ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
 
                       // Add bottom padding for scrolling
@@ -1176,51 +1430,55 @@ class _SentenceExerciseScreenState
                   child: Row(
                     children: [
                       Expanded(
-                        child: _showResult
-                            ? ElevatedButton.icon(
-                                icon: const Icon(Icons.arrow_forward),
-                                label: const Text(
-                                  'Devam Et',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          height: 56,
+                          child: _showResult
+                              ? ElevatedButton.icon(
+                                  icon: const Icon(Icons.arrow_forward),
+                                  label: const Text(
+                                    'Devam Et',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  onPressed: _nextExercise,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    foregroundColor: Colors.white,
+                                    elevation: 2,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 14),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                )
+                              : ElevatedButton(
+                                  onPressed: _selectedWords.isEmpty
+                                      ? null
+                                      : _checkAnswer,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: widget.color,
+                                    disabledBackgroundColor:
+                                        widget.color.withOpacity(0.3),
+                                    elevation: _selectedWords.isEmpty ? 0 : 2,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 14),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Kontrol Et',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
-                                onPressed: _nextExercise,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                  foregroundColor: Colors.white,
-                                  elevation: 2,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              )
-                            : ElevatedButton(
-                                onPressed: _selectedWords.isEmpty
-                                    ? null
-                                    : _checkAnswer,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: widget.color,
-                                  disabledBackgroundColor:
-                                      widget.color.withOpacity(0.3),
-                                  elevation: 0,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Kontrol Et',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
+                        ),
                       ),
                     ],
                   ),
