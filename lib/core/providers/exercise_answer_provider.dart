@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
 import '../../features/grammar/repositories/exercise_answer_repository.dart';
 import '../models/exercise_answer.dart';
 
@@ -46,6 +47,11 @@ class ExerciseAnswerNotifier extends StateNotifier<ExerciseAnswerState> {
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
+    // Debug prints to track the function execution
+    debugPrint(
+        'Saving exercise answer: userId=$userId, exerciseId=$exerciseId, isCorrect=$isCorrect');
+    debugPrint('Current correctExerciseIds: ${state.correctExerciseIds}');
+
     try {
       await _repository.saveExerciseAnswer(
         userId: userId,
@@ -60,17 +66,22 @@ class ExerciseAnswerNotifier extends StateNotifier<ExerciseAnswerState> {
         final updatedIds = List<String>.from(state.correctExerciseIds);
         if (!updatedIds.contains(exerciseId)) {
           updatedIds.add(exerciseId);
+          debugPrint('Added $exerciseId to correctExerciseIds');
+        } else {
+          debugPrint('$exerciseId already in correctExerciseIds');
         }
         state = state.copyWith(
           isLoading: false,
           correctExerciseIds: updatedIds,
         );
+        debugPrint('Updated correctExerciseIds: ${state.correctExerciseIds}');
       } else {
         state = state.copyWith(isLoading: false);
       }
 
       return true;
     } catch (e) {
+      debugPrint('Error saving exercise answer: $e');
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Error saving exercise answer: ${e.toString()}',

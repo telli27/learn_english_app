@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/providers.dart';
+import '../core/providers/ad_provider.dart';
 import 'dart:ui';
 
 class ExerciseDetailScreen extends ConsumerStatefulWidget {
@@ -31,6 +32,10 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
   @override
   void initState() {
     super.initState();
+    // Load ads when screen opens
+    ref.read(adServiceProvider).loadInterstitialAd();
+    ref.read(adServiceProvider).loadRewardedAd();
+
     // Her alıştırma için boş liste başlat
     for (int i = 0; i < widget.exercises.length; i++) {
       _exerciseSentences[i] = [];
@@ -43,32 +48,108 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
     super.dispose();
   }
 
+  // Show rewarded ad for hint
+  void _showRewardedAdForHint() {
+    ref.read(adServiceProvider).showRewardedAd(
+      onRewarded: () {
+        setState(() {
+          _showHint = true;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'İpucu kazandınız! Doğru cevap gösteriliyor.',
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = ref.watch(isDarkModeProvider);
+    // Check if interstitial ad limit has been reached
+    final isInterstitialLimitReached =
+        ref.watch(isInterstitialLimitReachedProvider);
+    // Check if rewarded ad limit has been reached
+    final isRewardedLimitReached = ref.watch(isRewardedLimitReachedProvider);
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          _buildSliverAppBar(isDark),
-          SliverToBoxAdapter(
-            child: _buildLevelDetails(isDark),
-          ),
-          SliverToBoxAdapter(
-            child: _buildStepIndicator(isDark),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: _buildCurrentExercise(isDark),
+      body: Column(
+        children: [
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+                _buildSliverAppBar(isDark),
+                SliverToBoxAdapter(
+                  child: _buildLevelDetails(isDark),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildStepIndicator(isDark),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child:
+                        _buildCurrentExercise(isDark, isRewardedLimitReached),
+                  ),
+                ),
+              ],
             ),
           ),
+          // Banner reklamı kaldırdık
         ],
       ),
       bottomNavigationBar: _buildBottomBar(isDark),
+      floatingActionButton: !isInterstitialLimitReached && _currentStep > 2
+          ? FloatingActionButton(
+              onPressed: () {
+                // Show interstitial ad after completing a few exercises
+                ref.read(adServiceProvider).showInterstitialAd();
+              },
+              backgroundColor: widget.color,
+              child:
+                  const Icon(Icons.emoji_events_outlined, color: Colors.white),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildCurrentExercise(bool isDark, bool isRewardedLimitReached) {
+    if (widget.exercises.isEmpty || _currentStep >= widget.exercises.length) {
+      return const Center(child: Text('Alıştırma bulunamadı'));
+    }
+
+    final exercise = widget.exercises[_currentStep];
+    final questions = exercise['questions'] ?? [];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Original content
+        for (var question in questions)
+          if (question['type'] == 'example_sentence')
+            _buildQuestionContent(question, isDark),
+
+        // Add hint button if appropriate and not shown yet
+        if (!_showHint && !isRewardedLimitReached)
+          Padding(
+            padding: const EdgeInsets.only(top: 16.0),
+            child: TextButton.icon(
+              onPressed: _showRewardedAdForHint,
+              icon: const Icon(Icons.lightbulb_outline),
+              label: const Text("İpucu için Reklam İzle"),
+              style: TextButton.styleFrom(
+                foregroundColor: widget.color,
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -308,125 +389,6 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
     );
   }
 
-  Widget _buildCurrentExercise(bool isDark) {
-    if (widget.exercises.isEmpty || _currentStep >= widget.exercises.length) {
-      return const Center(child: Text('Alıştırma bulunamadı'));
-    }
-
-    final exercise = widget.exercises[_currentStep];
-    final questions = exercise['questions'] ?? [];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Seviye İçeriği
-        _buildLevelContent(isDark),
-
-        // Alıştırma İçeriği
-        Container(
-          margin: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isDark
-                  ? [const Color(0xFF2D2D3A), const Color(0xFF1D1D2B)]
-                  : [Colors.white, const Color(0xFFF8FAFF)],
-            ),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: widget.color.withOpacity(0.1),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Exercise Header
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(24)),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          widget.color.withOpacity(0.7),
-                          widget.color.withOpacity(0.5),
-                        ],
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            _getTopicIcon(exercise['title']),
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                exercise['title'],
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  letterSpacing: 0.3,
-                                ),
-                              ),
-                              Text(
-                                'Adım ${_currentStep + 1}/${widget.exercises.length}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white.withOpacity(0.9),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (var question in questions)
-                      if (question['type'] == 'example_sentence')
-                        _buildQuestionContent(question, isDark),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildLevelContent(bool isDark) {
     String levelDescription = '';
     List<String> expectedSkills = [];
@@ -602,164 +564,247 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Seviye Header
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      progressColor.withOpacity(0.7),
-                      progressColor.withOpacity(0.5),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  progressColor.withOpacity(0.7),
+                  progressColor.withOpacity(0.5),
+                ],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            child: Row(
+              children: [
+                // Seviye İkonu
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _getLevelIconData(widget.level),
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Seviye Bilgisi
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.level,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        levelDescription,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ],
+            ),
+          ),
+
+          // İlerleme Durumu
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
+                    Text(
+                      'Seviye İlerlemeniz',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: progressColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${(progressValue * 100).toInt()}%',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: progressColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // İlerleme Çubuğu
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Stack(
+                    children: [
+                      Container(
+                        height: 12,
+                        width: double.infinity,
+                        color: isDark
+                            ? Colors.grey.shade800
+                            : Colors.grey.shade200,
+                      ),
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 800),
+                        height: 12,
+                        width: MediaQuery.of(context).size.width *
+                            progressValue *
+                            0.8,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              progressColor,
+                              progressColor.withOpacity(0.8)
                             ],
                           ),
-                          child: Icon(
-                            _getLevelIconData(widget.level),
-                            color: Colors.white,
-                            size: 24,
-                          ),
                         ),
-                        const SizedBox(width: 20),
-                        Expanded(
-                          child: Column(
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Beceriler Başlığı
+                Text(
+                  'Bu Seviyede Kazanılacak Beceriler',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Beceriler Listesi
+                ...expectedSkills
+                    .map((skill) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    widget.level,
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 5),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.25),
-                                      borderRadius: BorderRadius.circular(30),
-                                      border: Border.all(
-                                        color: Colors.white.withOpacity(0.3),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'CEFR',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w900,
-                                        color: Colors.white.withOpacity(0.95),
-                                        letterSpacing: 1,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                              Icon(
+                                Icons.check_circle,
+                                color: progressColor,
+                                size: 16,
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                levelDescription,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white.withOpacity(0.95),
-                                  height: 1.4,
-                                  letterSpacing: 0.3,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  skill,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color:
+                                        isDark ? Colors.white : Colors.black87,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildLevelStat('Yöntem',
-                            levelMethodology['Yöntem'] ?? '', Icons.psychology),
-                        _buildLevelStat('Süre', levelMethodology['Süre'] ?? '',
-                            Icons.timer_outlined),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+                        ))
+                    .toList(),
 
-          // Seviye İçeriklerine Geçiş Tabları
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: DefaultTabController(
-              length: 3,
-              child: Column(
-                children: [
-                  Container(
-                    height: 45,
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF1F1F2C)
-                          : const Color(0xFFF0F3F8),
-                      borderRadius: BorderRadius.circular(25),
+                const SizedBox(height: 20),
+
+                // İpuçları
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.grey.shade800.withOpacity(0.3)
+                        : progressColor.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: progressColor.withOpacity(0.2),
                     ),
-                    child: TabBar(
-                      indicator: BoxDecoration(
-                        borderRadius: BorderRadius.circular(25),
-                        color: progressColor,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.lightbulb_outline,
+                            color: progressColor,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Seviye İpuçları',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: progressColor,
+                            ),
+                          ),
+                        ],
                       ),
-                      labelColor: Colors.white,
-                      unselectedLabelColor:
-                          isDark ? Colors.white70 : Colors.black54,
-                      tabs: const [
-                        Tab(text: 'İlerleme'),
-                        Tab(text: 'Beceriler'),
-                        Tab(text: 'İpuçları'),
-                      ],
-                    ),
+                      const SizedBox(height: 12),
+                      ...levelTips
+                          .take(2)
+                          .map((tip) => Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      margin: const EdgeInsets.only(top: 5),
+                                      width: 5,
+                                      height: 5,
+                                      decoration: BoxDecoration(
+                                        color: progressColor,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        tip,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: isDark
+                                              ? Colors.white70
+                                              : Colors.black87,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ))
+                          .toList(),
+                    ],
                   ),
-                  SizedBox(
-                    height: 280,
-                    child: TabBarView(
-                      children: [
-                        // İlerleme Tab
-                        _buildProgressTab(progressValue, progressColor, isDark),
-
-                        // Beceriler Tab
-                        _buildSkillsTab(expectedSkills, progressColor, isDark),
-
-                        // İpuçları Tab
-                        _buildTipsTab(levelTips, isDark),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
@@ -1869,6 +1914,7 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
     Color progressColor;
     double progressValue;
     List<String> tipList = [];
+    Map<String, String> levelMethodology = {};
 
     switch (widget.level) {
       case 'Beginner (A1-A2)':
@@ -1897,6 +1943,15 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
           'Öğrendiğiniz kelimeleri kategorize ederek daha organize çalışın (ev eşyaları, yiyecekler, renkler vb.)',
           'Başlangıç seviyesi İngilizce metinler okuyun ve sesli okuma pratiği yapın'
         ];
+        levelMethodology = {
+          'Yöntem': 'İnteraktif Öğrenme ve Tekrar Modeli',
+          'Yaklaşım':
+              'Yapı odaklı, pratik temelli, görsel ve işitsel destekli öğrenme',
+          'Süre': 'Günde 20-30 dakika düzenli pratik yapın',
+          'Tekrar': 'Her kelime grubu için en az 5-7 tekrar uygulayın',
+          'Odak': 'Temel kelime hazinesi ve günlük kullanım için dil yapıları',
+          'Hedef': 'Temel iletişim becerileri kazanmak'
+        };
         progressColor = Colors.green;
         progressValue = 0.25;
         break;
@@ -1930,6 +1985,16 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
           'Metinlerdeki gramer yapılarını analiz ederek kendi cümlelerinizde kullanın',
           'Anadili İngilizce olan kişilerin konuşmalarını dikkatle dinleyin ve önemli kalıpları not edin'
         ];
+        levelMethodology = {
+          'Yöntem': 'Bağlamsal Öğrenme ve Uygulama Metodu',
+          'Yaklaşım':
+              'İletişim odaklı, doğal dil kullanımı ve bağlam içinde öğrenme',
+          'Süre': 'Günde 30-45 dakika yoğun ve düzenli pratik',
+          'Tekrar':
+              'Öğrendiklerinizi farklı bağlamlarda ve senaryolarda kullanın',
+          'Odak': 'Akıcı konuşma, karmaşık yapıları anlama ve doğru kullanım',
+          'Hedef': 'Profesyonel ve sosyal ortamlarda etkili iletişim'
+        };
         progressColor = Colors.blue;
         progressValue = 0.65;
         break;
@@ -1965,6 +2030,19 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
           'Edebi metinlerde ve şiirlerde metaforları ve mecazları analiz edin',
           'Farklı türden yazılar (deneme, makale, rapor, hikaye) yazarak yazım becerilerinizi geliştirin'
         ];
+        levelMethodology = {
+          'Yöntem': 'Üst Düzey Dil Modeli ve Entegrasyon Yaklaşımı',
+          'Yaklaşım':
+              'Analitik düşünme, detaylı kavrama ve bütünleştirici kullanım',
+          'Süre':
+              'Günde 45-60 dakika derin odaklanma ve konsantrasyon gerektiren pratikler',
+          'Tekrar':
+              'Öğrendiklerinizi profesyonel, akademik ve sosyal ortamlarda uygulayın',
+          'Odak':
+              'İnce ayrıntılar, kültürel referanslar, özgün ifade ve yaratıcı dil kullanımı',
+          'Hedef':
+              'Anadile yakın akıcılık ve global iletişimde üst düzey yetkinlik'
+        };
         progressColor = Colors.purple;
         progressValue = 0.9;
         break;
@@ -1972,6 +2050,11 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
         levelDescription = 'Dil öğrenme yolculuğunuz';
         expectedSkills = ['Temel iletişim becerileri'];
         tipList = ['Düzenli pratik yapın'];
+        levelMethodology = {
+          'Yöntem': 'Kişiselleştirilmiş Öğrenme',
+          'Yaklaşım': 'Çok yönlü dil gelişimi',
+          'Süre': 'Günde 20-45 dakika pratik'
+        };
         progressColor = Colors.orange;
         progressValue = 0.5;
     }

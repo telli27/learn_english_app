@@ -9,7 +9,7 @@ import '../../../auth/providers/auth_provider.dart';
 import '../widgets/user_avatar.dart';
 import 'package:flutter/services.dart';
 import '../../grammar/screens/exercises_screen.dart';
-import '../../grammar/screens/common_phrases_screen.dart';
+import '../../../screens/daily_phrases_screen.dart';
 
 // Global function to show user menu
 void showUserMenu(BuildContext context, WidgetRef ref, bool isDark) {
@@ -190,7 +190,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   final List<Widget> _screens = [
     HomeScreen(),
     SentencePracticeScreen(),
-    CommonPhrasesScreen(),
+    DailyPhrasesScreen(),
     SettingsScreen(),
   ];
 

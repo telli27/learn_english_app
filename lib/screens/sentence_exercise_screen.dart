@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/providers.dart';
 import '../auth/providers/auth_provider.dart';
+import 'dart:math' as math;
 
 class SentenceExerciseScreen extends ConsumerStatefulWidget {
   final String topic;
@@ -81,246 +82,513 @@ class _SentenceExerciseScreenState
   final Map<String, List<Map<String, dynamic>>> _exercises = {
     'Present Simple': [
       {
+        'id': 'ps_1',
         'words': ['she', 'coffee', 'drinks', 'every', 'morning'],
         'correctSentence': 'she drinks coffee every morning',
         'type': 'Olumlu Cümle',
         'meaning': 'O her sabah kahve içer.',
       },
       {
+        'id': 'ps_2',
         'words': ['do', 'like', 'you', 'pizza'],
         'correctSentence': 'do you like pizza',
         'type': 'Soru Cümlesi',
         'meaning': 'Pizza sever misin?',
       },
       {
+        'id': 'ps_3',
         'words': ['they', 'to', 'school', 'walk', 'usually'],
         'correctSentence': 'they usually walk to school',
         'type': 'Olumlu Cümle',
         'meaning': 'Onlar genellikle okula yürüyerek giderler.',
       },
       {
+        'id': 'ps_4',
         'words': ['he', 'does', 'not', 'meat', 'eat'],
         'correctSentence': 'he does not eat meat',
         'type': 'Olumsuz Cümle',
         'meaning': 'O et yemez.',
       },
       {
+        'id': 'ps_5',
         'words': ['English', 'speak', 'fluently', 'I'],
         'correctSentence': 'I speak English fluently',
         'type': 'Olumlu Cümle',
         'meaning': 'İngilizceyi akıcı konuşurum.',
       },
       {
+        'id': 'ps_6',
         'words': ['your', 'where', 'does', 'live', 'brother'],
         'correctSentence': 'where does your brother live',
         'type': 'Soru Cümlesi',
         'meaning': 'Kardeşin nerede yaşıyor?',
       },
       {
+        'id': 'ps_7',
         'words': ['always', 'on', 'breakfast', 'time', 'we', 'have'],
         'correctSentence': 'we always have breakfast on time',
         'type': 'Olumlu Cümle',
         'meaning': 'Her zaman kahvaltımızı zamanında yaparız.',
       },
       {
+        'id': 'ps_8',
         'words': ['they', 'do', 'not', 'understand', 'the', 'problem'],
         'correctSentence': 'they do not understand the problem',
         'type': 'Olumsuz Cümle',
         'meaning': 'Onlar problemi anlamazlar.',
       },
       {
+        'id': 'ps_9',
         'words': ['does', 'he', 'play', 'football', 'every', 'weekend'],
         'correctSentence': 'does he play football every weekend',
         'type': 'Soru Cümlesi',
         'meaning': 'O her hafta sonu futbol oynar mı?',
       },
       {
+        'id': 'ps_10',
         'words': ['my', 'parents', 'travel', 'abroad', 'every', 'summer'],
         'correctSentence': 'my parents travel abroad every summer',
         'type': 'Olumlu Cümle',
         'meaning': 'Ailem her yaz yurtdışına seyahat eder.',
       },
+      {
+        'id': 'ps_11',
+        'words': ['I', 'usually', 'read', 'books', 'before', 'sleeping'],
+        'correctSentence': 'I usually read books before sleeping',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Genellikle uyumadan önce kitap okurum.',
+      },
+      {
+        'id': 'ps_12',
+        'words': ['do', 'you', 'know', 'his', 'phone', 'number'],
+        'correctSentence': 'do you know his phone number',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Onun telefon numarasını biliyor musun?',
+      },
+      {
+        'id': 'ps_13',
+        'words': ['she', 'does', 'not', 'drive', 'to', 'work'],
+        'correctSentence': 'she does not drive to work',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'O işe araba kullanarak gitmez.',
+      },
+      {
+        'id': 'ps_14',
+        'words': ['children', 'the', 'play', 'in', 'park', 'every', 'day'],
+        'correctSentence': 'the children play in park every day',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Çocuklar her gün parkta oynarlar.',
+      },
+      {
+        'id': 'ps_15',
+        'words': ['what', 'time', 'does', 'the', 'bank', 'open'],
+        'correctSentence': 'what time does the bank open',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Banka saat kaçta açılır?',
+      },
+      {
+        'id': 'ps_16',
+        'words': ['we', 'do', 'not', 'work', 'on', 'Sundays'],
+        'correctSentence': 'we do not work on Sundays',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Pazar günleri çalışmayız.',
+      },
+      {
+        'id': 'ps_17',
+        'words': ['she', 'always', 'helps', 'her', 'friends'],
+        'correctSentence': 'she always helps her friends',
+        'type': 'Olumlu Cümle',
+        'meaning': 'O her zaman arkadaşlarına yardım eder.',
+      },
+      {
+        'id': 'ps_18',
+        'words': ['does', 'it', 'often', 'rain', 'in', 'your', 'city'],
+        'correctSentence': 'does it often rain in your city',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Şehrinde sık sık yağmur yağar mı?',
+      },
+      {
+        'id': 'ps_19',
+        'words': ['I', 'do', 'not', 'agree', 'with', 'your', 'opinion'],
+        'correctSentence': 'I do not agree with your opinion',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Fikrine katılmıyorum.',
+      },
+      {
+        'id': 'ps_20',
+        'words': ['most', 'people', 'want', 'to', 'be', 'happy'],
+        'correctSentence': 'most people want to be happy',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Çoğu insan mutlu olmak ister.',
+      },
     ],
     'Present Continuous': [
       {
+        'id': 'pc_1',
         'words': ['is', 'now', 'raining', 'it'],
         'correctSentence': 'it is raining now',
         'type': 'Olumlu Cümle',
         'meaning': 'Şu anda yağmur yağıyor.',
       },
       {
+        'id': 'pc_2',
         'words': ['are', 'what', 'doing', 'you'],
         'correctSentence': 'what are you doing',
         'type': 'Soru Cümlesi',
         'meaning': 'Ne yapıyorsun?',
       },
       {
+        'id': 'pc_3',
         'words': ['she', 'is', 'for', 'studying', 'exam', 'the'],
         'correctSentence': 'she is studying for the exam',
         'type': 'Olumlu Cümle',
         'meaning': 'O, sınav için çalışıyor.',
       },
       {
+        'id': 'pc_4',
         'words': ['we', 'are', 'not', 'today', 'working'],
         'correctSentence': 'we are not working today',
         'type': 'Olumsuz Cümle',
         'meaning': 'Bugün çalışmıyoruz.',
       },
       {
+        'id': 'pc_5',
         'words': ['they', 'are', 'dinner', 'having', 'now'],
         'correctSentence': 'they are having dinner now',
         'type': 'Olumlu Cümle',
         'meaning': 'Onlar şu anda akşam yemeği yiyorlar.',
       },
       {
+        'id': 'pc_6',
         'words': ['is', 'the', 'baby', 'crying', 'why'],
         'correctSentence': 'why is the baby crying',
         'type': 'Soru Cümlesi',
         'meaning': 'Bebek neden ağlıyor?',
       },
       {
+        'id': 'pc_7',
         'words': ['are', 'you', 'listening', 'to', 'me'],
         'correctSentence': 'are you listening to me',
         'type': 'Soru Cümlesi',
         'meaning': 'Beni dinliyor musun?',
       },
       {
+        'id': 'pc_8',
         'words': ['is', 'not', 'she', 'feeling', 'well', 'today'],
         'correctSentence': 'she is not feeling well today',
         'type': 'Olumsuz Cümle',
         'meaning': 'O bugün kendini iyi hissetmiyor.',
       },
       {
+        'id': 'pc_9',
         'words': ['I', 'am', 'currently', 'reading', 'a', 'good', 'book'],
         'correctSentence': 'I am currently reading a good book',
         'type': 'Olumlu Cümle',
         'meaning': 'Şu anda iyi bir kitap okuyorum.',
       },
       {
+        'id': 'pc_10',
         'words': ['they', 'are', 'planning', 'a', 'vacation', 'next', 'month'],
         'correctSentence': 'they are planning a vacation next month',
         'type': 'Olumlu Cümle',
         'meaning': 'Gelecek ay bir tatil planlıyorlar.',
       },
+      {
+        'id': 'pc_11',
+        'words': ['he', 'is', 'cooking', 'dinner', 'in', 'the', 'kitchen'],
+        'correctSentence': 'he is cooking dinner in the kitchen',
+        'type': 'Olumlu Cümle',
+        'meaning': 'O mutfakta akşam yemeği pişiriyor.',
+      },
+      {
+        'id': 'pc_12',
+        'words': ['are', 'you', 'waiting', 'for', 'someone'],
+        'correctSentence': 'are you waiting for someone',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Birini mi bekliyorsun?',
+      },
+      {
+        'id': 'pc_13',
+        'words': ['the', 'children', 'are', 'not', 'sleeping', 'yet'],
+        'correctSentence': 'the children are not sleeping yet',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Çocuklar henüz uyumuyor.',
+      },
+      {
+        'id': 'pc_14',
+        'words': ['we', 'are', 'learning', 'English', 'at', 'the', 'moment'],
+        'correctSentence': 'we are learning English at the moment',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Şu anda İngilizce öğreniyoruz.',
+      },
+      {
+        'id': 'pc_15',
+        'words': ['why', 'are', 'you', 'looking', 'at', 'me', 'like', 'that'],
+        'correctSentence': 'why are you looking at me like that',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Neden bana öyle bakıyorsun?',
+      },
+      {
+        'id': 'pc_16',
+        'words': ['she', 'is', 'not', 'wearing', 'her', 'glasses', 'today'],
+        'correctSentence': 'she is not wearing her glasses today',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'O bugün gözlüklerini takmıyor.',
+      },
+      {
+        'id': 'pc_17',
+        'words': ['I', 'am', 'working', 'on', 'a', 'new', 'project'],
+        'correctSentence': 'I am working on a new project',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Yeni bir proje üzerinde çalışıyorum.',
+      },
+      {
+        'id': 'pc_18',
+        'words': ['are', 'they', 'building', 'a', 'new', 'house'],
+        'correctSentence': 'are they building a new house',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Yeni bir ev mi inşa ediyorlar?',
+      },
+      {
+        'id': 'pc_19',
+        'words': ['the', 'sun', 'is', 'shining', 'brightly', 'today'],
+        'correctSentence': 'the sun is shining brightly today',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Güneş bugün parlak bir şekilde parlıyor.',
+      },
+      {
+        'id': 'pc_20',
+        'words': ['he', 'is', 'not', 'telling', 'the', 'truth'],
+        'correctSentence': 'he is not telling the truth',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'O doğruyu söylemiyor.',
+      },
     ],
     'Past Simple': [
       {
+        'id': 'pas_1',
         'words': ['visited', 'museum', 'they', 'the', 'yesterday'],
         'correctSentence': 'they visited the museum yesterday',
         'type': 'Olumlu Cümle',
         'meaning': 'Onlar dün müzeyi ziyaret ettiler.',
       },
       {
+        'id': 'pas_2',
         'words': ['did', 'last', 'weekend', 'what', 'you', 'do'],
         'correctSentence': 'what did you do last weekend',
         'type': 'Soru Cümlesi',
         'meaning': 'Geçen hafta sonu ne yaptın?',
       },
       {
+        'id': 'pas_3',
         'words': ['not', 'did', 'the', 'I', 'finish', 'book'],
         'correctSentence': 'I did not finish the book',
         'type': 'Olumsuz Cümle',
         'meaning': 'Kitabı bitirmedim.',
       },
       {
+        'id': 'pas_4',
         'words': ['she', 'bought', 'a', 'new', 'car', 'last', 'month'],
         'correctSentence': 'she bought a new car last month',
         'type': 'Olumlu Cümle',
         'meaning': 'O geçen ay yeni bir araba satın aldı.',
       },
       {
+        'id': 'pas_5',
         'words': ['did', 'where', 'you', 'go', 'to', 'school'],
         'correctSentence': 'where did you go to school',
         'type': 'Soru Cümlesi',
         'meaning': 'Nerede okula gittin?',
       },
       {
+        'id': 'pas_6',
         'words': ['they', 'did', 'not', 'call', 'me', 'yesterday'],
         'correctSentence': 'they did not call me yesterday',
         'type': 'Olumsuz Cümle',
         'meaning': 'Dün beni aramadılar.',
       },
       {
+        'id': 'pas_7',
         'words': ['we', 'watched', 'a', 'movie', 'last', 'night'],
         'correctSentence': 'we watched a movie last night',
         'type': 'Olumlu Cümle',
         'meaning': 'Dün gece bir film izledik.',
       },
       {
+        'id': 'pas_8',
         'words': ['did', 'he', 'enjoy', 'the', 'party'],
         'correctSentence': 'did he enjoy the party',
         'type': 'Soru Cümlesi',
         'meaning': 'Partiden keyif aldı mı?',
       },
       {
+        'id': 'pas_9',
         'words': ['I', 'did', 'not', 'hear', 'the', 'doorbell'],
         'correctSentence': 'I did not hear the doorbell',
         'type': 'Olumsuz Cümle',
         'meaning': 'Kapı zilini duymadım.',
       },
       {
+        'id': 'pas_10',
         'words': ['she', 'wrote', 'a', 'letter', 'to', 'her', 'friend'],
         'correctSentence': 'she wrote a letter to her friend',
         'type': 'Olumlu Cümle',
         'meaning': 'Arkadaşına bir mektup yazdı.',
       },
+      {
+        'id': 'pas_11',
+        'words': ['I', 'walked', 'to', 'work', 'yesterday', 'morning'],
+        'correctSentence': 'I walked to work yesterday morning',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Dün sabah işe yürüyerek gittim.',
+      },
+      {
+        'id': 'pas_12',
+        'words': ['did', 'when', 'you', 'arrive', 'home', 'last', 'night'],
+        'correctSentence': 'when did you arrive home last night',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Dün gece eve ne zaman vardın?',
+      },
+      {
+        'id': 'pas_13',
+        'words': ['he', 'did', 'not', 'study', 'for', 'the', 'exam'],
+        'correctSentence': 'he did not study for the exam',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Sınav için çalışmadı.',
+      },
+      {
+        'id': 'pas_14',
+        'words': ['we', 'went', 'to', 'the', 'beach', 'last', 'summer'],
+        'correctSentence': 'we went to the beach last summer',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Geçen yaz plaja gittik.',
+      },
+      {
+        'id': 'pas_15',
+        'words': [
+          'did',
+          'they',
+          'visit',
+          'their',
+          'grandparents',
+          'last',
+          'week'
+        ],
+        'correctSentence': 'did they visit their grandparents last week',
+        'type': 'Soru Cümlesi',
+        'meaning':
+            'Geçen hafta büyükanne ve büyükbabalarını ziyaret ettiler mi?',
+      },
+      {
+        'id': 'pas_16',
+        'words': ['she', 'did', 'not', 'like', 'the', 'movie', 'we', 'saw'],
+        'correctSentence': 'she did not like the movie we saw',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'İzlediğimiz filmi beğenmedi.',
+      },
+      {
+        'id': 'pas_17',
+        'words': ['I', 'lost', 'my', 'keys', 'this', 'morning'],
+        'correctSentence': 'I lost my keys this morning',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Bu sabah anahtarlarımı kaybettim.',
+      },
+      {
+        'id': 'pas_18',
+        'words': ['did', 'why', 'you', 'leave', 'the', 'party', 'early'],
+        'correctSentence': 'why did you leave the party early',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Neden partiden erken ayrıldın?',
+      },
+      {
+        'id': 'pas_19',
+        'words': [
+          'the',
+          'teacher',
+          'explained',
+          'the',
+          'lesson',
+          'very',
+          'well'
+        ],
+        'correctSentence': 'the teacher explained the lesson very well',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Öğretmen dersi çok iyi anlattı.',
+      },
+      {
+        'id': 'pas_20',
+        'words': ['she', 'did', 'not', 'answer', 'my', 'question'],
+        'correctSentence': 'she did not answer my question',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Sorumu yanıtlamadı.',
+      },
     ],
     'Past Continuous': [
       {
+        'id': 'pac_1',
         'words': ['was', 'watching', 'TV', 'I', 'when', 'you', 'called'],
         'correctSentence': 'I was watching TV when you called',
         'type': 'Olumlu Cümle',
         'meaning': 'Sen aradığında TV izliyordum.',
       },
       {
+        'id': 'pac_2',
         'words': ['were', 'doing', 'what', 'you', 'at', '8', 'yesterday'],
         'correctSentence': 'what were you doing at 8 yesterday',
         'type': 'Soru Cümlesi',
         'meaning': 'Dün saat 8\'de ne yapıyordun?',
       },
       {
+        'id': 'pac_3',
         'words': ['she', 'was', 'not', 'listening', 'to', 'the', 'teacher'],
         'correctSentence': 'she was not listening to the teacher',
         'type': 'Olumsuz Cümle',
         'meaning': 'O öğretmeni dinlemiyordu.',
       },
       {
+        'id': 'pac_4',
         'words': ['they', 'were', 'playing', 'football', 'all', 'afternoon'],
         'correctSentence': 'they were playing football all afternoon',
         'type': 'Olumlu Cümle',
         'meaning': 'Onlar bütün öğleden sonra futbol oynuyorlardı.',
       },
       {
+        'id': 'pac_5',
         'words': ['was', 'it', 'raining', 'when', 'you', 'left'],
         'correctSentence': 'was it raining when you left',
         'type': 'Soru Cümlesi',
         'meaning': 'Sen ayrıldığında yağmur yağıyor muydu?',
       },
       {
+        'id': 'pac_6',
         'words': ['we', 'were', 'not', 'expecting', 'any', 'visitors'],
         'correctSentence': 'we were not expecting any visitors',
         'type': 'Olumsuz Cümle',
         'meaning': 'Hiç ziyaretçi beklemiyorduk.',
       },
       {
+        'id': 'pac_7',
         'words': ['he', 'was', 'studying', 'while', 'I', 'was', 'cooking'],
         'correctSentence': 'he was studying while I was cooking',
         'type': 'Olumlu Cümle',
         'meaning': 'Ben yemek pişirirken o ders çalışıyordu.',
       },
       {
+        'id': 'pac_8',
         'words': ['were', 'they', 'waiting', 'for', 'the', 'bus'],
         'correctSentence': 'were they waiting for the bus',
         'type': 'Soru Cümlesi',
         'meaning': 'Onlar otobüs için bekliyor muydu?',
       },
       {
+        'id': 'pac_9',
         'words': ['she', 'was', 'not', 'feeling', 'well', 'yesterday'],
         'correctSentence': 'she was not feeling well yesterday',
         'type': 'Olumsuz Cümle',
         'meaning': 'O dün kendini iyi hissetmiyordu.',
       },
       {
+        'id': 'pac_10',
         'words': [
           'I',
           'was',
@@ -339,104 +607,200 @@ class _SentenceExerciseScreenState
     ],
     'Present Perfect': [
       {
+        'id': 'pp_1',
         'words': ['I', 'have', 'never', 'been', 'to', 'Paris'],
         'correctSentence': 'I have never been to Paris',
         'type': 'Olumlu Cümle',
         'meaning': 'Hiç Paris\'e gitmedim.',
       },
       {
+        'id': 'pp_2',
         'words': ['have', 'you', 'finished', 'your', 'homework', 'yet'],
         'correctSentence': 'have you finished your homework yet',
         'type': 'Soru Cümlesi',
         'meaning': 'Ödevinizi bitirdiniz mi?',
       },
       {
+        'id': 'pp_3',
         'words': ['she', 'has', 'not', 'seen', 'the', 'movie'],
         'correctSentence': 'she has not seen the movie',
         'type': 'Olumsuz Cümle',
         'meaning': 'O filmi görmedi.',
       },
       {
+        'id': 'pp_4',
         'words': ['they', 'have', 'lived', 'here', 'for', 'ten', 'years'],
         'correctSentence': 'they have lived here for ten years',
         'type': 'Olumlu Cümle',
         'meaning': 'On yıldır burada yaşıyorlar.',
       },
       {
+        'id': 'pp_5',
         'words': ['has', 'he', 'ever', 'visited', 'London'],
         'correctSentence': 'has he ever visited London',
         'type': 'Soru Cümlesi',
         'meaning': 'Hiç Londra\'yı ziyaret etti mi?',
       },
       {
+        'id': 'pp_6',
         'words': ['we', 'have', 'not', 'received', 'any', 'news'],
         'correctSentence': 'we have not received any news',
         'type': 'Olumsuz Cümle',
         'meaning': 'Hiç haber almadık.',
       },
       {
+        'id': 'pp_7',
         'words': ['I', 'have', 'already', 'eaten', 'lunch'],
         'correctSentence': 'I have already eaten lunch',
         'type': 'Olumlu Cümle',
         'meaning': 'Çoktan öğle yemeğini yedim.',
       },
       {
+        'id': 'pp_8',
         'words': ['have', 'they', 'arrived', 'yet'],
         'correctSentence': 'have they arrived yet',
         'type': 'Soru Cümlesi',
         'meaning': 'Onlar vardı mı?',
       },
       {
+        'id': 'pp_9',
         'words': ['she', 'has', 'just', 'left', 'the', 'office'],
         'correctSentence': 'she has just left the office',
         'type': 'Olumlu Cümle',
         'meaning': 'O az önce ofisten ayrıldı.',
       },
       {
+        'id': 'pp_10',
         'words': ['we', 'have', 'not', 'met', 'before'],
         'correctSentence': 'we have not met before',
         'type': 'Olumsuz Cümle',
         'meaning': 'Daha önce tanışmadık.',
       },
+      {
+        'id': 'pp_11',
+        'words': ['has', 'your', 'brother', 'graduated', 'from', 'university'],
+        'correctSentence': 'has your brother graduated from university',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Kardeşin üniversiteden mezun oldu mu?',
+      },
+      {
+        'id': 'pp_12',
+        'words': ['they', 'have', 'improved', 'their', 'English', 'a', 'lot'],
+        'correctSentence': 'they have improved their English a lot',
+        'type': 'Olumlu Cümle',
+        'meaning': 'İngilizcelerini çok geliştirdiler.',
+      },
+      {
+        'id': 'pp_13',
+        'words': ['I', 'have', 'not', 'spoken', 'to', 'her', 'since', 'Monday'],
+        'correctSentence': 'I have not spoken to her since Monday',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Pazartesiden beri onunla konuşmadım.',
+      },
+      {
+        'id': 'pp_14',
+        'words': ['have', 'you', 'ever', 'tried', 'Turkish', 'coffee'],
+        'correctSentence': 'have you ever tried Turkish coffee',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Hiç Türk kahvesi denedin mi?',
+      },
+      {
+        'id': 'pp_15',
+        'words': ['she', 'has', 'written', 'three', 'books', 'so', 'far'],
+        'correctSentence': 'she has written three books so far',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Şimdiye kadar üç kitap yazdı.',
+      },
+      {
+        'id': 'pp_16',
+        'words': [
+          'our',
+          'team',
+          'has',
+          'won',
+          'five',
+          'games',
+          'this',
+          'season'
+        ],
+        'correctSentence': 'our team has won five games this season',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Takımımız bu sezon beş maç kazandı.',
+      },
+      {
+        'id': 'pp_17',
+        'words': ['has', 'anyone', 'seen', 'my', 'keys'],
+        'correctSentence': 'has anyone seen my keys',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Anahtarlarımı gören oldu mu?',
+      },
+      {
+        'id': 'pp_18',
+        'words': ['they', 'have', 'not', 'decided', 'yet', 'what', 'to', 'do'],
+        'correctSentence': 'they have not decided yet what to do',
+        'type': 'Olumsuz Cümle',
+        'meaning': 'Henüz ne yapacaklarına karar vermediler.',
+      },
+      {
+        'id': 'pp_19',
+        'words': ['he', 'has', 'forgotten', 'his', 'password', 'again'],
+        'correctSentence': 'he has forgotten his password again',
+        'type': 'Olumlu Cümle',
+        'meaning': 'Şifresini yine unuttu.',
+      },
+      {
+        'id': 'pp_20',
+        'words': ['have', 'you', 'seen', 'the', 'new', 'shopping', 'mall'],
+        'correctSentence': 'have you seen the new shopping mall',
+        'type': 'Soru Cümlesi',
+        'meaning': 'Yeni alışveriş merkezini gördün mü?',
+      },
     ],
     'Present Perfect Continuous': [
       {
+        'id': 'ppc_1',
         'words': ['I', 'have', 'been', 'waiting', 'for', 'two', 'hours'],
         'correctSentence': 'I have been waiting for two hours',
         'type': 'Olumlu Cümle',
         'meaning': 'İki saattir bekliyorum.',
       },
       {
+        'id': 'ppc_2',
         'words': ['have', 'you', 'been', 'feeling', 'okay'],
         'correctSentence': 'have you been feeling okay',
         'type': 'Soru Cümlesi',
         'meaning': 'İyi hissediyor musun?',
       },
       {
+        'id': 'ppc_3',
         'words': ['she', 'has', 'not', 'been', 'studying', 'enough'],
         'correctSentence': 'she has not been studying enough',
         'type': 'Olumsuz Cümle',
         'meaning': 'O yeterince ders çalışmıyor.',
       },
       {
+        'id': 'ppc_4',
         'words': ['they', 'have', 'been', 'working', 'since', 'morning'],
         'correctSentence': 'they have been working since morning',
         'type': 'Olumlu Cümle',
         'meaning': 'Sabahtan beri çalışıyorlar.',
       },
       {
+        'id': 'ppc_5',
         'words': ['how', 'long', 'have', 'you', 'been', 'learning', 'English'],
         'correctSentence': 'how long have you been learning English',
         'type': 'Soru Cümlesi',
         'meaning': 'Ne zamandır İngilizce öğreniyorsun?',
       },
       {
+        'id': 'ppc_6',
         'words': ['he', 'has', 'not', 'been', 'sleeping', 'well', 'lately'],
         'correctSentence': 'he has not been sleeping well lately',
         'type': 'Olumsuz Cümle',
         'meaning': 'Son zamanlarda iyi uyumuyor.',
       },
       {
+        'id': 'ppc_7',
         'words': [
           'we',
           'have',
@@ -452,18 +816,21 @@ class _SentenceExerciseScreenState
         'meaning': 'Beş yıldır burada yaşıyoruz.',
       },
       {
+        'id': 'ppc_8',
         'words': ['has', 'it', 'been', 'raining', 'all', 'day'],
         'correctSentence': 'has it been raining all day',
         'type': 'Soru Cümlesi',
         'meaning': 'Bütün gün yağmur mu yağıyor?',
       },
       {
+        'id': 'ppc_9',
         'words': ['she', 'has', 'been', 'cooking', 'since', 'early', 'morning'],
         'correctSentence': 'she has been cooking since early morning',
         'type': 'Olumlu Cümle',
         'meaning': 'Sabahın erken saatlerinden beri yemek pişiriyor.',
       },
       {
+        'id': 'ppc_10',
         'words': [
           'they',
           'have',
@@ -481,60 +848,70 @@ class _SentenceExerciseScreenState
     ],
     'Future Tense': [
       {
+        'id': 'ft_1',
         'words': ['will', 'tomorrow', 'rain', 'it'],
         'correctSentence': 'it will rain tomorrow',
         'type': 'Olumlu Cümle',
         'meaning': 'Yarın yağmur yağacak.',
       },
       {
+        'id': 'ft_2',
         'words': ['going', 'are', 'to', 'university', 'you', 'attend'],
         'correctSentence': 'are you going to attend university',
         'type': 'Soru Cümlesi',
         'meaning': 'Üniversiteye gitmeyi düşünüyor musun?',
       },
       {
+        'id': 'ft_3',
         'words': ['will', 'dinner', 'cook', 'she', 'tonight'],
         'correctSentence': 'she will cook dinner tonight',
         'type': 'Olumlu Cümle',
         'meaning': 'O bu akşam yemek pişirecek.',
       },
       {
+        'id': 'ft_4',
         'words': ['I', 'am', 'going', 'to', 'buy', 'a', 'new', 'phone'],
         'correctSentence': 'I am going to buy a new phone',
         'type': 'Olumlu Cümle',
         'meaning': 'Yeni bir telefon satın alacağım.',
       },
       {
+        'id': 'ft_5',
         'words': ['will', 'not', 'be', 'we', 'late', 'for', 'the', 'meeting'],
         'correctSentence': 'we will not be late for the meeting',
         'type': 'Olumsuz Cümle',
         'meaning': 'Toplantıya geç kalmayacağız.',
       },
       {
+        'id': 'ft_6',
         'words': ['when', 'will', 'you', 'return', 'from', 'vacation'],
         'correctSentence': 'when will you return from vacation',
         'type': 'Soru Cümlesi',
         'meaning': 'Tatilden ne zaman döneceksiniz?',
       },
       {
+        'id': 'ft_7',
         'words': ['they', 'are', 'going', 'to', 'move', 'next', 'year'],
         'correctSentence': 'they are going to move next year',
         'type': 'Olumlu Cümle',
         'meaning': 'Gelecek yıl taşınacaklar.',
       },
       {
+        'id': 'ft_8',
         'words': ['will', 'the', 'train', 'arrive', 'on', 'time'],
         'correctSentence': 'will the train arrive on time',
         'type': 'Soru Cümlesi',
         'meaning': 'Tren zamanında gelecek mi?',
       },
       {
+        'id': 'ft_9',
         'words': ['I', 'will', 'not', 'forget', 'your', 'birthday'],
         'correctSentence': 'I will not forget your birthday',
         'type': 'Olumsuz Cümle',
         'meaning': 'Doğum gününü unutmayacağım.',
       },
       {
+        'id': 'ft_10',
         'words': ['she', 'is', 'going', 'to', 'start', 'a', 'new', 'job'],
         'correctSentence': 'she is going to start a new job',
         'type': 'Olumlu Cümle',
@@ -543,24 +920,28 @@ class _SentenceExerciseScreenState
     ],
     'Past Perfect': [
       {
+        'id': 'pap_1',
         'words': ['I', 'had', 'already', 'left', 'when', 'you', 'called'],
         'correctSentence': 'I had already left when you called',
         'type': 'Olumlu Cümle',
         'meaning': 'Sen aradığında çoktan ayrılmıştım.',
       },
       {
+        'id': 'pap_2',
         'words': ['had', 'you', 'ever', 'visited', 'Italy', 'before'],
         'correctSentence': 'had you ever visited Italy before',
         'type': 'Soru Cümlesi',
         'meaning': 'Daha önce hiç İtalya\'yı ziyaret etmiş miydin?',
       },
       {
+        'id': 'pap_3',
         'words': ['she', 'had', 'not', 'finished', 'her', 'work', 'by', 'then'],
         'correctSentence': 'she had not finished her work by then',
         'type': 'Olumsuz Cümle',
         'meaning': 'O zamana kadar işini bitirmemişti.',
       },
       {
+        'id': 'pap_4',
         'words': [
           'they',
           'had',
@@ -576,12 +957,14 @@ class _SentenceExerciseScreenState
         'meaning': 'Onlar daha önce böyle güzel bir gün batımı görmemişlerdi.',
       },
       {
+        'id': 'pap_5',
         'words': ['had', 'he', 'finished', 'dinner', 'before', 'the', 'movie'],
         'correctSentence': 'had he finished dinner before the movie',
         'type': 'Soru Cümlesi',
         'meaning': 'Filmden önce akşam yemeğini bitirmiş miydi?',
       },
       {
+        'id': 'pap_6',
         'words': [
           'we',
           'had',
@@ -597,6 +980,7 @@ class _SentenceExerciseScreenState
         'meaning': 'Dün sabaha kadar haberi duymamıştık.',
       },
       {
+        'id': 'pap_7',
         'words': [
           'she',
           'had',
@@ -611,6 +995,7 @@ class _SentenceExerciseScreenState
         'meaning': 'Yurtdışına taşınmadan önce İngilizce çalışmıştı.',
       },
       {
+        'id': 'pap_8',
         'words': [
           'had',
           'everyone',
@@ -625,12 +1010,14 @@ class _SentenceExerciseScreenState
         'meaning': 'Toplantı başlamadan önce herkes gelmis miydi?',
       },
       {
+        'id': 'pap_9',
         'words': ['I', 'had', 'not', 'expected', 'such', 'a', 'surprise'],
         'correctSentence': 'I had not expected such a surprise',
         'type': 'Olumsuz Cümle',
         'meaning': 'Böyle bir sürpriz beklememiştim.',
       },
       {
+        'id': 'pap_10',
         'words': [
           'they',
           'had',
@@ -650,70 +1037,68 @@ class _SentenceExerciseScreenState
   @override
   void initState() {
     super.initState();
-    // Use addPostFrameCallback to load exercises after build is complete
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadFilteredExercises();
-    });
+    _loadExercisesForTopic();
   }
 
-  Future<void> _loadFilteredExercises() async {
+  void _loadExercisesForTopic() async {
     setState(() {
       _isLoading = true;
     });
 
-    // Load user's correct exercise answers
-    final authState = ref.read(authProvider);
-    if (authState.isLoggedIn && authState.userId != null) {
-      await ref
-          .read(exerciseAnswerProvider.notifier)
-          .loadUserCorrectExerciseIds(authState.userId!);
-    }
+    try {
+      // Get authentication state to see if user is logged in
+      final authState = ref.read(authProvider);
 
-    // Get list of exercise IDs for this topic
-    final allExercisesForTopic = _exercises[widget.topic] ?? [];
+      if (authState.isLoggedIn) {
+        // Load user's correct exercise IDs
+        await ref
+            .read(exerciseAnswerProvider.notifier)
+            .loadUserCorrectExerciseIds(authState.userId!);
+      }
 
-    // Create unique IDs for each exercise based on content
-    final exerciseIds = allExercisesForTopic.map((exercise) {
-      // Create a unique ID based on topic, subtopic and content
-      return "${widget.topicId}_${widget.subtopicId}_${exercise['correctSentence']}";
-    }).toList();
+      // Get list of exercises for the current topic
+      final allExercisesForTopic = _exercises[widget.topic] ?? [];
 
-    // Filter exercises based on user login status
-    if (authState.isLoggedIn && authState.userId != null) {
-      final correctExerciseIds =
-          ref.read(exerciseAnswerProvider).correctExerciseIds;
+      if (allExercisesForTopic.isEmpty) {
+        setState(() {
+          _filteredExercises = [];
+          _isLoading = false;
+        });
+        return;
+      }
 
-      // Create a list of filtered exercises (exclude correctly completed ones)
-      final List<Map<String, dynamic>> filtered = [];
-      for (int i = 0; i < allExercisesForTopic.length; i++) {
-        if (!correctExerciseIds.contains(exerciseIds[i])) {
-          final exercise = Map<String, dynamic>.from(allExercisesForTopic[i]);
-          exercise['id'] = exerciseIds[i]; // Add the ID to the exercise
-          filtered.add(exercise);
+      if (authState.isLoggedIn) {
+        // Get all exercise IDs for this topic
+        final allExerciseIds =
+            allExercisesForTopic.map((e) => e['id'] as String).toList();
+
+        // Get the correct exercise IDs for this user
+        final correctIds = ref.read(exerciseAnswerProvider).correctExerciseIds;
+
+        // Filter to only include exercises that haven't been completed correctly for this topic
+        _filteredExercises = allExercisesForTopic.where((exercise) {
+          final exerciseId = exercise['id'] as String;
+          return !correctIds.contains(exerciseId);
+        }).toList();
+
+        // Cap at 10 exercises for this session if there are more than 10
+        if (_filteredExercises.length > 10) {
+          _filteredExercises = _filteredExercises.sublist(0, 10);
+        }
+      } else {
+        // If user is not logged in, just take 10 random exercises
+        _filteredExercises = List.from(allExercisesForTopic);
+        if (_filteredExercises.length > 10) {
+          _filteredExercises = _filteredExercises.sublist(0, 10);
         }
       }
 
       setState(() {
-        _filteredExercises = filtered;
         _isLoading = false;
       });
-    } else {
-      // User not logged in, show random subset of exercises
-      final List<Map<String, dynamic>> allWithIds = [];
-      for (int i = 0; i < allExercisesForTopic.length; i++) {
-        final exercise = Map<String, dynamic>.from(allExercisesForTopic[i]);
-        exercise['id'] = exerciseIds[i]; // Add the ID to the exercise
-        allWithIds.add(exercise);
-      }
-
-      // Shuffle the exercises and take first 5 (or fewer if there are less than 5)
-      allWithIds.shuffle();
-      final randomExercises = allWithIds
-          .take(allWithIds.length > 5 ? 5 : allWithIds.length)
-          .toList();
-
+    } catch (e) {
       setState(() {
-        _filteredExercises = randomExercises;
+        _filteredExercises = [];
         _isLoading = false;
       });
     }
@@ -736,48 +1121,79 @@ class _SentenceExerciseScreenState
   }
 
   void _checkAnswer() {
+    if (_filteredExercises.isEmpty ||
+        _currentExerciseIndex >= _filteredExercises.length) {
+      return;
+    }
+
     final currentExercise = _filteredExercises[_currentExerciseIndex];
-    final correctSentence = currentExercise['correctSentence'];
+    final correctSentence = currentExercise['correctSentence'] as String;
     final userSentence = _selectedWords.join(' ');
-    final isCorrect = userSentence == correctSentence;
+
+    final isCorrect = userSentence.trim().toLowerCase() ==
+        correctSentence.trim().toLowerCase();
+
+    // Save the answer if user is logged in
+    final authState = ref.read(authProvider);
+    if (authState.isLoggedIn) {
+      ref.read(exerciseAnswerProvider.notifier).saveExerciseAnswer(
+            userId: authState.userId!,
+            topicId: widget.topicId,
+            subtopicId: widget.subtopicId,
+            exerciseId: currentExercise['id'] as String,
+            isCorrect: isCorrect,
+          );
+    }
 
     setState(() {
       _showResult = true;
       _isCorrect = isCorrect;
     });
-
-    // Save answer to Firestore if user is logged in
-    final authState = ref.read(authProvider);
-    if (authState.isLoggedIn && authState.userId != null) {
-      ref.read(exerciseAnswerProvider.notifier).saveExerciseAnswer(
-            userId: authState.userId!,
-            topicId: widget.topicId,
-            subtopicId: widget.subtopicId,
-            exerciseId: currentExercise['id'],
-            isCorrect: isCorrect,
-          );
-    }
   }
 
   void _nextExercise() {
-    if (_currentExerciseIndex < _filteredExercises.length - 1) {
-      setState(() {
-        _currentExerciseIndex++;
-        _resetExercise();
-      });
-    } else {
-      // All exercises completed
-      Navigator.pop(context);
-    }
-  }
-
-  void _resetExercise() {
     setState(() {
+      _showResult = false;
       _selectedWords = [];
       _selectedIndices = [];
-      _showResult = false;
-      _isCorrect = false;
+
+      // If the answer was correct, remove this exercise from _filteredExercises
+      if (_isCorrect) {
+        _filteredExercises.removeAt(_currentExerciseIndex);
+
+        // Check if there are any exercises left
+        if (_filteredExercises.isEmpty) {
+          _showCompletionDialog();
+          return;
+        }
+      } else {
+        // If the answer was wrong, move to the next exercise or cycle back to the beginning
+        _currentExerciseIndex =
+            (_currentExerciseIndex + 1) % _filteredExercises.length;
+      }
     });
+  }
+
+  // Show a dialog when all exercises are completed
+  void _showCompletionDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text('Tebrikler!'),
+        content: Text(
+            'Bu oturumdaki alıştırmaları tamamladınız. Doğru cevapladığınız alıştırmalar artık karşınıza çıkmayacak ve ilerleyişiniz kaydedildi.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close dialog
+              Navigator.of(context).pop(); // Return to previous screen
+            },
+            child: Text('Tamam'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -835,7 +1251,7 @@ class _SentenceExerciseScreenState
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Bu konuya ait tüm alıştırmaları başarıyla tamamladınız.',
+                  'Bu oturumdaki alıştırmaları tamamladınız. Doğru cevapladığınız alıştırmalar artık karşınıza çıkmayacak ve ilerleyişiniz kaydedildi.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
@@ -858,7 +1274,7 @@ class _SentenceExerciseScreenState
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text('Geri Dön'),
+                  child: const Text('Tamam'),
                 ),
               ],
             ),

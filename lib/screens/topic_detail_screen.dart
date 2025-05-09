@@ -42,6 +42,16 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
 
         // Start periodic progress saving
         _startProgressSaving();
+
+        // Load and show interstitial ad if not reached max impression limit
+        final adService = ref.read(adServiceProvider);
+        if (!ref.read(isInterstitialLimitReachedProvider)) {
+          adService.loadInterstitialAd().then((_) {
+            if (mounted) {
+              adService.showInterstitialAd();
+            }
+          });
+        }
       }
     });
   }
@@ -53,7 +63,6 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
     _progressTimer?.cancel();
 
     // Save progress one last time when leaving the screen
-    _saveProgress();
 
     super.dispose();
   }
@@ -101,9 +110,7 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
   // Start periodic progress saving
   void _startProgressSaving() {
     _progressTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (_isUserScrolling) {
-        _saveProgress();
-      }
+      if (_isUserScrolling) {}
     });
   }
 
@@ -210,31 +217,6 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
     );
   }
 
-  // Save progress to Firebase
-  void _saveProgress() async {
-    if (!mounted) return;
-
-    final authState = ref.read(authProvider);
-    if (!authState.isLoggedIn) return;
-
-    // Don't save if there's no actual progress
-    if (_currentProgress <= 0) return;
-
-    // Cap progress at 100%
-    final cappedProgress = _currentProgress > 100 ? 100.0 : _currentProgress;
-
-    // Update progress via the provider
-    await ref.read(topicProgressProvider.notifier).updateTopicProgress(
-          widget.topicId,
-          cappedProgress,
-          _lastPosition,
-        );
-
-    setState(() {
-      _isUserScrolling = false;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = ref.watch(isDarkModeProvider);
@@ -268,7 +250,6 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
     return WillPopScope(
       onWillPop: () {
         // Save progress before leaving screen
-        _saveProgress();
 
         // Refresh the topic progress list
         final authState = ref.read(authProvider);

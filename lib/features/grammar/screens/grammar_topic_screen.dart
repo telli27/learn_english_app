@@ -17,9 +17,17 @@ class _GrammarTopicScreenState extends ConsumerState<GrammarTopicScreen> {
   void initState() {
     super.initState();
     // Load the grammar topic when the screen loads
-    Future.microtask(() => ref
-        .read(grammarControllerProvider.notifier)
-        .loadGrammarTopic(widget.topicId));
+    Future.microtask(() {
+      ref
+          .read(grammarControllerProvider.notifier)
+          .loadGrammarTopic(widget.topicId);
+
+      // Load and show an interstitial ad when the screen opens
+      final adService = ref.read(adServiceProvider);
+      adService.loadInterstitialAd().then((_) {
+        adService.showInterstitialAd();
+      });
+    });
   }
 
   @override

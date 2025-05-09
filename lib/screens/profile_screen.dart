@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/providers.dart';
 import '../utils/constants/colors.dart';
+import '../features/settings/screens/terms_of_use_screen.dart';
+import '../features/settings/screens/privacy_policy_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -124,6 +126,44 @@ class ProfileScreen extends ConsumerWidget {
                         'Türkçe',
                         Icons.language_rounded,
                         isDark,
+                      ),
+                    ],
+                    isDark,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Legal section
+                  _buildSection(
+                    'Yasal',
+                    [
+                      _buildSettingItem(
+                        'Kullanım Şartları',
+                        '',
+                        Icons.description_outlined,
+                        isDark,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const TermsOfUseScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildSettingItem(
+                        'Gizlilik Politikası',
+                        '',
+                        Icons.privacy_tip_outlined,
+                        isDark,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PrivacyPolicyScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                     isDark,

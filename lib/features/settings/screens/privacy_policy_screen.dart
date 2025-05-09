@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
-import '../../../core/utils/constants/colors.dart';
 
 class PrivacyPolicyScreen extends ConsumerWidget {
   const PrivacyPolicyScreen({Key? key}) : super(key: key);
@@ -10,150 +9,156 @@ class PrivacyPolicyScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = ref.watch(isDarkModeProvider);
 
-    // Şimdiki zamanı alalım
-    final now = DateTime.now();
-    final aylar = [
-      'Ocak',
-      'Şubat',
-      'Mart',
-      'Nisan',
-      'Mayıs',
-      'Haziran',
-      'Temmuz',
-      'Ağustos',
-      'Eylül',
-      'Ekim',
-      'Kasım',
-      'Aralık'
-    ];
-    final currentMonth = aylar[now.month - 1];
-    final currentYear = now.year.toString();
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gizlilik Sözleşmesi'),
-        centerTitle: true,
+        title: const Text("Privacy Policy"),
+        backgroundColor: isDark ? Colors.black : Colors.white,
         elevation: 0,
+        foregroundColor: isDark ? Colors.white : Colors.black,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          // Title
-          Text(
-            'Gizlilik Politikamız',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : AppColors.textPrimary,
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Last updated date
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.primary.withOpacity(0.1)
-                  : AppColors.primary.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: AppColors.primary.withOpacity(0.2),
-                width: 1,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle("Privacy Policy", isDark),
+              _buildSectionText(
+                "Your privacy is important to us when using the Englitics application. This document explains the data we collect, use, and share.",
+                isDark,
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.calendar_today_outlined,
-                  size: 14,
-                  color: isDark
-                      ? AppColors.primary.withOpacity(0.8)
-                      : AppColors.primary,
+              _buildSectionTitle("Data We Collect", isDark),
+              _buildSectionText(
+                "Our application collects the following data to provide you with a better language learning experience:",
+                isDark,
+              ),
+              _buildBulletPoint(
+                  "Account information (email, username)", isDark),
+              _buildBulletPoint("Learning statistics and progress", isDark),
+              _buildBulletPoint("Usage data and interactions", isDark),
+              _buildBulletPoint("Device information", isDark),
+              _buildSectionTitle("Use of Data", isDark),
+              _buildSectionText(
+                "We use the data we collect for the following purposes:",
+                isDark,
+              ),
+              _buildBulletPoint("Personalized learning experience", isDark),
+              _buildBulletPoint("Improving application performance", isDark),
+              _buildBulletPoint("Developing new features", isDark),
+              _buildBulletPoint("User support", isDark),
+              _buildSectionTitle("Cookies and Tracking Technologies", isDark),
+              _buildSectionText(
+                "Our application may use cookies and similar tracking technologies to enhance user experience.",
+                isDark,
+              ),
+              _buildSectionTitle("Advertising and Analytics", isDark),
+              _buildSectionText(
+                "We display advertisements to provide you with a better experience and to finance our services. We use third-party advertising providers such as Google AdMob. These providers may use cookies to serve you ads based on your interests.",
+                isDark,
+              ),
+              _buildSectionTitle("Data Security", isDark),
+              _buildSectionText(
+                "We take reasonable security measures to protect your personal data, but no electronic transmission or storage method is 100% secure.",
+                isDark,
+              ),
+              _buildSectionTitle("Data Sharing", isDark),
+              _buildSectionText(
+                "We may share your data with third parties in the following circumstances:",
+                isDark,
+              ),
+              _buildBulletPoint(
+                  "With our service providers (servers, analytics, advertising)",
+                  isDark),
+              _buildBulletPoint("When legally required", isDark),
+              _buildBulletPoint(
+                  "In case of a business merger or acquisition", isDark),
+              _buildSectionTitle("User Rights", isDark),
+              _buildSectionText(
+                "All users have rights regarding their personal data, including:",
+                isDark,
+              ),
+              _buildBulletPoint("The right to access their data", isDark),
+              _buildBulletPoint("The right to correct inaccurate data", isDark),
+              _buildBulletPoint("The right to deletion of their data", isDark),
+              _buildBulletPoint(
+                  "The right to restrict or object to certain processing",
+                  isDark),
+              _buildSectionTitle("Policy Changes", isDark),
+              _buildSectionText(
+                "We may update this privacy policy from time to time. We will notify you when significant changes occur.",
+                isDark,
+              ),
+              _buildSectionTitle("Contact", isDark),
+              _buildSectionText(
+                "If you have any questions about this privacy policy, please contact us at support@englitics.com.",
+                isDark,
+              ),
+              const SizedBox(height: 30),
+              Text(
+                "Last Updated: May 9, 2024",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontStyle: FontStyle.italic,
+                  color: isDark ? Colors.white70 : Colors.black54,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  'Son Güncelleme: $currentMonth $currentYear',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: isDark
-                        ? AppColors.primary.withOpacity(0.9)
-                        : AppColors.primary,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-
-          const SizedBox(height: 24),
-
-          // Introduction
-          _buildSection(
-            'Giriş',
-            'Englitics uygulamasını kullanarak, gizliliğinizi ve kişisel verilerinizin nasıl işlendiğini önemsediğimizi belirtmek isteriz. Bu gizlilik politikası, topladığımız bilgileri, bu bilgileri nasıl kullandığımızı ve sizin haklarınızı açıklar.',
-            isDark,
-          ),
-
-          _buildSection(
-            'Topladığımız Bilgiler',
-            'Uygulamamız, size daha iyi bir deneyim sunmak için aşağıdaki bilgileri toplayabilir:\n\n'
-                '• Kullanım Verileri: Uygulama içindeki etkinlikleriniz, tamamladığınız alıştırmalar ve öğrenme performansınız\n'
-                '• Cihaz Bilgileri: İşletim sistemi, cihaz türü ve benzeri teknik bilgiler',
-            isDark,
-          ),
-
-          _buildSection(
-            'Bilgilerin Kullanımı',
-            'Topladığımız bilgileri şu amaçlarla kullanıyoruz:\n\n'
-                '• Hizmetimizi sağlamak ve geliştirmek\n'
-                '• Öğrenme deneyiminizi kişiselleştirmek\n'
-                '• İlerlemenizi takip etmek ve size geri bildirim sağlamak\n'
-                '• Teknik sorunları gidermek',
-            isDark,
-          ),
-
-          _buildSection(
-            'Değişiklikler',
-            'Bu gizlilik politikasını zaman zaman güncelleyebiliriz. Önemli değişiklikler olduğunda sizi bilgilendireceğiz.',
-            isDark,
-          ),
-
-          _buildSection(
-            'İletişim',
-            'Gizlilik politikamızla ilgili sorularınız veya endişeleriniz varsa, lütfen bizimle iletişime geçin.',
-            isDark,
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildSection(String title, String content, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      child: Column(
+  Widget _buildSectionTitle(String title, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 24, bottom: 12),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: isDark ? Colors.white : Colors.black,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionText(String text, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 16,
+          height: 1.5,
+          color: isDark ? Colors.white.withOpacity(0.9) : Colors.black87,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBulletPoint(String text, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 16, bottom: 8),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : AppColors.textPrimary,
-              ),
+          Text(
+            "•",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.blue : Colors.blue.shade700,
             ),
           ),
-          Text(
-            content,
-            style: TextStyle(
-              fontSize: 15,
-              height: 1.5,
-              color: isDark ? Colors.white.withOpacity(0.8) : Colors.black87,
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 16,
+                color: isDark ? Colors.white.withOpacity(0.9) : Colors.black87,
+              ),
             ),
           ),
         ],

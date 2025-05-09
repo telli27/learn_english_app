@@ -6,6 +6,14 @@ import '../features/grammar/repositories/exercise_answer_repository.dart';
 import '../features/auth/controllers/theme_controller.dart';
 import '../core/models/grammar_topic.dart';
 import 'providers/exercise_answer_provider.dart';
+import 'providers/connectivity_provider.dart';
+import 'providers/ad_provider.dart';
+
+// Re-export connectivity providers
+export 'providers/connectivity_provider.dart';
+
+// Re-export ad providers
+export 'providers/ad_provider.dart';
 
 // Dilbilgisi Providerleri (Grammar providers)
 // Dilbilgisi repository provider - GrammarRepository nesnesini sağlar

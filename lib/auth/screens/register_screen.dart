@@ -5,6 +5,9 @@ import '../../../core/utils/constants/colors.dart';
 import 'verification_screen.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import '../../../features/settings/screens/terms_of_use_screen.dart';
+import '../../../features/settings/screens/privacy_policy_screen.dart';
+import 'package:flutter/gestures.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -649,6 +652,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                         color: AppColors.primary,
                                         fontWeight: FontWeight.w500,
                                       ),
+                                      recognizer: TapGestureRecognizer()
+                                        ..onTap = () {
+                                          HapticFeedback.selectionClick();
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const TermsOfUseScreen(),
+                                            ),
+                                          );
+                                        },
                                     ),
                                     const TextSpan(text: ' ve '),
                                     TextSpan(
@@ -657,6 +671,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                         color: AppColors.primary,
                                         fontWeight: FontWeight.w500,
                                       ),
+                                      recognizer: TapGestureRecognizer()
+                                        ..onTap = () {
+                                          HapticFeedback.selectionClick();
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const PrivacyPolicyScreen(),
+                                            ),
+                                          );
+                                        },
                                     ),
                                   ],
                                 ),

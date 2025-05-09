@@ -7,14 +7,21 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'firebase_options.dart';
 import 'core/providers.dart';
+import 'core/providers/connectivity_provider.dart';
 import 'features/home/screens/main_screen.dart';
 import 'core/utils/constants/theme.dart';
 import 'core/data/grammar_data.dart';
 import 'auth/screens/login_screen.dart';
 import 'auth/screens/register_screen.dart';
 import 'auth/screens/verification_screen.dart';
+import 'core/screens/no_internet_screen.dart';
+import 'core/screens/loading_screen.dart';
+import 'core/screens/weak_connection_screen.dart';
+import 'features/settings/screens/terms_of_use_screen.dart';
+import 'features/settings/screens/privacy_policy_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +29,9 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Google Mobile Ads'i başlat
+  await MobileAds.instance.initialize();
 
   // Dilbilgisi verilerini JSON dosyasından yükle
   await GrammarData.loadTopics();
@@ -37,24 +47,148 @@ void main() async {
 
 // ConsumerWidget: Riverpod provider'larını kullanmak için özel widget sınıfı
 // Normal StatelessWidget yerine kullanılır ve WidgetRef alır
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeControllerProvider);
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
 
+class _MyAppState extends ConsumerState<MyApp> {
+  bool _isInitializing = true;
+  bool _topicsLoaded = false;
+  bool _isWeakConnection = false;
+  String _loadingMessage = 'İnternet bağlantısı kontrol ediliyor...';
+  late DateTime _loadStartTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    _loadStartTime = DateTime.now();
+
+    // Give a moment for the connectivity provider to initialize
+    await Future.delayed(Duration(seconds: 1));
+
+    // Check connectivity
+    final isConnected = ref.read(isConnectedProvider);
+
+    if (!isConnected) {
+      // If not connected, update the state and wait for connection
+      setState(() {
+        _isInitializing = false;
+      });
+      return;
+    }
+
+    // If connected, load topics
+    setState(() {
+      _loadingMessage = 'Konular yükleniyor...';
+    });
+
+    try {
+      // Start a timer to check for slow loading
+      _checkForSlowLoading();
+
+      // Load topics here (if needed again)
+      // await GrammarData.loadTopics();
+
+      // Simulate loading time for testing
+      // Comment this out in production
+      // await Future.delayed(Duration(seconds: 5));
+
+      setState(() {
+        _topicsLoaded = true;
+        _isInitializing = false;
+        _isWeakConnection = false;
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading topics: $e');
+      }
+      setState(() {
+        _isInitializing = false;
+        _isWeakConnection = true;
+      });
+    }
+  }
+
+  // Check if loading is taking too long, which may indicate a weak connection
+  Future<void> _checkForSlowLoading() async {
+    // Wait for 5 seconds
+    await Future.delayed(Duration(seconds: 5));
+
+    // If still initializing after 5 seconds, show weak connection screen
+    if (_isInitializing && mounted) {
+      setState(() {
+        _isWeakConnection = true;
+        _isInitializing = false;
+      });
+    }
+  }
+
+  // Reset app state and try loading again
+  void _retryLoading() {
+    setState(() {
+      _isInitializing = true;
+      _isWeakConnection = false;
+      _topicsLoaded = false;
+      _loadingMessage = 'Konular yükleniyor...';
+    });
+
+    _initializeApp();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeMode = ref.watch(themeControllerProvider);
+    final connectivityStatus = ref.watch(connectivityProvider);
+
+    // Return a MaterialApp with the correct content based on connectivity
     return MaterialApp(
       title: 'Englitics-İngilizce Öğren',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
-      initialRoute: '/',
+      home: connectivityStatus.when(
+        data: (isConnected) {
+          // If there's no internet, show no internet screen
+          if (!isConnected) {
+            return const NoInternetScreen();
+          }
+
+          // If showing weak connection warning
+          if (_isWeakConnection) {
+            return WeakConnectionScreen(onRetry: _retryLoading);
+          }
+
+          // If initializing, show loading screen
+          if (_isInitializing) {
+            return LoadingScreen(message: _loadingMessage);
+          }
+
+          // If topics are not loaded, try loading them again
+          if (!_topicsLoaded) {
+            _initializeApp();
+            return LoadingScreen(message: 'Konular yükleniyor...');
+          }
+
+          // If everything is good, show the main screen
+          return const MainScreen();
+        },
+        loading: () => const LoadingScreen(
+            message: 'İnternet bağlantısı kontrol ediliyor...'),
+        error: (_, __) => const NoInternetScreen(),
+      ),
       routes: {
-        '/': (context) => const MainScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
+        '/terms_of_use': (context) => const TermsOfUseScreen(),
+        '/privacy_policy': (context) => const PrivacyPolicyScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/verification') {
