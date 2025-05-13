@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
@@ -25,6 +26,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen>
   Timer? _timer;
   int _timeLeft = 60;
   bool _canResend = false;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // Animasyon kontrolcüsü
   late AnimationController _animationController;
@@ -77,9 +79,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen>
         });
         timer.cancel();
       } else {
-        setState(() {
-          _timeLeft--;
-        });
+        _timeLeft--;
       }
     });
   }
@@ -97,7 +97,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen>
         setState(() {
           _isVerified = true;
         });
-
+        await _auth.currentUser!.reload();
         // Show success message and navigate after delay
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -110,11 +110,9 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen>
         // Stop checking for verification
         _timer?.cancel();
 
-        // Navigate back to home screen after a delay
+        // Just pop the current screen after a delay
         Future.delayed(const Duration(seconds: 1), () {
           if (mounted) {
-            // Pop twice to get back to the home screen
-            Navigator.of(context).pop();
             Navigator.of(context).pop();
           }
         });

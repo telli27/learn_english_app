@@ -111,7 +111,7 @@ class TermsOfUseScreen extends ConsumerWidget {
               ),
               _buildSectionTitle("Contact", isDark),
               _buildSectionText(
-                "If you have any questions about these terms of use, please contact us at support@englitics.com.",
+                "If you have any questions about these terms of use, please contact us at huseyintelli30@gmail.com",
                 isDark,
               ),
               const SizedBox(height: 30),

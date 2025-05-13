@@ -1,7 +1,12 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../core/utils/constants/colors.dart';
+import '../providers/feature_request_provider.dart';
+import 'user_feature_requests_screen.dart';
+import 'admin_feature_requests_screen.dart';
 
 class FeatureRequestScreen extends ConsumerStatefulWidget {
   const FeatureRequestScreen({Key? key}) : super(key: key);
@@ -17,11 +22,113 @@ class _FeatureRequestScreenState extends ConsumerState<FeatureRequestScreen> {
 
   bool _isSubmitting = false;
   bool _submitted = false;
+  String? _errorMessage;
+  String? _debugMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    // Schedule a refresh of the isAdmin status after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // This will force the isAdminProvider to refresh
+      ref.refresh(isAdminProvider);
+    });
+  }
 
   @override
   void dispose() {
     _featureController.dispose();
     super.dispose();
+  }
+
+  Future<void> _debugCheckCollections() async {
+    setState(() {
+      _debugMessage = "Koleksiyonlar kontrol ediliyor...";
+    });
+
+    try {
+      final service = ref.read(featureRequestServiceProvider);
+      await service.debugCheckCollections();
+
+      setState(() {
+        _debugMessage =
+            "Debug log'ları konsola yazdırıldı. Lütfen konsolu kontrol edin.";
+      });
+
+      Future.delayed(Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _debugMessage = null;
+          });
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _debugMessage = "Hata: $e";
+      });
+    }
+  }
+
+  Future<void> _createTestFeatureRequest() async {
+    setState(() {
+      _debugMessage = "Test özellik isteği oluşturuluyor...";
+    });
+
+    try {
+      final service = ref.read(featureRequestServiceProvider);
+      final result = await service.createTestFeatureRequest();
+
+      setState(() {
+        if (result) {
+          _debugMessage = "Test özellik isteği başarıyla oluşturuldu.";
+        } else {
+          _debugMessage = "Test özellik isteği oluşturulamadı.";
+        }
+      });
+
+      Future.delayed(Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _debugMessage = null;
+          });
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _debugMessage = "Hata: $e";
+      });
+    }
+  }
+
+  Future<void> _createSampleFeatureRequests() async {
+    setState(() {
+      _debugMessage = "Örnek özellik istekleri oluşturuluyor...";
+    });
+
+    try {
+      final service = ref.read(featureRequestServiceProvider);
+      final result = await service.createSampleFeatureRequests();
+
+      setState(() {
+        if (result) {
+          _debugMessage = "Örnek özellik istekleri başarıyla oluşturuldu.";
+        } else {
+          _debugMessage = "Örnek özellik istekleri oluşturulamadı.";
+        }
+      });
+
+      Future.delayed(Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _debugMessage = null;
+          });
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _debugMessage = "Hata: $e";
+      });
+    }
   }
 
   Future<void> _submitForm() async {
@@ -31,30 +138,124 @@ class _FeatureRequestScreenState extends ConsumerState<FeatureRequestScreen> {
 
     setState(() {
       _isSubmitting = true;
+      _errorMessage = null;
     });
 
-    // Simulating API call
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final service = ref.read(featureRequestServiceProvider);
+      final success =
+          await service.submitFeatureRequest(_featureController.text);
 
-    if (mounted) {
-      setState(() {
-        _isSubmitting = false;
-        _submitted = true;
-      });
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+          _submitted = success;
+          if (!success) {
+            _errorMessage =
+                'Özellik isteği gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.';
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+          _errorMessage = 'Özellik isteği gönderilirken bir hata oluştu: $e';
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = ref.watch(isDarkModeProvider);
+    final isAdminAsync = ref.watch(isAdminProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Özellik İsteği'),
         centerTitle: true,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Özellik İsteklerim',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const UserFeatureRequestsScreen(),
+                ),
+              );
+            },
+          ),
+          if (isAdminAsync.maybeWhen(
+            data: (isAdmin) {
+              log("isAdmin ** * $isAdmin");
+              return isAdmin;
+            },
+            orElse: () => false,
+          ))
+            IconButton(
+              icon: const Icon(Icons.admin_panel_settings),
+              tooltip: 'Özellik İstekleri Yönetimi',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AdminFeatureRequestsScreen(),
+                  ),
+                );
+              },
+            ),
+          /* PopupMenuButton(
+            icon: Icon(Icons.bug_report),
+            tooltip: 'Debug',
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                child: Text('Koleksiyonları Kontrol Et'),
+                onTap: () => Future.delayed(
+                  Duration(seconds: 0),
+                  () => _debugCheckCollections(),
+                ),
+              ),
+              PopupMenuItem(
+                child: Text('Test İsteği Oluştur'),
+                onTap: () => Future.delayed(
+                  Duration(seconds: 0),
+                  () => _createTestFeatureRequest(),
+                ),
+              ),
+              PopupMenuItem(
+                child: Text('Örnek İstekler Oluştur'),
+                onTap: () => Future.delayed(
+                  Duration(seconds: 0),
+                  () => _createSampleFeatureRequests(),
+                ),
+              ),
+            ],
+          ),*/
+        ],
       ),
-      body: _submitted ? _buildSuccessView(isDark) : _buildFormView(isDark),
+      body: Column(
+        children: [
+          if (_debugMessage != null)
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(8),
+              color: Colors.blue.withOpacity(0.2),
+              child: Text(
+                _debugMessage!,
+                style: TextStyle(color: Colors.blue[800]),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          Expanded(
+            child:
+                _submitted ? _buildSuccessView(isDark) : _buildFormView(isDark),
+          ),
+        ],
+      ),
     );
   }
 
@@ -90,25 +291,55 @@ class _FeatureRequestScreenState extends ConsumerState<FeatureRequestScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _submitted = false;
-                  _featureController.clear();
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _submitted = false;
+                      _featureController.clear();
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Yeni Öneri Gönder',
+                    style: TextStyle(fontSize: 16),
+                  ),
                 ),
-              ),
-              child: const Text(
-                'Yeni Öneri Gönder',
-                style: TextStyle(fontSize: 16),
-              ),
+                const SizedBox(width: 16),
+                OutlinedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const UserFeatureRequestsScreen(),
+                      ),
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    side: BorderSide(
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  child: const Text(
+                    'İsteklerimi Gör',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -182,6 +413,16 @@ class _FeatureRequestScreenState extends ConsumerState<FeatureRequestScreen> {
                       return null;
                     },
                   ),
+                  if (_errorMessage != null) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      _errorMessage!,
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,

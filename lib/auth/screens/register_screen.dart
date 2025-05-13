@@ -280,7 +280,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               fontSize: 16.0);
 
           if (mounted) {
-            Navigator.pushReplacement(
+            Navigator.push(
               context,
               PageRouteBuilder(
                 pageBuilder: (context, animation, secondaryAnimation) =>

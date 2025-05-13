@@ -86,6 +86,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             'createdAt': Timestamp.now(),
             'lastLoginAt': Timestamp.now(),
             'emailVerified': user.emailVerified,
+            "isAdmin": false
           });
         } else {
           // Kullanıcı var, son giriş bilgisini güncelle
@@ -206,6 +207,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           'createdAt': Timestamp.now(),
           'lastLoginAt': Timestamp.now(),
           'emailVerified': false,
+          "isAdmin":false
         });
 
         // E-posta doğrulama gönder

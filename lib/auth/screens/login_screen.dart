@@ -190,8 +190,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             textColor: Colors.white,
             fontSize: 16.0);
 
-        // Return to home screen if successful - using popUntil instead of pop
-        Navigator.popUntil(context, (route) => route.isFirst);
+        // Just pop this screen instead of navigating to home
+        Navigator.pop(context);
       } else if (mounted) {
         // Error haptic feedback
         HapticFeedback.heavyImpact();
@@ -236,323 +236,359 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       backgroundColor:
           isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
       body: SafeArea(
-        child: GestureDetector(
-          onTap: () {
-            // Hide keyboard when tapping outside of text fields
-            FocusScope.of(context).unfocus();
-          },
-          child: Form(
-            key: _formKey,
-            child: Center(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Logo with animation
-                      Center(
-                        child: FadeTransition(
-                          opacity: _logoFadeAnimation,
-                          child: ScaleTransition(
-                            scale: _logoScaleAnimation,
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Icon(
-                                Icons.school_rounded,
-                                size: 64,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Title with animation
-                      FadeTransition(
-                        opacity: _titleFadeAnimation,
-                        child: SlideTransition(
-                          position: _titleSlideAnimation,
-                          child: Column(
-                            children: [
-                              Text(
-                                'Englitics',
-                                style: TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : Colors.black87,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'İngilizce Öğrenmeye Devam Edin',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color:
-                                      isDark ? Colors.white70 : Colors.black54,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // Error message if exists
-                      if (errorMessage != null)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.red.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: Colors.red.shade200,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.error_outline,
-                                color: Colors.red,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  errorMessage,
-                                  style: const TextStyle(
-                                    color: Colors.red,
-                                    fontSize: 14,
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 16.0),
+              child: IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.black.withOpacity(0.05),
+                  ),
+                  child: Icon(
+                    Icons.arrow_back_rounded,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  HapticFeedback.lightImpact();
+                },
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                // Hide keyboard when tapping outside of text fields
+                FocusScope.of(context).unfocus();
+              },
+              child: Form(
+                key: _formKey,
+                child: Center(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Logo with animation
+                          Center(
+                            child: FadeTransition(
+                              opacity: _logoFadeAnimation,
+                              child: ScaleTransition(
+                                scale: _logoScaleAnimation,
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Icon(
+                                    Icons.school_rounded,
+                                    size: 64,
+                                    color: AppColors.primary,
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-
-                      // Email field with animation
-                      FadeTransition(
-                        opacity: _emailFieldFadeAnimation,
-                        child: SlideTransition(
-                          position: _emailFieldSlideAnimation,
-                          child: _buildTextField(
-                            controller: _emailController,
-                            label: 'E-posta',
-                            placeholder: 'E-posta adresinizi girin',
-                            icon: Icons.email_outlined,
-                            isDark: isDark,
-                            keyboardType: TextInputType.emailAddress,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'E-posta adresi gerekli';
-                              }
-                              if (!RegExp(
-                                      r'^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+')
-                                  .hasMatch(value)) {
-                                return 'Geçerli bir e-posta adresi girin';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Password field with animation
-                      FadeTransition(
-                        opacity: _passwordFieldFadeAnimation,
-                        child: SlideTransition(
-                          position: _passwordFieldSlideAnimation,
-                          child: _buildTextField(
-                            controller: _passwordController,
-                            label: 'Şifre',
-                            placeholder: 'Şifrenizi girin',
-                            icon: Icons.lock_outline,
-                            isDark: isDark,
-                            obscureText: _obscurePassword,
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
-                                color: isDark ? Colors.white54 : Colors.black45,
-                                size: 20,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                                HapticFeedback.selectionClick();
-                              },
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Şifre gerekli';
-                              }
-                              if (value.length < 6) {
-                                return 'Şifre en az 6 karakter olmalı';
-                              }
-                              return null;
-                            },
                           ),
-                        ),
-                      ),
 
-                      // Forgot password link with animation
-                      FadeTransition(
-                        opacity: _forgotPasswordFadeAnimation,
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              // Forgot password logic
-                              HapticFeedback.selectionClick();
-                              Fluttertoast.showToast(
-                                msg: "Şifre sıfırlama yakında eklenecek!",
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.BOTTOM,
-                                timeInSecForIosWeb: 1,
-                                backgroundColor: Colors.grey.shade800,
-                                textColor: Colors.white,
-                                fontSize: 16.0,
-                              );
-                            },
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppColors.primary,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
+                          const SizedBox(height: 24),
+
+                          // Title with animation
+                          FadeTransition(
+                            opacity: _titleFadeAnimation,
+                            child: SlideTransition(
+                              position: _titleSlideAnimation,
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'Englitics',
+                                    style: TextStyle(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.black87,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'İngilizce Öğrenmeye Devam Edin',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.black54,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
                               ),
                             ),
-                            child: const Text(
-                              'Şifremi Unuttum',
-                              style: TextStyle(fontSize: 14),
-                            ),
                           ),
-                        ),
-                      ),
 
-                      const SizedBox(height: 30),
+                          const SizedBox(height: 32),
 
-                      // Login button with animation
-                      FadeTransition(
-                        opacity: _loginButtonFadeAnimation,
-                        child: SlideTransition(
-                          position: _loginButtonSlideAnimation,
-                          child: SizedBox(
-                            height: 54,
-                            child: ElevatedButton(
-                              onPressed: _isLoading ? null : _login,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.white,
-                                elevation: 2,
-                                shadowColor: AppColors.primary.withOpacity(0.3),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
+                          // Error message if exists
+                          if (errorMessage != null)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Colors.red.shade200,
                                 ),
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
                               ),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.5,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Text(
-                                      'Giriş Yap',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.error_outline,
+                                    color: Colors.red,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      errorMessage,
+                                      style: const TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 14,
                                       ),
                                     ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          // Email field with animation
+                          FadeTransition(
+                            opacity: _emailFieldFadeAnimation,
+                            child: SlideTransition(
+                              position: _emailFieldSlideAnimation,
+                              child: _buildTextField(
+                                controller: _emailController,
+                                label: 'E-posta',
+                                placeholder: 'E-posta adresinizi girin',
+                                icon: Icons.email_outlined,
+                                isDark: isDark,
+                                keyboardType: TextInputType.emailAddress,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'E-posta adresi gerekli';
+                                  }
+                                  if (!RegExp(
+                                          r'^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+')
+                                      .hasMatch(value)) {
+                                    return 'Geçerli bir e-posta adresi girin';
+                                  }
+                                  return null;
+                                },
+                              ),
                             ),
                           ),
-                        ),
-                      ),
 
-                      const SizedBox(height: 40),
+                          const SizedBox(height: 20),
 
-                      // Register option with animation
-                      FadeTransition(
-                        opacity: _registerOptionFadeAnimation,
-                        child: SlideTransition(
-                          position: _registerOptionSlideAnimation,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Hesabınız yok mu?',
-                                style: TextStyle(
-                                  color:
-                                      isDark ? Colors.white70 : Colors.black54,
+                          // Password field with animation
+                          FadeTransition(
+                            opacity: _passwordFieldFadeAnimation,
+                            child: SlideTransition(
+                              position: _passwordFieldSlideAnimation,
+                              child: _buildTextField(
+                                controller: _passwordController,
+                                label: 'Şifre',
+                                placeholder: 'Şifrenizi girin',
+                                icon: Icons.lock_outline,
+                                isDark: isDark,
+                                obscureText: _obscurePassword,
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                    color: isDark
+                                        ? Colors.white54
+                                        : Colors.black45,
+                                    size: 20,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                    HapticFeedback.selectionClick();
+                                  },
                                 ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Şifre gerekli';
+                                  }
+                                  if (value.length < 6) {
+                                    return 'Şifre en az 6 karakter olmalı';
+                                  }
+                                  return null;
+                                },
                               ),
-                              TextButton(
+                            ),
+                          ),
+
+                          // Forgot password link with animation
+                          FadeTransition(
+                            opacity: _forgotPasswordFadeAnimation,
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
                                 onPressed: () {
+                                  // Forgot password logic
                                   HapticFeedback.selectionClick();
-                                  Navigator.push(
-                                    context,
-                                    PageRouteBuilder(
-                                      pageBuilder: (context, animation,
-                                              secondaryAnimation) =>
-                                          const RegisterScreen(),
-                                      transitionsBuilder: (context, animation,
-                                          secondaryAnimation, child) {
-                                        var begin = const Offset(1.0, 0.0);
-                                        var end = Offset.zero;
-                                        var curve = Curves.easeOutQuint;
-                                        var tween = Tween(
-                                                begin: begin, end: end)
-                                            .chain(CurveTween(curve: curve));
-                                        return SlideTransition(
-                                          position: animation.drive(tween),
-                                          child: child,
-                                        );
-                                      },
-                                    ),
+                                  Fluttertoast.showToast(
+                                    msg: "Şifre sıfırlama yakında eklenecek!",
+                                    toastLength: Toast.LENGTH_SHORT,
+                                    gravity: ToastGravity.BOTTOM,
+                                    timeInSecForIosWeb: 1,
+                                    backgroundColor: Colors.grey.shade800,
+                                    textColor: Colors.white,
+                                    fontSize: 16.0,
                                   );
                                 },
                                 style: TextButton.styleFrom(
                                   foregroundColor: AppColors.primary,
-                                  textStyle: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 8,
                                     vertical: 4,
                                   ),
                                 ),
-                                child: const Text('Kayıt Ol'),
+                                child: const Text(
+                                  'Şifremi Unuttum',
+                                  style: TextStyle(fontSize: 14),
+                                ),
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
 
-                      const SizedBox(height: 20),
-                    ],
+                          const SizedBox(height: 30),
+
+                          // Login button with animation
+                          FadeTransition(
+                            opacity: _loginButtonFadeAnimation,
+                            child: SlideTransition(
+                              position: _loginButtonSlideAnimation,
+                              child: SizedBox(
+                                height: 54,
+                                child: ElevatedButton(
+                                  onPressed: _isLoading ? null : _login,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: Colors.white,
+                                    elevation: 2,
+                                    shadowColor:
+                                        AppColors.primary.withOpacity(0.3),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                  ),
+                                  child: _isLoading
+                                      ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Text(
+                                          'Giriş Yap',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 40),
+
+                          // Register option with animation
+                          FadeTransition(
+                            opacity: _registerOptionFadeAnimation,
+                            child: SlideTransition(
+                              position: _registerOptionSlideAnimation,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Hesabınız yok mu?',
+                                    style: TextStyle(
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.black54,
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      HapticFeedback.selectionClick();
+                                      Navigator.push(
+                                        context,
+                                        PageRouteBuilder(
+                                          pageBuilder: (context, animation,
+                                                  secondaryAnimation) =>
+                                              const RegisterScreen(),
+                                          transitionsBuilder: (context,
+                                              animation,
+                                              secondaryAnimation,
+                                              child) {
+                                            var begin = const Offset(1.0, 0.0);
+                                            var end = Offset.zero;
+                                            var curve = Curves.easeOutQuint;
+                                            var tween = Tween(
+                                                    begin: begin, end: end)
+                                                .chain(
+                                                    CurveTween(curve: curve));
+                                            return SlideTransition(
+                                              position: animation.drive(tween),
+                                              child: child,
+                                            );
+                                          },
+                                        ),
+                                      );
+                                    },
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: AppColors.primary,
+                                      textStyle: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                    ),
+                                    child: const Text('Kayıt Ol'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

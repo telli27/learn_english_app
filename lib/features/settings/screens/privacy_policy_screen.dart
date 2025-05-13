@@ -90,7 +90,7 @@ class PrivacyPolicyScreen extends ConsumerWidget {
               ),
               _buildSectionTitle("Contact", isDark),
               _buildSectionText(
-                "If you have any questions about this privacy policy, please contact us at support@englitics.com.",
+                "If you have any questions about this privacy policy, please contact us at huseyintelli30@gmail.com",
                 isDark,
               ),
               const SizedBox(height: 30),

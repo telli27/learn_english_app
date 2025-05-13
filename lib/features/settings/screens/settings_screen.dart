@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
@@ -6,12 +7,13 @@ import 'privacy_policy_screen.dart';
 import 'feature_request_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+   SettingsScreen({Key? key}) : super(key: key);
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = ref.watch(isDarkModeProvider);
-
+   _auth.currentUser?.reload();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ayarlar'),
@@ -73,6 +75,7 @@ class SettingsScreen extends ConsumerWidget {
                       builder: (context) => const FeatureRequestScreen()));
             },
           ),
+
           /* _buildSettingCard(
             context,
             icon: Icons.info_outline,

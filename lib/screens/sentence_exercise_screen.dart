@@ -33,6 +33,7 @@ class _SentenceExerciseScreenState
   bool _showExplanation = true;
   List<Map<String, dynamic>> _filteredExercises = [];
   bool _isLoading = true;
+  bool _allExercisesCompleted = false;
 
   // Topic grammar explanations
   final Map<String, String> _grammarExplanations = {
@@ -1037,70 +1038,121 @@ class _SentenceExerciseScreenState
   @override
   void initState() {
     super.initState();
-    _loadExercisesForTopic();
+
+    // Widget ağacı oluşturulduktan sonra alıştırmaları yükle
+    Future.microtask(() {
+      if (mounted) {
+        _loadAndFilterExercises();
+      }
+    });
   }
 
-  void _loadExercisesForTopic() async {
+  // Alıştırmaları yükle ve kullanıcının doğru yaptıklarını filtrele
+  Future<void> _loadAndFilterExercises() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true;
     });
 
-    try {
-      // Get authentication state to see if user is logged in
-      final authState = ref.read(authProvider);
+    // Kullanıcının oturum durumunu kontrol et
+    final authState = ref.read(authProvider);
 
-      if (authState.isLoggedIn) {
-        // Load user's correct exercise IDs
-        await ref
-            .read(exerciseAnswerProvider.notifier)
-            .loadUserCorrectExerciseIds(authState.userId!);
+    // Kullanıcının giriş yapmadığı durumda tüm alıştırmaları göster
+    if (!authState.isLoggedIn) {
+      if (!mounted) return;
+
+      setState(() {
+        _filteredExercises = List.from(_exercises[widget.topic] ?? []);
+        _isLoading = false;
+      });
+
+      // Oturum açılmaması durumunda uyarı göster
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'İlerleme kaydetmek için lütfen giriş yapın',
+              style: TextStyle(color: Colors.white),
+            ),
+            action: SnackBarAction(
+              label: 'Giriş Yap',
+              onPressed: () {
+                // Login sayfasına yönlendir
+                Navigator.pushNamed(context, '/login');
+              },
+            ),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 5),
+          ),
+        );
       }
+      return;
+    }
 
-      // Get list of exercises for the current topic
-      final allExercisesForTopic = _exercises[widget.topic] ?? [];
+    try {
+      // Exercise-answer provider'dan notifier'a erişim
+      final exerciseAnswerNotifier = ref.read(exerciseAnswerProvider.notifier);
 
-      if (allExercisesForTopic.isEmpty) {
+      // Kullanıcının doğru yaptığı alıştırmaları getir
+      await exerciseAnswerNotifier
+          .loadUserCorrectExerciseIds(authState.userId!);
+
+      if (!mounted) return;
+
+      // Provider'dan doğru yapılmış alıştırma ID'lerini al
+      final exerciseAnswerState = ref.read(exerciseAnswerProvider);
+      final correctExerciseIds = exerciseAnswerState.correctExerciseIds;
+
+      // Tüm alıştırmaları al
+      final allExercises = _exercises[widget.topic] ?? [];
+
+      // Doğru yapılmamış alıştırmaları filtrele
+      final uncompleteExercises = allExercises.where((exercise) {
+        return !correctExerciseIds.contains(exercise['id']);
+      }).toList();
+
+      if (!mounted) return;
+
+      // Tüm alıştırmalar tamamlandıysa
+      if (uncompleteExercises.isEmpty && allExercises.isNotEmpty) {
         setState(() {
-          _filteredExercises = [];
+          _allExercisesCompleted = true;
           _isLoading = false;
+          _filteredExercises = [];
         });
         return;
       }
 
-      if (authState.isLoggedIn) {
-        // Get all exercise IDs for this topic
-        final allExerciseIds =
-            allExercisesForTopic.map((e) => e['id'] as String).toList();
-
-        // Get the correct exercise IDs for this user
-        final correctIds = ref.read(exerciseAnswerProvider).correctExerciseIds;
-
-        // Filter to only include exercises that haven't been completed correctly for this topic
-        _filteredExercises = allExercisesForTopic.where((exercise) {
-          final exerciseId = exercise['id'] as String;
-          return !correctIds.contains(exerciseId);
-        }).toList();
-
-        // Cap at 10 exercises for this session if there are more than 10
-        if (_filteredExercises.length > 10) {
-          _filteredExercises = _filteredExercises.sublist(0, 10);
-        }
-      } else {
-        // If user is not logged in, just take 10 random exercises
-        _filteredExercises = List.from(allExercisesForTopic);
-        if (_filteredExercises.length > 10) {
-          _filteredExercises = _filteredExercises.sublist(0, 10);
-        }
-      }
+      // Rastgele karıştır - isteğe bağlı
+      uncompleteExercises.shuffle();
 
       setState(() {
+        _filteredExercises = uncompleteExercises;
         _isLoading = false;
       });
     } catch (e) {
+      // Hata durumunda tüm alıştırmaları göster
+      if (!mounted) return;
+
       setState(() {
-        _filteredExercises = [];
+        _filteredExercises = List.from(_exercises[widget.topic] ?? []);
         _isLoading = false;
       });
+
+      // Hata mesajı göster
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Alıştırmalar yüklenirken bir hata oluştu: ${e.toString()}',
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
     }
   }
 
@@ -1136,13 +1188,53 @@ class _SentenceExerciseScreenState
     // Save the answer if user is logged in
     final authState = ref.read(authProvider);
     if (authState.isLoggedIn) {
-      ref.read(exerciseAnswerProvider.notifier).saveExerciseAnswer(
-            userId: authState.userId!,
-            topicId: widget.topicId,
-            subtopicId: widget.subtopicId,
-            exerciseId: currentExercise['id'] as String,
-            isCorrect: isCorrect,
-          );
+      // Firebase'e cevabı kaydet - Future kullanarak widget ağacı oluşturulduktan sonra işlem yap
+      Future.microtask(() {
+        ref.read(exerciseAnswerProvider.notifier).saveExerciseAnswer(
+              userId: authState.userId!,
+              topicId: widget.topicId,
+              subtopicId: widget.subtopicId,
+              exerciseId: currentExercise['id'] as String,
+              isCorrect: isCorrect,
+            );
+      });
+
+      // Eğer cevap doğruysa ve bu son alıştırma ise
+      if (isCorrect && _filteredExercises.length == 1) {
+        // Yüklenen alıştırma sayısını güncelle ve ekranı göster
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            setState(() {
+              _allExercisesCompleted = true;
+            });
+          }
+        });
+      }
+    } else {
+      // Kullanıcı oturum açmamışsa ancak doğru cevap verdiyse bilgilendir
+      if (isCorrect) {
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text(
+                  'İlerlemenizi kaydetmek için giriş yapabilirsiniz',
+                  style: TextStyle(color: Colors.white),
+                ),
+                action: SnackBarAction(
+                  label: 'Giriş Yap',
+                  onPressed: () {
+                    // Login sayfasına yönlendir
+                    Navigator.pushNamed(context, '/login');
+                  },
+                ),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          }
+        });
+      }
     }
 
     setState(() {
@@ -1163,7 +1255,9 @@ class _SentenceExerciseScreenState
 
         // Check if there are any exercises left
         if (_filteredExercises.isEmpty) {
-          _showCompletionDialog();
+          // Tüm alıştırmalar tamamlandı, _allExercisesCompleted flag'ini aktif et
+          // Dialog göstermek yerine tebrikler ekranını göstereceğiz
+          _allExercisesCompleted = true;
           return;
         }
       } else {
@@ -1207,9 +1301,8 @@ class _SentenceExerciseScreenState
             widget.topic,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          foregroundColor: isDark ? Colors.white : Colors.black,
-          elevation: 0,
+          backgroundColor: widget.color,
+          foregroundColor: Colors.white,
         ),
         body: const Center(
           child: CircularProgressIndicator(),
@@ -1217,7 +1310,92 @@ class _SentenceExerciseScreenState
       );
     }
 
-    // No exercises left to show
+    // Tüm alıştırmalar tamamlandıysa tebrik ekranını göster
+    if (_allExercisesCompleted) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.topic,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: widget.color,
+          foregroundColor: Colors.white,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: Container(
+          color: isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5),
+          width: double.infinity,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Tebrikler ikonu
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 60,
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Tebrikler mesajı
+              Text(
+                'Tebrikler!',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                child: Text(
+                  'Bu oturumdaki alıştırmaları tamamladınız.\nDoğru cevapladığınız alıştırmalar artık karşınıza çıkmayacak ve ilerlemeniz kaydedildi.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Tamam butonu
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: widget.color,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                child: const Text(
+                  'Tamam',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Alıştırma içeriği yoksa
     if (_filteredExercises.isEmpty) {
       return Scaffold(
         appBar: AppBar(
