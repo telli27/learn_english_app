@@ -177,7 +177,7 @@ class _FeatureRequestScreenState extends ConsumerState<FeatureRequestScreen> {
         centerTitle: true,
         elevation: 0,
         actions: [
-          IconButton(
+          /*  IconButton(
             icon: const Icon(Icons.history),
             tooltip: 'Özellik İsteklerim',
             onPressed: () {
@@ -208,7 +208,7 @@ class _FeatureRequestScreenState extends ConsumerState<FeatureRequestScreen> {
                 );
               },
             ),
-          /* PopupMenuButton(
+        PopupMenuButton(
             icon: Icon(Icons.bug_report),
             tooltip: 'Debug',
             itemBuilder: (context) => [
