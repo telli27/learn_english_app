@@ -33,6 +33,13 @@ class AdService {
         _adConfig = AdConfig.fromFirestore(docSnapshot);
         debugPrint(
             'Ad config loaded: maxImpression=${_adConfig.maxImpression}, platform=${_adConfig.platform}');
+        debugPrint('Is test mode: ${_adConfig.isTestMode}');
+        debugPrint(
+            'Real interstitial ad unit ID: ${_adConfig.realInterstitialAdUnitId}');
+        debugPrint(
+            'Test interstitial ad unit ID: ${_adConfig.testInterstitialAdUnitId}');
+        debugPrint(
+            'Using interstitial ad unit ID: ${_adConfig.interstitialAdUnitId}');
       } else {
         debugPrint('Ad config not found, using default values');
       }
@@ -49,8 +56,12 @@ class AdService {
       return;
     }
 
+    final adUnitId = _adConfig.interstitialAdUnitId;
+    debugPrint(
+        'Loading interstitial ad with ID: $adUnitId (platform: ${_adConfig.platform}, isTestMode: ${_adConfig.isTestMode})');
+
     await InterstitialAd.load(
-      adUnitId: _adConfig.interstitialAdUnitId,
+      adUnitId: adUnitId,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {

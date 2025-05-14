@@ -99,7 +99,11 @@ class _MyAppState extends ConsumerState<MyApp> {
       // Simulate loading time for testing
       // Comment this out in production
       // await Future.delayed(Duration(seconds: 5));
-
+    if (GrammarData.topics.isEmpty) {
+        // If topics are not loaded, force loading from GitHub
+        debugPrint('Topics are empty, loading from GitHub...');
+        await GrammarData.loadTopics();
+      }
       setState(() {
         _topicsLoaded = true;
         _isInitializing = false;

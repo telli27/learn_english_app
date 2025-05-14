@@ -1,12 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/connectivity_provider.dart';
+import '../data/grammar_data.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class NoInternetScreen extends ConsumerWidget {
+class NoInternetScreen extends ConsumerStatefulWidget {
   const NoInternetScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NoInternetScreen> createState() => _NoInternetScreenState();
+}
+
+class _NoInternetScreenState extends ConsumerState<NoInternetScreen> {
+  bool _isLoading = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Check if connectivity status changed to connected
+    final connectivityStatus = ref.watch(connectivityProvider);
+    connectivityStatus.whenData((isConnected) {
+      if (isConnected && !_isLoading) {
+        _reloadContentOnReconnect();
+      }
+    });
+  }
+
+  // This method reloads content when internet connection is restored
+  Future<void> _reloadContentOnReconnect() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Check if we have content in SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final hasGrammarData = prefs.containsKey('grammar_data_json');
+
+      // If no data in SharedPreferences, force reload from GitHub
+      if (!hasGrammarData) {
+        await GrammarData.loadTopics();
+      }
+    } catch (e) {
+      debugPrint('Error reloading content: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Watch the connectivity stream to rebuild when connection status changes
     final connectivityStatus = ref.watch(connectivityProvider);
 
@@ -15,16 +62,15 @@ class NoInternetScreen extends ConsumerWidget {
         data: (isConnected) {
           // If connection is restored, this will rebuild but app
           // should navigate away from this screen in parent widget
-          return _buildNoInternetUI(context, isConnected, ref);
+          return _buildNoInternetUI(context, isConnected);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => _buildNoInternetUI(context, false, ref),
+        error: (_, __) => _buildNoInternetUI(context, false),
       ),
     );
   }
 
-  Widget _buildNoInternetUI(
-      BuildContext context, bool isConnected, WidgetRef ref) {
+  Widget _buildNoInternetUI(BuildContext context, bool isConnected) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -92,7 +138,14 @@ class NoInternetScreen extends ConsumerWidget {
               const SizedBox(height: 40),
 
               // Retry button - only show if not already reconnected
-              if (!isConnected) _buildRetryButton(context, ref),
+              if (!isConnected) _buildRetryButton(context),
+
+              // Loading indicator
+              if (_isLoading)
+                Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: CircularProgressIndicator(color: Colors.white),
+                ),
 
               // Space at the bottom
               const Spacer(flex: 2),
@@ -129,15 +182,38 @@ class NoInternetScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildRetryButton(BuildContext context, WidgetRef ref) {
+  Widget _buildRetryButton(BuildContext context) {
     return ElevatedButton.icon(
-      onPressed: () {
+      onPressed: () async {
         // Manually trigger a refresh of the connectivity provider
         ref.invalidate(connectivityProvider);
 
-        // The invalidation above is sufficient to refresh connectivity status
-        // final connectivityService = ref.read(connectivityServiceProvider);
-        // connectivityService.checkConnectivity();
+        // Force reload content from GitHub
+        if (!_isLoading) {
+          setState(() {
+            _isLoading = true;
+          });
+
+          try {
+            // Check if we have content in SharedPreferences
+            final prefs = await SharedPreferences.getInstance();
+
+            // Clear grammar data
+            await prefs.remove('grammar_data_json');
+            await prefs.remove('grammar_version_json');
+
+            // Force reload from GitHub
+            await GrammarData.loadTopics();
+          } catch (e) {
+            debugPrint('Error reloading content: $e');
+          } finally {
+            if (mounted) {
+              setState(() {
+                _isLoading = false;
+              });
+            }
+          }
+        }
       },
       icon: Icon(Icons.refresh, color: Colors.indigo.shade800),
       label: Text(

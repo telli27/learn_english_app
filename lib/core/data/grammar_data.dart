@@ -12,11 +12,37 @@ class GrammarData {
 
   static Future<void> loadTopics() async {
     try {
+      debugPrint('Loading grammar topics...');
+
+      // Check if topics list is already populated
+      if (topics.isNotEmpty) {
+        debugPrint('Topics already loaded with ${topics.length} topics');
+        return;
+      }
+
       // Use the version checker to check and update grammar data
       topics = await _versionChecker.checkAndUpdateGrammarData();
 
       if (topics.isEmpty) {
-        debugPrint('No grammar data could be loaded');
+        debugPrint(
+            'No grammar data could be loaded, forcing download from GitHub');
+
+        // Try to force download from GitHub
+        final prefs = await SharedPreferences.getInstance();
+
+        // Remove existing data to force fresh download
+        await prefs.remove(GrammarVersionChecker.VERSION_KEY);
+        await prefs.remove(GrammarVersionChecker.GRAMMAR_DATA_KEY);
+
+        // Try again
+        topics = await _versionChecker.checkAndUpdateGrammarData();
+
+        if (topics.isEmpty) {
+          debugPrint('Still unable to load grammar data after forced attempt');
+        } else {
+          debugPrint(
+              'Successfully loaded ${topics.length} topics after forced attempt');
+        }
       } else {
         debugPrint('Grammar data loaded with ${topics.length} topics');
       }

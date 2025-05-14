@@ -30,7 +30,7 @@ class AdConfig {
   }
 
   // İş moduna göre doğru reklam ID'lerini döndüren metodlar
-  bool get isTestMode => platform == "test";
+  bool get isTestMode => platform != "canli";
 
   String get interstitialAdUnitId =>
       isTestMode ? testInterstitialAdUnitId : realInterstitialAdUnitId;
@@ -41,10 +41,10 @@ class AdConfig {
   // Default test config
   static AdConfig get defaultConfig => AdConfig(
         maxImpression: 10,
-        platform: "test",
+        platform: "canli",
         realInterstitialAdUnitId: "",
         realRewardedAdUnitId: "",
-        testInterstitialAdUnitId: "ca-app-pub-3940256099942544/4411468910",
-        testRewardedAdUnitId: "ca-app-pub-3940256099942544/5224354917",
+        testInterstitialAdUnitId: "",
+        testRewardedAdUnitId: "",
       );
 }

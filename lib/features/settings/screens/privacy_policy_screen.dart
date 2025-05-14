@@ -95,7 +95,7 @@ class PrivacyPolicyScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 30),
               Text(
-                "Last Updated: May 9, 2024",
+                "Last Updated: May 9, 2025",
                 style: TextStyle(
                   fontSize: 14,
                   fontStyle: FontStyle.italic,

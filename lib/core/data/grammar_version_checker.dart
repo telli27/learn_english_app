@@ -181,9 +181,32 @@ class GrammarVersionChecker {
   // Download and save both JSONs to SharedPreferences
   Future<List<GrammarTopic>> _downloadAndSaveBothJsons() async {
     try {
-      // Download version JSON
+      debugPrint('Attempting to download JSON data from GitHub...');
+
+      // Download version JSON with retry logic
       debugPrint('Downloading version data from $VERSION_URL');
-      final Response versionResponse = await _dio.get(VERSION_URL);
+      Response? versionResponse;
+      int retryCount = 0;
+      const int maxRetries = 3;
+
+      while (versionResponse == null && retryCount < maxRetries) {
+        try {
+          versionResponse = await _dio.get(VERSION_URL);
+        } catch (e) {
+          retryCount++;
+          debugPrint(
+              'Error downloading version data (attempt $retryCount/$maxRetries): $e');
+          if (retryCount < maxRetries) {
+            await Future.delayed(Duration(seconds: 1)); // Wait before retry
+          }
+        }
+      }
+
+      if (versionResponse == null) {
+        throw Exception(
+            'Failed to download version data after $maxRetries attempts');
+      }
+
       final String versionResponseStr = versionResponse.data.toString();
       debugPrint('Version response: $versionResponseStr');
 
@@ -216,38 +239,51 @@ class GrammarVersionChecker {
       // Get the last shown version
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String? lastShownVersion = prefs.getString(LAST_SHOWN_VERSION_KEY);
-      final String? currentVersion = prefs.getString(VERSION_KEY) != null
-          ? _safeGetVersion(json.decode(prefs.getString(VERSION_KEY)!))
-          : null;
-      debugPrint('Last shown version from prefs: $lastShownVersion');
-      debugPrint('Current version from prefs: $currentVersion');
+      debugPrint('Last shown version: $lastShownVersion');
 
-      // Only set hasNewVersion if we haven't shown the dialog for this version yet
-      // AND we're not first-time users (checking if VERSION_KEY exists)
-      final bool isFirstTimeUser = prefs.getString(VERSION_KEY) == null;
-      debugPrint('Is first time user: $isFirstTimeUser');
-
-      if (!isFirstTimeUser && lastShownVersion != _remoteVersion) {
+      // Check if we should show the update dialog
+      // Only show dialog if the last shown version is different from the current remote version
+      if (lastShownVersion != _remoteVersion) {
         _hasNewVersion = true;
-        debugPrint('Setting hasNewVersion=true for version $_remoteVersion');
-      } else if (isFirstTimeUser) {
-        _hasNewVersion = false;
-        debugPrint('First-time user detected, not showing update dialog');
-      } else {
         debugPrint(
-            'Not showing update dialog because: lastShownVersion=$lastShownVersion matches remoteVersion=$_remoteVersion');
+            'New version detected: $_remoteVersion (last shown: $lastShownVersion)');
+      } else {
+        _hasNewVersion = false;
+        debugPrint(
+            'Version already shown to user: $_remoteVersion (last shown: $lastShownVersion)');
       }
 
-      // Download grammar data JSON
+      // Download grammar data JSON with retry logic
       debugPrint('Downloading grammar data from $GRAMMAR_DATA_URL');
-      final Response grammarResponse = await _dio.get(GRAMMAR_DATA_URL);
-      final String grammarResponseStr = grammarResponse.data.toString();
-      debugPrint('Grammar response length: ${grammarResponseStr.length}');
+      Response? grammarResponse;
+      retryCount = 0;
 
-      // Manually parse JSON string
-      final Map<String, dynamic> grammarData = json.decode(grammarResponseStr);
+      while (grammarResponse == null && retryCount < maxRetries) {
+        try {
+          grammarResponse = await _dio.get(GRAMMAR_DATA_URL);
+        } catch (e) {
+          retryCount++;
+          debugPrint(
+              'Error downloading grammar data (attempt $retryCount/$maxRetries): $e');
+          if (retryCount < maxRetries) {
+            await Future.delayed(Duration(seconds: 1)); // Wait before retry
+          }
+        }
+      }
+
+      if (grammarResponse == null) {
+        throw Exception(
+            'Failed to download grammar data after $maxRetries attempts');
+      }
+
+      final String grammarResponseStr = grammarResponse.data.toString();
+
+      // Debug response size
       debugPrint(
-          'Grammar data contains topics: ${grammarData.containsKey('topics')}');
+          'Grammar data response size: ${grammarResponseStr.length} characters');
+
+      // Parse grammar data
+      final Map<String, dynamic> grammarData = json.decode(grammarResponseStr);
 
       // Debug the grammar data structure
       if (grammarData.containsKey('topics')) {

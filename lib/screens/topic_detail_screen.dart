@@ -194,7 +194,7 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
         backgroundColor = Colors.blue;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    /* ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           message,
@@ -214,7 +214,7 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
         duration: const Duration(seconds: 3),
         backgroundColor: backgroundColor,
       ),
-    );
+    );*/
   }
 
   @override
