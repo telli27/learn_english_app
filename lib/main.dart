@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:in_app_update/in_app_update.dart';
 import 'firebase_options.dart';
 import 'core/providers.dart';
 import 'core/providers/connectivity_provider.dart';
@@ -22,6 +23,20 @@ import 'core/screens/loading_screen.dart';
 import 'core/screens/weak_connection_screen.dart';
 import 'features/settings/screens/terms_of_use_screen.dart';
 import 'features/settings/screens/privacy_policy_screen.dart';
+Future<void> checkForUpdate() async {
+  try {
+    AppUpdateInfo info = await InAppUpdate.checkForUpdate();
+    if (info.updateAvailability == UpdateAvailability.updateAvailable) {
+      try {
+        await InAppUpdate.performImmediateUpdate();
+      } on Exception catch (e) {
+        debugPrint(e.toString());
+      }
+    }
+  } on Exception catch (e) {
+    debugPrint(e.toString());
+  }
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +50,16 @@ void main() async {
 
   // Dilbilgisi verilerini JSON dosyasından yükle
   await GrammarData.loadTopics();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
+      overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom]);
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
+  if (Platform.isAndroid) {
+    checkForUpdate();
+  }
 
   runApp(
     // ProviderScope: Riverpod provider'larını tüm uygulamada erişilebilir kılar
