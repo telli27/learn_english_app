@@ -8,6 +8,11 @@ class Flashcard {
   final String category;
   final String difficulty;
   final bool isFavorite;
+  final String pronunciation;
+  final String audioUrl;
+  final List<String> synonyms;
+  final List<String> antonyms;
+  final String usageFrequency;
 
   Flashcard({
     required this.id,
@@ -19,6 +24,11 @@ class Flashcard {
     required this.category,
     required this.difficulty,
     this.isFavorite = false,
+    this.pronunciation = '',
+    this.audioUrl = '',
+    this.synonyms = const [],
+    this.antonyms = const [],
+    this.usageFrequency = '',
   });
 
   Flashcard copyWith({
@@ -31,6 +41,11 @@ class Flashcard {
     String? category,
     String? difficulty,
     bool? isFavorite,
+    String? pronunciation,
+    String? audioUrl,
+    List<String>? synonyms,
+    List<String>? antonyms,
+    String? usageFrequency,
   }) {
     return Flashcard(
       id: id ?? this.id,
@@ -42,6 +57,11 @@ class Flashcard {
       category: category ?? this.category,
       difficulty: difficulty ?? this.difficulty,
       isFavorite: isFavorite ?? this.isFavorite,
+      pronunciation: pronunciation ?? this.pronunciation,
+      audioUrl: audioUrl ?? this.audioUrl,
+      synonyms: synonyms ?? this.synonyms,
+      antonyms: antonyms ?? this.antonyms,
+      usageFrequency: usageFrequency ?? this.usageFrequency,
     );
   }
 
@@ -56,6 +76,11 @@ class Flashcard {
       'category': category,
       'difficulty': difficulty,
       'isFavorite': isFavorite,
+      'pronunciation': pronunciation,
+      'audioUrl': audioUrl,
+      'synonyms': synonyms,
+      'antonyms': antonyms,
+      'usageFrequency': usageFrequency,
     };
   }
 
@@ -70,6 +95,11 @@ class Flashcard {
       category: map['category'] ?? '',
       difficulty: map['difficulty'] ?? '',
       isFavorite: map['isFavorite'] ?? false,
+      pronunciation: map['pronunciation'] ?? '',
+      audioUrl: map['audioUrl'] ?? '',
+      synonyms: List<String>.from(map['synonyms'] ?? []),
+      antonyms: List<String>.from(map['antonyms'] ?? []),
+      usageFrequency: map['usageFrequency'] ?? '',
     );
   }
 }

@@ -198,6 +198,47 @@ class DailyWordWidget extends ConsumerWidget {
 
               const SizedBox(height: 24),
 
+              // After the translation text, add:
+              if (word.pronunciation.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        word.pronunciation,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontStyle: FontStyle.italic,
+                          color: secondaryTextColor,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: () {
+                          ref
+                              .read(dailyWordProvider.notifier)
+                              .playWordAudio(word.audioUrl);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: primaryColor.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.volume_up,
+                            size: 16,
+                            color: primaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              const SizedBox(height: 24),
+
               // Example
               if (word.example.isNotEmpty)
                 Container(
@@ -273,6 +314,291 @@ class DailyWordWidget extends ConsumerWidget {
                 ),
 
               const SizedBox(height: 24),
+
+              // After the example container, add a section for synonyms and antonyms
+              if (word.synonyms.isNotEmpty || word.antonyms.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.only(top: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.black.withOpacity(0.2)
+                        : Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark ? Colors.white10 : Colors.grey.shade200,
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (word.synonyms.isNotEmpty) ...[
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.compare_arrows,
+                              size: 16,
+                              color: primaryColor,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Eş Anlamlılar',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: primaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          children: word.synonyms.map((synonym) {
+                            return Chip(
+                              label: Text(
+                                synonym,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: primaryColor,
+                                ),
+                              ),
+                              backgroundColor: primaryColor.withOpacity(0.1),
+                              padding: EdgeInsets.zero,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                      if (word.antonyms.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.sync_alt,
+                              size: 16,
+                              color: primaryColor,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Zıt Anlamlılar',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: primaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          children: word.antonyms.map((antonym) {
+                            return Chip(
+                              label: Text(
+                                antonym,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color:
+                                      isDark ? Colors.white70 : Colors.black54,
+                                ),
+                              ),
+                              backgroundColor: isDark
+                                  ? Colors.white.withOpacity(0.05)
+                                  : Colors.grey.shade200,
+                              padding: EdgeInsets.zero,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+
+              const SizedBox(height: 24),
+
+              // Add usage frequency badge below the difficulty badge
+              if (word.usageFrequency.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getUsageFrequencyColor(word.usageFrequency),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.equalizer,
+                        size: 14,
+                        color: _getUsageFrequencyTextColor(word.usageFrequency),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        word.usageFrequency,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color:
+                              _getUsageFrequencyTextColor(word.usageFrequency),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              const SizedBox(height: 24),
+
+              // Add personal notes section
+              Container(
+                margin: const EdgeInsets.only(top: 16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.black.withOpacity(0.2)
+                      : Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark ? Colors.white10 : Colors.grey.shade200,
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.note_alt,
+                          size: 16,
+                          color: primaryColor,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Kişisel Notlarım',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: primaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: TextEditingController(text: word.memo),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: textColor,
+                      ),
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText:
+                            'Bu kelimeyle ilgili notlarınızı yazabilirsiniz...',
+                        hintStyle: TextStyle(
+                          color: secondaryTextColor.withOpacity(0.7),
+                          fontSize: 13,
+                        ),
+                        filled: true,
+                        fillColor: isDark ? Colors.black12 : Colors.white,
+                        contentPadding: const EdgeInsets.all(12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color:
+                                isDark ? Colors.white24 : Colors.grey.shade300,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color:
+                                isDark ? Colors.white24 : Colors.grey.shade300,
+                          ),
+                        ),
+                      ),
+                      onChanged: (value) {
+                        ref
+                            .read(dailyWordProvider.notifier)
+                            .saveWordMemo(word.id, value);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Add streak section
+              Consumer(
+                builder: (context, ref, _) {
+                  final streak = ref.watch(streakProvider);
+                  final progress = ref.watch(weeklyProgressProvider);
+
+                  return Container(
+                    margin: const EdgeInsets.only(top: 16, bottom: 16),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              streak.toString(),
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: primaryColor,
+                              ),
+                            ),
+                            Text(
+                              'Günlük Seri',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: secondaryTextColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          height: 30,
+                          width: 1,
+                          color: isDark ? Colors.white24 : Colors.grey.shade300,
+                        ),
+                        Column(
+                          children: [
+                            Text(
+                              '${(progress * 100).toInt()}%',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: primaryColor,
+                              ),
+                            ),
+                            Text(
+                              'Haftalık İlerleme',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: secondaryTextColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
 
               // Add to collection button
               ElevatedButton.icon(
@@ -383,6 +709,33 @@ class DailyWordWidget extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  // Add a helper method for usage frequency colors
+  Color _getUsageFrequencyColor(String frequency) {
+    switch (frequency) {
+      case 'Common':
+        return Colors.green.shade100;
+      case 'Uncommon':
+        return Colors.orange.shade100;
+      case 'Rare':
+        return Colors.purple.shade100;
+      default:
+        return Colors.blue.shade100;
+    }
+  }
+
+  Color _getUsageFrequencyTextColor(String frequency) {
+    switch (frequency) {
+      case 'Common':
+        return Colors.green.shade700;
+      case 'Uncommon':
+        return Colors.orange.shade700;
+      case 'Rare':
+        return Colors.purple.shade700;
+      default:
+        return Colors.blue.shade700;
+    }
   }
 }
 

@@ -16,12 +16,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/flashcard.dart';
 import '../providers/flashcard_provider.dart';
 import '../providers/daily_word_provider.dart';
+import '../providers/study_progress_provider.dart';
+import '../providers/sentence_builder_provider.dart';
 import '../widgets/flashcard_widget.dart';
 import '../widgets/category_filter.dart';
 import '../widgets/quiz_widget.dart';
 import '../widgets/custom_card_form.dart';
 import '../widgets/daily_word_widget.dart';
+import '../widgets/sentence_builder_widget.dart';
 import 'package:intl/intl.dart';
+import 'notification_settings_screen.dart';
 
 class VocabularyScreen extends ConsumerStatefulWidget {
   const VocabularyScreen({Key? key}) : super(key: key);
@@ -96,6 +100,22 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen>
         backgroundColor: isDark ? const Color(0xFF242424) : Colors.white,
         elevation: 0,
         actions: [
+          // Notification settings button
+          if (_tabController.index == 2)
+            IconButton(
+              icon: Icon(
+                Icons.notifications_outlined,
+                color: isDark ? Colors.white70 : Colors.black54,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NotificationSettingsScreen(),
+                  ),
+                );
+              },
+            ),
           // Search button
           IconButton(
             icon: Icon(
@@ -253,7 +273,7 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen>
                   // Flashcard
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(0.0),
                       child: FlashcardWidget(
                         flashcard: flashcards[_currentIndex],
                         onFavoriteToggle: () {
@@ -413,298 +433,177 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen>
 
   Widget _buildMyCardsTab(bool isDark) {
     final customCardsAsync = ref.watch(customFlashcardsProvider);
-    final todayWordAsync = ref.watch(todayWordProvider);
-    final weeklyWordsAsync = ref.watch(weeklyWordsProvider);
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Today's Word Section
+          // Title and description
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.edit_note,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Cümle Oluşturma Alıştırması',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Öğrendiğiniz kelimeleri kullanarak anlamlı cümleler oluşturun. Bu alıştırma, kelimeleri bağlamda öğrenmenize ve daha iyi hatırlamanıza yardımcı olur.',
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.black87,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Cards section
           Expanded(
-            child: todayWordAsync.when(
-              data: (todayWord) {
-                return SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Today's word
-                      DailyWordWidget(
-                        word: todayWord,
-                        onAddToCollection: () {
-                          // Refresh custom cards list after adding
-                          ref.refresh(customFlashcardsProvider);
-                        },
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // Past words section header
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.history,
-                              size: 20,
-                              color: isDark ? Colors.white60 : Colors.black54,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Geçmiş Kelimeler',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : Colors.black87,
-                              ),
-                            ),
-                          ],
+            child: customCardsAsync.when(
+              data: (cards) {
+                if (cards.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.edit_note,
+                          size: 64,
+                          color: isDark ? Colors.white38 : Colors.black26,
                         ),
-                      ),
-
-                      // Past daily words
-                      weeklyWordsAsync.when(
-                        data: (weeklyWords) {
-                          // Skip today's word
-                          final pastWords = weeklyWords.skip(1).toList();
-
-                          if (pastWords.isEmpty) {
-                            return Container(
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? Colors.black12
-                                    : Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Column(
-                                children: [
-                                  Icon(
-                                    Icons.event_busy,
-                                    size: 48,
-                                    color: isDark
-                                        ? Colors.white30
-                                        : Colors.black26,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'Henüz geçmiş kelime bulunmamaktadır',
-                                    style: TextStyle(
-                                      color: isDark
-                                          ? Colors.white60
-                                          : Colors.black54,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
-
-                          return ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount:
-                                pastWords.length > 6 ? 6 : pastWords.length,
-                            itemBuilder: (context, index) {
-                              // Use Card instead of DailyWordListTile
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: InkWell(
-                                  onTap: () {
-                                    // Show bottom sheet with full daily word
-                                    showModalBottomSheet(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      backgroundColor: Colors.transparent,
-                                      builder: (context) =>
-                                          DraggableScrollableSheet(
-                                        initialChildSize: 0.9,
-                                        maxChildSize: 0.9,
-                                        minChildSize: 0.5,
-                                        builder: (_, controller) => Container(
-                                          decoration: BoxDecoration(
-                                            color: Theme.of(context)
-                                                .scaffoldBackgroundColor,
-                                            borderRadius:
-                                                const BorderRadius.only(
-                                              topLeft: Radius.circular(20),
-                                              topRight: Radius.circular(20),
-                                            ),
-                                          ),
-                                          child: ListView(
-                                            controller: controller,
-                                            padding: const EdgeInsets.all(20),
-                                            children: [
-                                              DailyWordWidget(
-                                                word: pastWords[index],
-                                                onAddToCollection: () {
-                                                  // Refresh custom cards list after adding
-                                                  ref.refresh(
-                                                      customFlashcardsProvider);
-                                                },
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Row(
-                                      children: [
-                                        // Date container
-                                        Container(
-                                          width: 45,
-                                          height: 45,
-                                          decoration: BoxDecoration(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary
-                                                .withOpacity(0.1),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                DateFormat('d').format(
-                                                    pastWords[index].date),
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .primary,
-                                                ),
-                                              ),
-                                              Text(
-                                                DateFormat('MMM').format(
-                                                    pastWords[index].date),
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .primary,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-
-                                        // Word info
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                pastWords[index].word,
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: isDark
-                                                      ? Colors.white
-                                                      : Colors.black87,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                pastWords[index].translation,
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: isDark
-                                                      ? Colors.white70
-                                                      : Colors.black54,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-
-                                        // Saved indicator
-                                        if (pastWords[index].saved)
-                                          Container(
-                                            padding: const EdgeInsets.all(6),
-                                            decoration: BoxDecoration(
-                                              color: Colors.green.shade100,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: Icon(
-                                              Icons.check,
-                                              size: 16,
-                                              color: Colors.green.shade700,
-                                            ),
-                                          )
-                                        else
-                                          Icon(
-                                            Icons.arrow_forward_ios,
-                                            size: 16,
-                                            color: isDark
-                                                ? Colors.white70
-                                                : Colors.black54,
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                        loading: () =>
-                            const Center(child: CircularProgressIndicator()),
-                        error: (_, __) => Center(
-                          child: Text(
-                            'Kelimeler yüklenemedi',
-                            style: TextStyle(
-                              color: isDark ? Colors.white70 : Colors.black54,
+                        const SizedBox(height: 16),
+                        Text(
+                          'Henüz kelime kartınız bulunmamaktadır',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: isDark ? Colors.white70 : Colors.black54,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Cümle alıştırması yapmak için önce kelime kartları ekleyin',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDark ? Colors.white60 : Colors.black45,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
+                          onPressed: _showAddCardDialog,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Kart Ekle'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
                         ),
-                      ),
+                      ],
+                    ),
+                  );
+                }
 
-                      // View your flashcards button if user has custom cards
-                      customCardsAsync.when(
-                        data: (cards) {
-                          if (cards.isNotEmpty) {
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 32.0),
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  // Show custom card management screen or dialog
-                                  _showCustomCardsDialog();
-                                },
-                                icon: const Icon(Icons.collections_bookmark),
-                                label: const Text('Kelime Koleksiyonum'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      Theme.of(context).colorScheme.secondary,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20, vertical: 12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-                          return const SizedBox.shrink();
+                // Randomly select a card to practice with, or let user choose
+                final selectedCard = cards[0]; // For demo purposes
+
+                return Column(
+                  children: [
+                    // Sentence builder widget
+                    Expanded(
+                      child: SentenceBuilderWidget(
+                        flashcard: selectedCard,
+                        onComplete: (score) {
+                          // Save the result
+                          final sentence = BuiltSentence(
+                            flashcardId: selectedCard.id,
+                            word: selectedCard.word,
+                            sentence:
+                                'Sample sentence with ${selectedCard.word}',
+                            score: score,
+                            timestamp: DateTime.now(),
+                          );
+
+                          ref.read(addSentenceProvider)(sentence);
+
+                          // Show a congratulation snackbar
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content:
+                                  Text('Tebrikler! $score/10 puan aldınız.'),
+                              duration: const Duration(seconds: 2),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
                         },
-                        loading: () => const SizedBox.shrink(),
-                        error: (_, __) => const SizedBox.shrink(),
                       ),
-                    ],
-                  ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Card selection button
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        _showWordSelectionDialog();
+                      },
+                      icon: const Icon(Icons.menu_book),
+                      label: const Text('Başka Bir Kelime Seç'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            Theme.of(context).colorScheme.secondary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // View collection button
+                    TextButton.icon(
+                      onPressed: () {
+                        _showCustomCardsDialog();
+                      },
+                      icon: const Icon(Icons.collections_bookmark),
+                      label: const Text('Koleksiyonumu Görüntüle'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -719,7 +618,7 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen>
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Günün kelimesi yüklenemedi',
+                      'Kelime kartları yüklenemedi',
                       style: TextStyle(
                         fontSize: 16,
                         color: isDark ? Colors.white70 : Colors.black54,
@@ -729,7 +628,7 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen>
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
                       onPressed: () {
-                        ref.read(dailyWordProvider.notifier).loadDailyWords();
+                        ref.refresh(customFlashcardsProvider);
                       },
                       icon: const Icon(Icons.refresh),
                       label: const Text('Tekrar Dene'),
@@ -749,6 +648,134 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // New method to show a word selection dialog
+  void _showWordSelectionDialog() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        maxChildSize: 0.9,
+        minChildSize: 0.5,
+        builder: (_, controller) => Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Çalışmak İstediğiniz Kelimeyi Seçin',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              Divider(),
+              Expanded(
+                child: Consumer(
+                  builder: (context, ref, _) {
+                    final customCards = ref.watch(customFlashcardsProvider);
+
+                    return customCards.when(
+                      data: (cards) {
+                        return ListView.builder(
+                          controller: controller,
+                          padding: const EdgeInsets.all(16),
+                          itemCount: cards.length,
+                          itemBuilder: (context, index) {
+                            final card = cards[index];
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.all(16),
+                                title: Text(
+                                  card.word,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      card.translation,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.white70
+                                            : Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                trailing: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    // In a full implementation, we would update the state to select this card
+                                  },
+                                  child: const Text('Seç'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.primary,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                ),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  // In a full implementation, we would update the state to select this card
+                                },
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (_, __) => Center(
+                        child: Text(
+                          'Kartlar yüklenemedi',
+                          style: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white70
+                                    : Colors.black54,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

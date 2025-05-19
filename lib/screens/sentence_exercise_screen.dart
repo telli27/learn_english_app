@@ -1045,6 +1045,14 @@ class _SentenceExerciseScreenState
         _loadAndFilterExercises();
       }
     });
+    final adService = ref.read(adServiceProvider);
+    if (!ref.read(isInterstitialLimitReachedProvider)) {
+      adService.loadInterstitialAd().then((_) {
+        if (mounted) {
+          adService.showInterstitialAd();
+        }
+      });
+    }
   }
 
   // Alıştırmaları yükle ve kullanıcının doğru yaptıklarını filtrele

@@ -145,7 +145,7 @@ class _FlashcardWidgetState extends State<FlashcardWidget>
                             SingleChildScrollView(
                               physics: const BouncingScrollPhysics(),
                               child: Padding(
-                                padding: const EdgeInsets.all(24.0),
+                                padding: const EdgeInsets.all(40.0),
                                 child: ConstrainedBox(
                                   constraints: BoxConstraints(
                                     minHeight: availableHeight -

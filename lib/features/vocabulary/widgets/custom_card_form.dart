@@ -1,52 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/flashcard.dart';
+import 'dart:math';
 
-class CustomCardForm extends StatefulWidget {
-  final Function(Flashcard) onSave;
+class CustomCardForm extends ConsumerStatefulWidget {
   final Flashcard? initialFlashcard;
+  final Function(Flashcard) onSave;
 
   const CustomCardForm({
     Key? key,
-    required this.onSave,
     this.initialFlashcard,
+    required this.onSave,
   }) : super(key: key);
 
   @override
-  State<CustomCardForm> createState() => _CustomCardFormState();
+  ConsumerState<CustomCardForm> createState() => _CustomCardFormState();
 }
 
-class _CustomCardFormState extends State<CustomCardForm> {
+class _CustomCardFormState extends ConsumerState<CustomCardForm> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _wordController = TextEditingController();
-  final TextEditingController _translationController = TextEditingController();
-  final TextEditingController _exampleController = TextEditingController();
-  final TextEditingController _exampleTranslationController =
-      TextEditingController();
-  final TextEditingController _imageUrlController = TextEditingController();
+  // Text controllers
+  final _wordController = TextEditingController();
+  final _translationController = TextEditingController();
+  final _exampleController = TextEditingController();
+  final _exampleTranslationController = TextEditingController();
+  final _imageUrlController = TextEditingController();
+  final _categoryController = TextEditingController();
+  final _pronunciationController = TextEditingController();
+  final _audioUrlController = TextEditingController();
+  final _synonymsController = TextEditingController();
+  final _antonymsController = TextEditingController();
 
-  String _selectedCategory = 'Other';
+  // Form values
   String _selectedDifficulty = 'Beginner';
+  String _selectedUsageFrequency = 'Common';
 
-  final List<String> _categories = [
-    'Food',
-    'Technology',
-    'Education',
-    'Travel',
-    'Business',
-    'Health',
-    'Home',
-    'Transportation',
-    'Other'
-  ];
-
+  // Difficulty options
   final List<String> _difficulties = ['Beginner', 'Intermediate', 'Advanced'];
+
+  // Usage frequency options
+  final List<String> _usageFrequencies = ['Common', 'Uncommon', 'Rare'];
 
   @override
   void initState() {
     super.initState();
-
-    // If editing an existing card, populate the form
     if (widget.initialFlashcard != null) {
       _wordController.text = widget.initialFlashcard!.word;
       _translationController.text = widget.initialFlashcard!.translation;
@@ -54,13 +52,16 @@ class _CustomCardFormState extends State<CustomCardForm> {
       _exampleTranslationController.text =
           widget.initialFlashcard!.exampleTranslation;
       _imageUrlController.text = widget.initialFlashcard!.imageUrl;
-
-      _selectedCategory = widget.initialFlashcard!.category;
-      if (!_categories.contains(_selectedCategory)) {
-        _categories.add(_selectedCategory);
-      }
-
+      _categoryController.text = widget.initialFlashcard!.category;
       _selectedDifficulty = widget.initialFlashcard!.difficulty;
+      _pronunciationController.text = widget.initialFlashcard!.pronunciation;
+      _audioUrlController.text = widget.initialFlashcard!.audioUrl;
+      _synonymsController.text = widget.initialFlashcard!.synonyms.join(', ');
+      _antonymsController.text = widget.initialFlashcard!.antonyms.join(', ');
+      _selectedUsageFrequency =
+          widget.initialFlashcard!.usageFrequency.isNotEmpty
+              ? widget.initialFlashcard!.usageFrequency
+              : 'Common';
     }
   }
 
@@ -71,26 +72,42 @@ class _CustomCardFormState extends State<CustomCardForm> {
     _exampleController.dispose();
     _exampleTranslationController.dispose();
     _imageUrlController.dispose();
+    _categoryController.dispose();
+    _pronunciationController.dispose();
+    _audioUrlController.dispose();
+    _synonymsController.dispose();
+    _antonymsController.dispose();
     super.dispose();
   }
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      // Create a new flashcard with the form data
+      // Convert comma-separated strings to lists
+      final synonymsList = _synonymsController.text.isNotEmpty
+          ? _synonymsController.text.split(',').map((s) => s.trim()).toList()
+          : <String>[];
+
+      final antonymsList = _antonymsController.text.isNotEmpty
+          ? _antonymsController.text.split(',').map((s) => s.trim()).toList()
+          : <String>[];
+
       final flashcard = Flashcard(
-        id: widget.initialFlashcard?.id ??
-            '', // Empty ID will be replaced with a generated one
-        word: _wordController.text.trim(),
-        translation: _translationController.text.trim(),
-        example: _exampleController.text.trim(),
-        exampleTranslation: _exampleTranslationController.text.trim(),
-        imageUrl: _imageUrlController.text.trim(),
-        category: _selectedCategory,
+        id: widget.initialFlashcard?.id ?? '',
+        word: _wordController.text,
+        translation: _translationController.text,
+        example: _exampleController.text,
+        exampleTranslation: _exampleTranslationController.text,
+        imageUrl: _imageUrlController.text,
+        category: _categoryController.text,
         difficulty: _selectedDifficulty,
         isFavorite: widget.initialFlashcard?.isFavorite ?? false,
+        pronunciation: _pronunciationController.text,
+        audioUrl: _audioUrlController.text,
+        synonyms: synonymsList,
+        antonyms: antonymsList,
+        usageFrequency: _selectedUsageFrequency,
       );
 
-      // Call the onSave callback
       widget.onSave(flashcard);
     }
   }
@@ -133,326 +150,186 @@ class _CustomCardFormState extends State<CustomCardForm> {
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
-            // Word input
-            _buildTextField(
+            // Word field
+            TextFormField(
               controller: _wordController,
-              label: 'Kelime (İngilizce)',
-              hint: 'Örn: Apple',
-              icon: Icons.text_fields,
+              decoration: const InputDecoration(
+                labelText: 'Kelime *',
+                hintText: 'Örn: Serendipity',
+              ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Lütfen kelimeyi girin';
+                  return 'Lütfen bir kelime girin';
                 }
                 return null;
               },
             ),
-
             const SizedBox(height: 16),
 
-            // Translation input
-            _buildTextField(
+            // Translation field
+            TextFormField(
               controller: _translationController,
-              label: 'Çevirisi (Türkçe)',
-              hint: 'Örn: Elma',
-              icon: Icons.translate,
+              decoration: const InputDecoration(
+                labelText: 'Çeviri *',
+                hintText: 'Örn: Şans eseri',
+              ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Lütfen çevirisini girin';
+                  return 'Lütfen çeviri girin';
                 }
                 return null;
               },
             ),
-
             const SizedBox(height: 16),
 
-            // Example input
-            _buildTextField(
+            // Pronunciation field
+            TextFormField(
+              controller: _pronunciationController,
+              decoration: const InputDecoration(
+                labelText: 'Telaffuz',
+                hintText: 'Örn: /ser·ən·dip·ə·tē/',
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Audio URL field
+            TextFormField(
+              controller: _audioUrlController,
+              decoration: const InputDecoration(
+                labelText: 'Ses Dosyası URL',
+                hintText: 'Örn: https://example.com/audio/word.mp3',
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Example field
+            TextFormField(
               controller: _exampleController,
-              label: 'Örnek Cümle (İngilizce)',
-              hint: 'Örn: I eat an apple every day.',
-              icon: Icons.format_quote,
+              decoration: const InputDecoration(
+                labelText: 'Örnek Cümle',
+                hintText: 'Örn: Meeting my wife was pure serendipity.',
+              ),
               maxLines: 2,
             ),
-
             const SizedBox(height: 16),
 
-            // Example Translation input
-            _buildTextField(
+            // Example translation field
+            TextFormField(
               controller: _exampleTranslationController,
-              label: 'Örnek Cümle Çevirisi (Türkçe)',
-              hint: 'Örn: Her gün bir elma yerim.',
-              icon: Icons.format_quote,
+              decoration: const InputDecoration(
+                labelText: 'Örnek Cümle Çevirisi',
+                hintText: 'Örn: Eşimle tanışmam tam bir şans eseriydi.',
+              ),
               maxLines: 2,
             ),
-
             const SizedBox(height: 16),
 
-            // Image URL input
-            _buildTextField(
+            // Synonyms field
+            TextFormField(
+              controller: _synonymsController,
+              decoration: const InputDecoration(
+                labelText: 'Eş Anlamlılar',
+                hintText: 'Virgülle ayırın, Örn: chance, coincidence, luck',
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Antonyms field
+            TextFormField(
+              controller: _antonymsController,
+              decoration: const InputDecoration(
+                labelText: 'Zıt Anlamlılar',
+                hintText:
+                    'Virgülle ayırın, Örn: planning, calculation, intention',
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Image URL field
+            TextFormField(
               controller: _imageUrlController,
-              label: 'Görsel URL (İsteğe bağlı)',
-              hint: 'Örn: https://example.com/image.png',
-              icon: Icons.image,
+              decoration: const InputDecoration(
+                labelText: 'Görsel URL',
+                hintText: 'Örn: https://example.com/images/word.jpg',
+              ),
             ),
+            const SizedBox(height: 16),
 
-            const SizedBox(height: 24),
-
-            // Category dropdown
-            _buildDropdown(
-              label: 'Kategori',
-              value: _selectedCategory,
-              items: _categories,
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _selectedCategory = value;
-                  });
+            // Category field
+            TextFormField(
+              controller: _categoryController,
+              decoration: const InputDecoration(
+                labelText: 'Kategori *',
+                hintText: 'Örn: Abstract',
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Lütfen bir kategori girin';
                 }
+                return null;
               },
-              icon: Icons.category,
             ),
-
             const SizedBox(height: 16),
 
             // Difficulty dropdown
-            _buildDropdown(
-              label: 'Zorluk Seviyesi',
+            DropdownButtonFormField<String>(
               value: _selectedDifficulty,
-              items: _difficulties,
+              decoration: const InputDecoration(
+                labelText: 'Zorluk',
+              ),
+              items: _difficulties.map((difficulty) {
+                return DropdownMenuItem(
+                  value: difficulty,
+                  child: Text(difficulty),
+                );
+              }).toList(),
               onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _selectedDifficulty = value;
-                  });
-                }
+                setState(() {
+                  _selectedDifficulty = value!;
+                });
               },
-              icon: Icons.trending_up,
             ),
+            const SizedBox(height: 16),
 
+            // Usage frequency dropdown
+            DropdownButtonFormField<String>(
+              value: _selectedUsageFrequency,
+              decoration: const InputDecoration(
+                labelText: 'Kullanım Sıklığı',
+              ),
+              items: _usageFrequencies.map((frequency) {
+                return DropdownMenuItem(
+                  value: frequency,
+                  child: Text(frequency),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedUsageFrequency = value!;
+                });
+              },
+            ),
             const SizedBox(height: 32),
 
-            // Preview section
-            if (_wordController.text.isNotEmpty ||
-                _translationController.text.isNotEmpty)
-              _buildPreview(isDark),
+            // Submit button
+            ElevatedButton(
+              onPressed: _submitForm,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                widget.initialFlashcard != null
+                    ? 'Kartı Güncelle'
+                    : 'Kart Oluştur',
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-    int maxLines = 1,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixIcon: Icon(icon),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-      maxLines: maxLines,
-      validator: validator,
-    );
-  }
-
-  Widget _buildDropdown({
-    required String label,
-    required String value,
-    required List<String> items,
-    required void Function(String?) onChanged,
-    required IconData icon,
-  }) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-      items: items.map((item) {
-        return DropdownMenuItem<String>(
-          value: item,
-          child: Text(item),
-        );
-      }).toList(),
-      onChanged: onChanged,
-    );
-  }
-
-  Widget _buildPreview(bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Ön İzleme',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Word and Translation
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _wordController.text.isEmpty
-                              ? 'Kelime'
-                              : _wordController.text,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _translationController.text.isEmpty
-                              ? 'Çeviri'
-                              : _translationController.text,
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: isDark ? Colors.white70 : Colors.black54,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (_imageUrlController.text.isNotEmpty)
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Image.network(
-                        _imageUrlController.text,
-                        errorBuilder: (_, __, ___) =>
-                            const Icon(Icons.image_not_supported),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Example and Translation
-              if (_exampleController.text.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.black12 : Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isDark ? Colors.white24 : Colors.grey.shade200,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _exampleController.text,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontStyle: FontStyle.italic,
-                          color: isDark ? Colors.white : Colors.black87,
-                        ),
-                      ),
-                      if (_exampleTranslationController.text.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          _exampleTranslationController.text,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isDark ? Colors.white70 : Colors.black54,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-
-              const SizedBox(height: 12),
-
-              // Category and Difficulty badges
-              Row(
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade700,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      _selectedCategory,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _selectedDifficulty == 'Beginner'
-                          ? Colors.green.shade700
-                          : _selectedDifficulty == 'Intermediate'
-                              ? Colors.orange.shade700
-                              : Colors.red.shade700,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      _selectedDifficulty,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

@@ -49,6 +49,7 @@ dependencies:
   intl: ^0.18.1
   in_app_update: ^4.2.3
   uuid: ^4.3.3
+  confetti: ^0.8.0
 
 
 

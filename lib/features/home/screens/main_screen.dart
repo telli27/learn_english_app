@@ -192,7 +192,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     HomeScreen(),
     SentencePracticeScreen(),
     DailyPhrasesScreen(),
-    VocabularyScreen(), // Add Vocabulary Screen
+    VocabularyScreen(), 
     SettingsScreen(),
   ];
 

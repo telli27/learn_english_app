@@ -485,7 +485,7 @@ class _QuizWidgetState extends State<QuizWidget> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    'Aşağıdaki kelimenin Türkçe karşılığı nedir?',
+                    'Yukarıdaki kelimenin Türkçe karşılığı nedir?',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -725,7 +725,7 @@ class _QuizWidgetState extends State<QuizWidget> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    'Aşağıdaki kelimenin Türkçe karşılığını yazınız',
+                    'Yukarıdaki kelimenin Türkçe karşılığını yazınız',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
