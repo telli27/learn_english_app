@@ -10,6 +10,7 @@ import '../widgets/user_avatar.dart';
 import 'package:flutter/services.dart';
 import '../../grammar/screens/exercises_screen.dart';
 import '../../../screens/daily_phrases_screen.dart';
+import '../../../features/vocabulary/screens/vocabulary_screen.dart';
 
 // Global function to show user menu
 void showUserMenu(BuildContext context, WidgetRef ref, bool isDark) {
@@ -191,6 +192,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     HomeScreen(),
     SentencePracticeScreen(),
     DailyPhrasesScreen(),
+    VocabularyScreen(), // Add Vocabulary Screen
     SettingsScreen(),
   ];
 
@@ -246,7 +248,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               _buildNavItem(Icons.home_rounded, 'Anasayfa', 0),
               _buildNavItem(Icons.text_fields_rounded, 'Cümle Kurma', 1),
               _buildNavItem(Icons.chat_bubble_outline, 'Konuşma', 2),
-              _buildNavItem(Icons.settings_rounded, 'Ayarlar', 3),
+              _buildNavItem(Icons.menu_book_rounded, 'Kelimeler',
+                  3), // Added vocabulary nav item
+              _buildNavItem(Icons.settings_rounded, 'Ayarlar', 4),
             ],
           ),
         ),
