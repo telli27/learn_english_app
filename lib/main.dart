@@ -6,9 +6,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:in_app_update/in_app_update.dart';
+import 'package:revenue_cat_integration/revenue_cat_integration.dart';
 import 'firebase_options.dart';
 import 'core/providers.dart';
 import 'core/providers/connectivity_provider.dart';
@@ -37,7 +39,17 @@ Future<void> checkForUpdate() async {
     debugPrint(e.toString());
   }
 }
+Future<void> _configureRevenueCatSDK() async {
+  await dotenv.load();
+final key =    dotenv.env['REVEUNECAT_GOOGLE_API_KEY'] ?? '';
 
+  await RevenueCatIntegrationService.instance.init(
+    StoreConfig(
+      entitlement: 'premium',
+      configuration: PurchasesConfiguration(key),
+    ),
+  );
+}
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -58,6 +70,7 @@ void main() async {
   ]);
 
   if (Platform.isAndroid) {
+    _configureRevenueCatSDK();
     checkForUpdate();
   }
 
