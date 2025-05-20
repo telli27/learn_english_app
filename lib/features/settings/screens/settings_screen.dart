@@ -77,9 +77,7 @@ class SettingsScreen extends ConsumerWidget {
                       builder: (context) => const FeatureRequestScreen()));
             },
           ),
-          _buildPremiumButton(
-            
-          ) 
+        
 
           /* _buildSettingCard(
             context,
@@ -200,62 +198,5 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
-  Widget _buildPremiumButton() {
-    return SubscriptionButton(
-  uiConfig: SubscriptionScreenUiConfig(
-         activePackageText: "Aktif paket",
-      description: "Hizmetimize abone olarak reklamları kaldırın ve tüm özelliklerin kilidini açın",
-      editingSavePercentageText: (value) =>
-          "${value}  % tasarruf et",
-      includesTitle: "İçerir",
-      popularBadgeText: "Popüler",
-      purchaseButtonTitle:"Abone Ol",
-      restorePurchases: "Satın Alımları Geri Yükle",
-      title: "Size en uygun planı seçin",
-      specialOfferTitle: "Özel Teklifi Göster",
-  
-      editingTrialDaysText: (value, periodUnit) {
-        switch (periodUnit) {
-          case PeriodUnit.day:
-            return "$value günlük deneme";
-          case PeriodUnit.month:
-            return "$value aylık deneme";
-          case PeriodUnit.year:
-            return "$value yıllık deneme";
-          case PeriodUnit.week:
-            return "$value haftalık deneme";
-          default:
-            return "";
-        }
-      },
-      features: [
-        FeatureItem(
-          title: "Tüm özelliklere sınırsız erişim",
-          icon: const Icon(Icons.check_circle),
-        ),
-        FeatureItem(
-          title: "Reklamsız kullanım",
-          description: "Tüm Özelliklere reklamsız erişim",
-          icon: const Icon(Icons.analytics_outlined),
-        ),
-       
-      ],
-      packagesTextConfig: PackagesTextConfig(
-        annualPackageText: "Yıllık Paket",
-        customPackageText: "Özel Paket",
-        lifetimePackageText: "Ömür Boyu",
-        monthlyPackageText: "Aylık Paket",
-        sixMonthPackageText: "6 Aylık Paket",
-        threeMonthPackageText: "3 Aylık Paket",
-        twoMonthPackageText: "2 Aylık Paket",
-        unknowPackageText: "Bilinmeyen Paket",
-        weeklyPackageText: "Haftalık Paket",
-      ),
-    
-  ),
-      onPaywallResult: (result) {
  
-      },
-    );
-  }
 }

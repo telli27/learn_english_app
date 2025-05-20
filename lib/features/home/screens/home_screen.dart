@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:revenue_cat_integration/configs/packages_text_config.dart';
+import 'package:revenue_cat_integration/revenue_cat_integration.dart';
+import 'package:revenue_cat_integration/widgets/feature_item.dart';
 import 'dart:ui';
 import '../../../core/providers.dart';
 import '../../../core/models/grammar_topic.dart';
@@ -212,7 +215,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           isDark ? const Color(0xFF121212) : const Color(0xFFF9FAFC),
       body: SafeArea(
         child: Column(
-          children: [
+          children: [  
             // Custom app bar
             _buildAppBar(isDark, filteredTopics.length, isLoggedIn),
 
@@ -557,13 +560,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final searchQuery = ref.watch(searchQueryProvider);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              
               isSearching
                   ? GestureDetector(
                       onTap: () {
@@ -625,7 +629,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ],
                     ),
               Row(
-                children: [
+                children: [_buildPremiumButton(),
                   // Account button - redirects to login/profile
                   GestureDetector(
                     onTap: () {
@@ -638,8 +642,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       }
                     },
                     child: Container(
-                      width: 42,
-                      height: 42,
+                      width: 35,
+                      height: 35,
                       margin: const EdgeInsets.only(right: 10),
                       decoration: BoxDecoration(
                         color: isLoggedIn
@@ -703,8 +707,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       }
                     },
                     child: Container(
-                      width: 42,
-                      height: 42,
+                      width: 35,
+                      height: 35,
                       decoration: BoxDecoration(
                         color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -1009,6 +1013,64 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ],
+    );
+  }
+   Widget _buildPremiumButton() {
+    return SubscriptionButton(
+  uiConfig: SubscriptionScreenUiConfig(
+         activePackageText: "Aktif paket",
+      description: "Hizmetimize abone olarak reklamları kaldırın ve tüm özelliklerin kilidini açın",
+      editingSavePercentageText: (value) =>
+          "${value}  % tasarruf et",
+      includesTitle: "İçerir",
+      popularBadgeText: "Popüler",
+      purchaseButtonTitle:"Abone Ol",
+      restorePurchases: "Satın Alımları Geri Yükle",
+      title: "Size en uygun planı seçin",
+      specialOfferTitle: "Özel Teklifi Göster",
+  
+      editingTrialDaysText: (value, periodUnit) {
+        switch (periodUnit) {
+          case PeriodUnit.day:
+            return "$value günlük deneme";
+          case PeriodUnit.month:
+            return "$value aylık deneme";
+          case PeriodUnit.year:
+            return "$value yıllık deneme";
+          case PeriodUnit.week:
+            return "$value haftalık deneme";
+          default:
+            return "";
+        }
+      },
+      features: [
+        FeatureItem(
+          title: "Tüm özelliklere sınırsız erişim",
+          icon: const Icon(Icons.check_circle),
+        ),
+        FeatureItem(
+          title: "Reklamsız kullanım",
+          description: "Tüm Özelliklere reklamsız erişim",
+          icon: const Icon(Icons.analytics_outlined),
+        ),
+       
+      ],
+      packagesTextConfig: PackagesTextConfig(
+        annualPackageText: "Yıllık Paket",
+        customPackageText: "Özel Paket",
+        lifetimePackageText: "Ömür Boyu",
+        monthlyPackageText: "Aylık Paket",
+        sixMonthPackageText: "6 Aylık Paket",
+        threeMonthPackageText: "3 Aylık Paket",
+        twoMonthPackageText: "2 Aylık Paket",
+        unknowPackageText: "Bilinmeyen Paket",
+        weeklyPackageText: "Haftalık Paket",
+      ),
+    
+  ),
+      onPaywallResult: (result) {
+ 
+      },
     );
   }
 }
