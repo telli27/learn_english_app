@@ -629,7 +629,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ],
                     ),
               Row(
-                children: [_buildPremiumButton(),
+                children: [
+                  _buildPremiumButton(),
                   // Account button - redirects to login/profile
                   GestureDetector(
                     onTap: () {

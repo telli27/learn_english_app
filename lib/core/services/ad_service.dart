@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:revenue_cat_integration/service/revenue_cat_integration_service.dart';
 import '../models/ad_config.dart';
 
 class AdService {
@@ -78,6 +79,8 @@ class AdService {
 
   // Geçiş reklamını göster
   Future<void> showInterstitialAd() async {
+   if (RevenueCatIntegrationService.instance.isPremium.value) return;
+
     if (_interstitialAdCount >= _adConfig.maxImpression) {
       debugPrint(
           'Interstitial ad limit reached: $_interstitialAdCount >= ${_adConfig.maxImpression}');
