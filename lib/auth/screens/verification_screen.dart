@@ -6,6 +6,7 @@ import '../../../core/utils/constants/colors.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:math' as math;
+import 'auth_wrapper.dart';
 
 class VerificationScreen extends ConsumerStatefulWidget {
   final String email;
@@ -110,10 +111,13 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen>
         // Stop checking for verification
         _timer?.cancel();
 
-        // Just pop the current screen after a delay
+        // Navigate to main screen after delay
         Future.delayed(const Duration(seconds: 1), () {
           if (mounted) {
-            Navigator.of(context).pop();
+            // Navigate to the main screen (pops all other screens)
+            Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const AuthWrapper()),
+                (route) => false);
           }
         });
       }
@@ -447,9 +451,11 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen>
                       height: 56,
                       child: ElevatedButton(
                         onPressed: () {
-                          // Pop twice to get back to the home screen
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
+                          // Navigate to the main screen (pops all other screens)
+                          Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                  builder: (context) => const AuthWrapper()),
+                              (route) => false);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,

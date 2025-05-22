@@ -293,46 +293,6 @@ class _FlashcardWidgetState extends State<FlashcardWidget>
                                 ),
                               ),
                             ),
-
-                            // Favorite button
-                            Positioned(
-                              top: 16,
-                              right: 16,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? Colors.black26
-                                      : Colors.white.withOpacity(0.8),
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
-                                      blurRadius: 4,
-                                      spreadRadius: 1,
-                                    ),
-                                  ],
-                                ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: widget.onFavoriteToggle,
-                                    customBorder: const CircleBorder(),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Icon(
-                                        widget.flashcard.isFavorite
-                                            ? Icons.favorite
-                                            : Icons.favorite_border,
-                                        color: widget.flashcard.isFavorite
-                                            ? Colors.red
-                                            : secondaryTextColor,
-                                        size: 24,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
                           ],
                         ),
                       ),

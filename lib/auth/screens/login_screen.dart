@@ -190,8 +190,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             textColor: Colors.white,
             fontSize: 16.0);
 
-        // Just pop this screen instead of navigating to home
-        Navigator.pop(context);
+        // Check if email is verified
+        final authState = ref.read(authProvider);
+        if (!authState.isEmailVerified) {
+          // If email is not verified, navigate to verification screen
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    VerificationScreen(email: authState.email ?? ''),
+              ),
+            );
+          }
+        } else {
+          // Just pop this screen instead of navigating to home
+          Navigator.pop(context);
+        }
       } else if (mounted) {
         // Error haptic feedback
         HapticFeedback.heavyImpact();

@@ -20,11 +20,13 @@ import 'core/data/grammar_data.dart';
 import 'auth/screens/login_screen.dart';
 import 'auth/screens/register_screen.dart';
 import 'auth/screens/verification_screen.dart';
+import 'auth/screens/auth_wrapper.dart';
 import 'core/screens/no_internet_screen.dart';
 import 'core/screens/loading_screen.dart';
 import 'core/screens/weak_connection_screen.dart';
 import 'features/settings/screens/terms_of_use_screen.dart';
 import 'features/settings/screens/privacy_policy_screen.dart';
+
 Future<void> checkForUpdate() async {
   try {
     AppUpdateInfo info = await InAppUpdate.checkForUpdate();
@@ -39,9 +41,10 @@ Future<void> checkForUpdate() async {
     debugPrint(e.toString());
   }
 }
+
 Future<void> _configureRevenueCatSDK() async {
   await dotenv.load();
-final key =    dotenv.env['REVEUNECAT_GOOGLE_API_KEY'] ?? '';
+  final key = dotenv.env['REVEUNECAT_GOOGLE_API_KEY'] ?? '';
 
   await RevenueCatIntegrationService.instance.init(
     StoreConfig(
@@ -50,6 +53,7 @@ final key =    dotenv.env['REVEUNECAT_GOOGLE_API_KEY'] ?? '';
     ),
   );
 }
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -137,7 +141,7 @@ class _MyAppState extends ConsumerState<MyApp> {
       // Simulate loading time for testing
       // Comment this out in production
       // await Future.delayed(Duration(seconds: 5));
-    if (GrammarData.topics.isEmpty) {
+      if (GrammarData.topics.isEmpty) {
         // If topics are not loaded, force loading from GitHub
         debugPrint('Topics are empty, loading from GitHub...');
         await GrammarData.loadTopics();
@@ -219,8 +223,8 @@ class _MyAppState extends ConsumerState<MyApp> {
             return LoadingScreen(message: 'Konular yükleniyor...');
           }
 
-          // If everything is good, show the main screen
-          return const MainScreen();
+          // If everything is good, show the AuthWrapper that will handle auth flow
+          return const AuthWrapper();
         },
         loading: () => const LoadingScreen(
             message: 'İnternet bağlantısı kontrol ediliyor...'),
@@ -231,6 +235,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         '/register': (context) => const RegisterScreen(),
         '/terms_of_use': (context) => const TermsOfUseScreen(),
         '/privacy_policy': (context) => const PrivacyPolicyScreen(),
+        '/verification': (context) => VerificationScreen(email: ''),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/verification') {

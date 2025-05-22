@@ -58,14 +58,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
     // Firebase oturum durumunu dinle
     firebase_auth.FirebaseAuth.instance.authStateChanges().listen((user) async {
       if (user != null) {
+        // Reload user to get latest email verification status
+        await user.reload();
+        final refreshedUser = firebase_auth.FirebaseAuth.instance.currentUser;
+
         // Kullanıcı giriş yapmış durumda
         state = state.copyWith(
           isLoggedIn: true,
-          email: user.email,
-          userId: user.uid,
-          username:
-              user.displayName ?? user.email?.split('@')[0] ?? 'Kullanıcı',
-          isEmailVerified: user.emailVerified,
+          email: refreshedUser?.email ?? user.email,
+          userId: refreshedUser?.uid ?? user.uid,
+          username: refreshedUser?.displayName ??
+              refreshedUser?.email?.split('@')[0] ??
+              'Kullanıcı',
+          isEmailVerified: refreshedUser?.emailVerified ?? false,
         );
 
         // Kullanıcı Firestore'da var mı kontrol et, yoksa oluştur
@@ -85,7 +90,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             'email': user.email,
             'createdAt': Timestamp.now(),
             'lastLoginAt': Timestamp.now(),
-            'emailVerified': user.emailVerified,
+            'emailVerified': refreshedUser?.emailVerified ?? false,
             "isAdmin": false
           });
         } else {
@@ -95,7 +100,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
               .doc(user.uid)
               .update({
             'lastLoginAt': Timestamp.now(),
-            'emailVerified': user.emailVerified,
+            'emailVerified': refreshedUser?.emailVerified ?? false,
           });
         }
 
@@ -135,6 +140,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final user = userCredential.user;
 
       if (user != null) {
+        // Reload user to get latest email verification status
+        await user.reload();
+
         // Kullanıcı giriş yapmış ise Firestore'daki son giriş bilgisini güncelle
         await FirebaseFirestore.instance
             .collection('users')
@@ -145,7 +153,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         });
 
         // Giriş başarılı - authStateChanges dinleyicisi state'i otomatik olarak güncelleyecek
-        state = state.copyWith(isLoading: false);
+        state = state.copyWith(
+          isLoading: false,
+          isEmailVerified: user.emailVerified,
+        );
         return true;
       } else {
         state =
@@ -207,7 +218,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           'createdAt': Timestamp.now(),
           'lastLoginAt': Timestamp.now(),
           'emailVerified': false,
-          "isAdmin":false
+          "isAdmin": false
         });
 
         // E-posta doğrulama gönder

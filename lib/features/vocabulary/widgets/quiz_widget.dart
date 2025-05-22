@@ -62,9 +62,9 @@ class _QuizWidgetState extends State<QuizWidget> {
       return isUnique;
     }).toList();
 
-    // Limit to max 10 cards
-    if (_quizCards.length > 10) {
-      _quizCards = _quizCards.sublist(0, 10);
+    // Limit to max 20 cards (changed from 10)
+    if (_quizCards.length > 20) {
+      _quizCards = _quizCards.sublist(0, 20);
     }
 
     // Reset quiz state

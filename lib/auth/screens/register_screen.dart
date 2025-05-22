@@ -267,7 +267,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             Navigator.pop(context);
           }
         } else {
-          // In a real app, we would send verification email and navigate to verification screen
+          // Send verification email
           await ref.read(authProvider.notifier).sendEmailVerification();
 
           Fluttertoast.showToast(
@@ -280,26 +280,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               fontSize: 16.0);
 
           if (mounted) {
-            Navigator.push(
+            // Replace current screen with verification screen
+            Navigator.pushReplacement(
               context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) =>
-                    VerificationScreen(
+              MaterialPageRoute(
+                builder: (context) => VerificationScreen(
                   email: _emailController.text.trim(),
                 ),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  var begin = const Offset(1.0, 0.0);
-                  var end = Offset.zero;
-                  var curve = Curves.easeOutQuint;
-
-                  var tween = Tween(begin: begin, end: end)
-                      .chain(CurveTween(curve: curve));
-                  return SlideTransition(
-                    position: animation.drive(tween),
-                    child: child,
-                  );
-                },
               ),
             );
           }

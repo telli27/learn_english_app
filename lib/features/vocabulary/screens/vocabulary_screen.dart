@@ -42,6 +42,7 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen>
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
   String _searchQuery = '';
+  bool _isCardFlipped = false;
 
   @override
   void initState() {
@@ -69,6 +70,7 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       appBar: AppBar(
@@ -87,6 +89,7 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen>
                   setState(() {
                     _searchQuery = value;
                     _currentIndex = 0;
+                    _isCardFlipped = false;
                   });
                 },
               )
@@ -94,6 +97,7 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen>
                 'Kelime Kartları',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
+                  fontSize: 22,
                   color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
@@ -133,15 +137,44 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen>
             },
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Theme.of(context).colorScheme.primary,
-          labelColor: Theme.of(context).colorScheme.primary,
-          unselectedLabelColor: isDark ? Colors.white70 : Colors.black54,
-          tabs: const [
-            Tab(text: 'Kartlar'),
-            Tab(text: 'Quiz'),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                color: primaryColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: primaryColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              labelColor: Colors.white,
+              unselectedLabelColor: isDark ? Colors.white70 : Colors.black54,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.normal,
+                fontSize: 16,
+              ),
+              tabs: const [
+                Tab(text: 'Kartlar'),
+                Tab(text: 'Quiz'),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(
@@ -154,11 +187,41 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen>
           _buildQuizTab(isDark),
         ],
       ),
-      floatingActionButton: null,
+      floatingActionButton: _tabController.index == 0
+          ? FloatingActionButton(
+              onPressed: () {
+                setState(() {
+                  // Generate a random index different from current
+                  if (ref.watch(filteredFlashcardsProvider).maybeWhen(
+                        data: (flashcards) => flashcards.length > 1,
+                        orElse: () => false,
+                      )) {
+                    int newIndex;
+                    final flashcardsLength =
+                        ref.watch(filteredFlashcardsProvider).maybeWhen(
+                              data: (flashcards) => flashcards.length,
+                              orElse: () => 0,
+                            );
+                    if (flashcardsLength > 0) {
+                      do {
+                        newIndex = Random().nextInt(flashcardsLength);
+                      } while (newIndex == _currentIndex);
+                      _currentIndex = newIndex;
+                      _isCardFlipped = false;
+                    }
+                  }
+                });
+              },
+              backgroundColor: primaryColor,
+              elevation: 4,
+              child: const Icon(Icons.shuffle, color: Colors.white),
+            )
+          : null,
     );
   }
 
   Widget _buildFlashcardsTab(bool isDark) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
     final filteredCardsProvider = _searchQuery.isNotEmpty
         ? Provider<AsyncValue<List<Flashcard>>>((ref) {
             final allCards = _showingFavorites
@@ -186,23 +249,28 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen>
 
     return Column(
       children: [
-        // Categories filter
+        // Categories filter with horizontal scroll
         if (_searchQuery.isEmpty)
           categories.when(
-            data: (categoriesList) => CategoryFilter(
-              categories: categoriesList,
-              selectedCategory: ref.watch(selectedCategoryProvider),
-              onCategorySelected: (category) {
-                ref.read(selectedCategoryProvider.notifier).state = category;
-                setState(() {
-                  _currentIndex = 0;
-                });
-              },
+            data: (categoriesList) => Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              height: 40,
+              child: CategoryFilter(
+                categories: categoriesList,
+                selectedCategory: ref.watch(selectedCategoryProvider),
+                onCategorySelected: (category) {
+                  ref.read(selectedCategoryProvider.notifier).state = category;
+                  setState(() {
+                    _currentIndex = 0;
+                    _isCardFlipped = false;
+                  });
+                },
+              ),
             ),
             loading: () => const SizedBox(
-                height: 50, child: Center(child: CircularProgressIndicator())),
+                height: 40, child: Center(child: CircularProgressIndicator())),
             error: (_, __) => const SizedBox(
-                height: 50,
+                height: 40,
                 child: Center(child: Text('Kategoriler yüklenemedi'))),
           ),
 
@@ -244,19 +312,124 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen>
 
               return Column(
                 children: [
-                  // Flashcard
+                  // Card Counter and Favorites Toggle
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Card count display
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withOpacity(0.1)
+                                : Colors.grey.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '${_currentIndex + 1} / ${flashcards.length}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        ),
+
+                        // Favorites toggle
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _showingFavorites = !_showingFavorites;
+                              _currentIndex = 0;
+                              _isCardFlipped = false;
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: _showingFavorites
+                                  ? Colors.red.withOpacity(0.1)
+                                  : isDark
+                                      ? Colors.white.withOpacity(0.1)
+                                      : Colors.grey.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  _showingFavorites
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  size: 18,
+                                  color: _showingFavorites
+                                      ? Colors.red
+                                      : isDark
+                                          ? Colors.white
+                                          : Colors.black87,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _showingFavorites
+                                      ? 'Favoriler'
+                                      : 'Tüm Kartlar',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: _showingFavorites
+                                        ? Colors.red
+                                        : isDark
+                                            ? Colors.white
+                                            : Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Flashcard with animation
                   Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(0.0),
-                      child: FlashcardWidget(
-                        flashcard: flashcards[_currentIndex],
-                        onFavoriteToggle: () {
-                          ref
-                              .read(flashcardNotifierProvider.notifier)
-                              .toggleFavorite(
-                                flashcards[_currentIndex].id,
-                              );
-                        },
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isCardFlipped = !_isCardFlipped;
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          transitionBuilder:
+                              (Widget child, Animation<double> animation) {
+                            final rotate =
+                                Tween(begin: 0.0, end: 1.0).animate(animation);
+                            return AnimatedBuilder(
+                              animation: rotate,
+                              child: child,
+                              builder: (context, child) {
+                                final angle = rotate.value * pi;
+                                return Transform(
+                                  transform: Matrix4.identity()
+                                    ..setEntry(3, 2, 0.001)
+                                    ..rotateY(angle),
+                                  alignment: Alignment.center,
+                                  child: child,
+                                );
+                              },
+                            );
+                          },
+                          child: _isCardFlipped
+                              ? _buildFlashcardBack(
+                                  flashcards[_currentIndex], isDark)
+                              : _buildFlashcardFront(
+                                  flashcards[_currentIndex], isDark),
+                        ),
                       ),
                     ),
                   ),
@@ -264,84 +437,46 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen>
                   // Navigation controls
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 24.0, vertical: 16.0),
+                        horizontal: 16.0, vertical: 16.0),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         // Previous button
-                        IconButton(
-                          icon: Icon(
-                            Icons.arrow_back_ios_rounded,
-                            color: _currentIndex > 0
-                                ? (isDark ? Colors.white : Colors.black87)
-                                : (isDark ? Colors.white24 : Colors.black12),
-                          ),
+                        _buildNavigationButton(
+                          icon: Icons.arrow_back_ios_rounded,
                           onPressed: _currentIndex > 0
                               ? () {
                                   setState(() {
                                     _currentIndex--;
+                                    _isCardFlipped = false;
                                   });
                                 }
                               : null,
+                          isDark: isDark,
+                          enabled: _currentIndex > 0,
                         ),
 
-                        // Card index indicator
-                        Text(
-                          '${_currentIndex + 1} / ${flashcards.length}',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white70 : Colors.black54,
-                          ),
-                        ),
+                        // Card flip button
+                        _buildFlipButton(isDark),
+
+                        // Favorite button for current card
+                        _buildFavoriteButton(flashcards[_currentIndex], isDark),
 
                         // Next button
-                        IconButton(
-                          icon: Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            color: _currentIndex < flashcards.length - 1
-                                ? (isDark ? Colors.white : Colors.black87)
-                                : (isDark ? Colors.white24 : Colors.black12),
-                          ),
+                        _buildNavigationButton(
+                          icon: Icons.arrow_forward_ios_rounded,
                           onPressed: _currentIndex < flashcards.length - 1
                               ? () {
                                   setState(() {
                                     _currentIndex++;
+                                    _isCardFlipped = false;
                                   });
                                 }
                               : null,
+                          isDark: isDark,
+                          enabled: _currentIndex < flashcards.length - 1,
                         ),
                       ],
-                    ),
-                  ),
-
-                  // Shuffle button
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 24.0),
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          // Generate a random index different from current
-                          if (flashcards.length > 1) {
-                            int newIndex;
-                            do {
-                              newIndex = Random().nextInt(flashcards.length);
-                            } while (newIndex == _currentIndex);
-                            _currentIndex = newIndex;
-                          }
-                        });
-                      },
-                      icon: const Icon(Icons.shuffle),
-                      label: const Text('Karıştır'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
                     ),
                   ),
                 ],
@@ -360,6 +495,448 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen>
         ),
       ],
     );
+  }
+
+  Widget _buildFlashcardFront(Flashcard card, bool isDark) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
+    return Container(
+      key: const ValueKey('front'),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            primaryColor,
+            primaryColor
+                .withBlue(min(primaryColor.blue + 30, 255))
+                .withRed(max(primaryColor.red - 30, 0)),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Category badge
+          Positioned(
+            top: 16,
+            left: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _getCategoryIcon(card.category),
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    card.category,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Difficulty badge
+          Positioned(
+            top: 16,
+            right: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _getDifficultyColor(card.difficulty).withOpacity(0.3),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _getDifficultyIcon(card.difficulty),
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    card.difficulty,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Main content
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Image if available
+                if (card.imageUrl.isNotEmpty)
+                  Container(
+                    width: 100,
+                    height: 100,
+                    margin: const EdgeInsets.only(bottom: 24),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(50),
+                      child: Image.network(
+                        card.imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Icon(
+                          Icons.image_not_supported,
+                          size: 40,
+                          color: Colors.white.withOpacity(0.5),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // Word text
+                Text(
+                  card.word,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        offset: Offset(0, 2),
+                        blurRadius: 4,
+                        color: Color.fromRGBO(0, 0, 0, 0.3),
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 16),
+
+                // Tap to flip hint
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.touch_app,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        'Çevirmek için dokun',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFlashcardBack(Flashcard card, bool isDark) {
+    final backColor = isDark ? const Color(0xFF2A2A2A) : Colors.white;
+
+    return Container(
+      key: const ValueKey('back'),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: backColor,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Original word reminder
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 24),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  card.word,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                ),
+              ),
+            ),
+
+            // Translation
+            Center(
+              child: Text(
+                card.translation,
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // Example section
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.black12 : Colors.grey.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark ? Colors.white12 : Colors.grey.withOpacity(0.1),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Örnek Cümle:',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    card.example,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontStyle: FontStyle.italic,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Çeviri:',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    card.exampleTranslation,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontStyle: FontStyle.italic,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavigationButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required bool isDark,
+    required bool enabled,
+  }) {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: enabled
+            ? isDark
+                ? Colors.white.withOpacity(0.1)
+                : Colors.grey.withOpacity(0.1)
+            : Colors.transparent,
+      ),
+      child: IconButton(
+        icon: Icon(
+          icon,
+          color: enabled
+              ? (isDark ? Colors.white : Colors.black87)
+              : (isDark ? Colors.white24 : Colors.black12),
+          size: 20,
+        ),
+        onPressed: onPressed,
+      ),
+    );
+  }
+
+  Widget _buildFlipButton(bool isDark) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: primaryColor,
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: const Icon(
+          Icons.flip,
+          color: Colors.white,
+          size: 24,
+        ),
+        onPressed: () {
+          setState(() {
+            _isCardFlipped = !_isCardFlipped;
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildFavoriteButton(Flashcard card, bool isDark) {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isDark
+            ? Colors.white.withOpacity(0.1)
+            : Colors.grey.withOpacity(0.1),
+      ),
+      child: IconButton(
+        icon: Icon(
+          card.isFavorite ? Icons.favorite : Icons.favorite_border,
+          color: card.isFavorite
+              ? Colors.red
+              : (isDark ? Colors.white70 : Colors.black54),
+          size: 20,
+        ),
+        onPressed: () {
+          ref.read(flashcardNotifierProvider.notifier).toggleFavorite(card.id);
+        },
+      ),
+    );
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'Food':
+        return Icons.restaurant;
+      case 'Education':
+        return Icons.school;
+      case 'Technology':
+        return Icons.computer;
+      case 'Home':
+        return Icons.home;
+      case 'Transportation':
+        return Icons.directions_car;
+      case 'Abstract':
+        return Icons.psychology;
+      case 'Finance':
+        return Icons.attach_money;
+      case 'Relationships':
+        return Icons.people;
+      case 'Travel':
+        return Icons.flight;
+      case 'Nature':
+        return Icons.eco;
+      case 'Entertainment':
+        return Icons.movie;
+      case 'Health':
+        return Icons.favorite;
+      case 'Shopping':
+        return Icons.shopping_cart;
+      default:
+        return Icons.category;
+    }
+  }
+
+  IconData _getDifficultyIcon(String difficulty) {
+    switch (difficulty) {
+      case 'Beginner':
+        return Icons.star_border;
+      case 'Intermediate':
+        return Icons.star_half;
+      case 'Advanced':
+        return Icons.star;
+      default:
+        return Icons.star_border;
+    }
+  }
+
+  Color _getDifficultyColor(String difficulty) {
+    switch (difficulty) {
+      case 'Beginner':
+        return Colors.green;
+      case 'Intermediate':
+        return Colors.orange;
+      case 'Advanced':
+        return Colors.red;
+      default:
+        return Colors.green;
+    }
   }
 
   Widget _buildQuizTab(bool isDark) {
