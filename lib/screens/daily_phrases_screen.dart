@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/providers.dart';
 import 'dart:async';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 class DailyPhrasesScreen extends ConsumerStatefulWidget {
   const DailyPhrasesScreen({Key? key}) : super(key: key);
@@ -598,12 +601,103 @@ class _PhraseDetailScreenState extends ConsumerState<PhraseDetailScreen> {
   bool _showAppBarTitle = false;
   bool _isScrolling = false;
   Timer? _scrollTimer;
+  final FlutterTts _flutterTts = FlutterTts();
+  String? _currentlyPlayingPhrase;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+    _initTts();
+  }
+
+  void _initTts() async {
+    // Set language to US English
+    await _flutterTts.setLanguage("en-US");
+
+    // Set speech rate (slower for better pronunciation)
+    await _flutterTts.setSpeechRate(0.5);
+
+    // Set volume to maximum
+    await _flutterTts.setVolume(1.0);
+
+    // Set pitch to natural level
+    await _flutterTts.setPitch(1.0);
+
+    // Platform-specific settings
+    if (Platform.isIOS) {
+      // Enable shared instance for better iOS performance
+      await _flutterTts.setSharedInstance(true);
+
+      // Configure iOS audio session to allow mixing with other audio
+      await _flutterTts.setIosAudioCategory(
+        IosTextToSpeechAudioCategory.ambient,
+        [
+          IosTextToSpeechAudioCategoryOptions.allowBluetooth,
+          IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
+          IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+        ],
+        IosTextToSpeechAudioMode.defaultMode,
+      );
+    } else if (Platform.isAndroid) {
+      // Try to get available voices and set a good quality voice if available
+      try {
+        var voices = await _flutterTts.getVoices;
+        if (voices.isNotEmpty) {
+          // Look for a high-quality English voice
+          var englishVoices = voices
+              .where((voice) =>
+                  voice['locale']?.toString().startsWith('en') == true)
+              .toList();
+
+          if (englishVoices.isNotEmpty) {
+            await _flutterTts.setVoice(englishVoices.first);
+          }
+        }
+      } catch (e) {
+        print("Failed to get voices: $e");
+      }
+    }
+
+    // Set up completion handler to reset playing state
+    _flutterTts.setCompletionHandler(() {
+      setState(() {
+        _currentlyPlayingPhrase = null;
+      });
+    });
+
+    // Set up error handler
+    _flutterTts.setErrorHandler((msg) {
+      print("TTS Error: $msg");
+      setState(() {
+        _currentlyPlayingPhrase = null;
+      });
+    });
+  }
+
+  Future<void> _speakPhrase(String phrase) async {
+    if (_currentlyPlayingPhrase == phrase) {
+      await _flutterTts.stop();
+      setState(() {
+        _currentlyPlayingPhrase = null;
+      });
+    } else {
+      if (_currentlyPlayingPhrase != null) {
+        await _flutterTts.stop();
+      }
+
+      setState(() {
+        _currentlyPlayingPhrase = phrase;
+      });
+
+      // Use focus parameter on Android for better audio handling
+      if (Platform.isAndroid) {
+        await _flutterTts.speak(phrase, focus: true);
+      } else {
+        await _flutterTts.speak(phrase);
+      }
+    }
   }
 
   @override
@@ -611,6 +705,7 @@ class _PhraseDetailScreenState extends ConsumerState<PhraseDetailScreen> {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _scrollTimer?.cancel();
+    _flutterTts.stop();
     super.dispose();
   }
 
@@ -789,6 +884,9 @@ class _PhraseDetailScreenState extends ConsumerState<PhraseDetailScreen> {
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
                   final phrase = phrases[index];
+                  final bool isPlaying =
+                      _currentlyPlayingPhrase == phrase['english'];
+
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
@@ -831,16 +929,57 @@ class _PhraseDetailScreenState extends ConsumerState<PhraseDetailScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // English phrase
-                                    Text(
-                                      phrase['english']!,
-                                      style: TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.bold,
-                                        color: isDark
-                                            ? Colors.white
-                                            : Colors.black87,
-                                      ),
+                                    // English phrase with speaker icon
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            phrase['english']!,
+                                            style: TextStyle(
+                                              fontSize: 17,
+                                              fontWeight: FontWeight.bold,
+                                              color: isDark
+                                                  ? Colors.white
+                                                  : Colors.black87,
+                                            ),
+                                          ),
+                                        ),
+                                        InkWell(
+                                          onTap: () =>
+                                              _speakPhrase(phrase['english']!),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: isPlaying
+                                                  ? categoryColor
+                                                      .withOpacity(0.3)
+                                                  : categoryColor
+                                                      .withOpacity(0.15),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              border: isPlaying
+                                                  ? Border.all(
+                                                      color: categoryColor,
+                                                      width: 1)
+                                                  : null,
+                                            ),
+                                            child: AnimatedSwitcher(
+                                              duration: const Duration(
+                                                  milliseconds: 200),
+                                              child: Icon(
+                                                isPlaying
+                                                    ? Icons.stop_rounded
+                                                    : Icons.volume_up_rounded,
+                                                color: categoryColor,
+                                                size: 22,
+                                                key: ValueKey<bool>(isPlaying),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                     const SizedBox(height: 8),
                                     // Turkish translation with decorative element
