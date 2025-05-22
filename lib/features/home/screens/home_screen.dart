@@ -130,6 +130,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final searchQuery = ref.watch(searchQueryProvider);
     final isSearching = ref.watch(isSearchingProvider);
 
+    // Konular boş ve yükleme tamamlanmışsa, loading durumunu doğru göster
+    final bool effectiveLoading =
+        isLoading || (topics.isEmpty && errorMessage == null);
+
     // Update to use authState
     final authState = ref.watch(authProvider);
     final isLoggedIn = authState.isLoggedIn;
@@ -215,7 +219,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           isDark ? const Color(0xFF121212) : const Color(0xFFF9FAFC),
       body: SafeArea(
         child: Column(
-          children: [  
+          children: [
             // Custom app bar
             _buildAppBar(isDark, filteredTopics.length, isLoggedIn),
 
@@ -245,40 +249,74 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
 
-            // Loading indicator
-            if (isLoading)
+          
+            // Loading indicator - shows even if topics are empty
+            if (effectiveLoading)
               const Expanded(
                 child: Center(
-                  child: CircularProgressIndicator(),
-                ),
-              )
-            else if (filteredTopics.isEmpty)
-              Expanded(
-                child: Center(
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        searchQuery.isNotEmpty
-                            ? Icons.search_off_rounded
-                            : Icons.category_outlined,
-                        size: 64,
-                        color: isDark ? Colors.white24 : Colors.black12,
-                      ),
-                      const SizedBox(height: 16),
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
                       Text(
-                        searchQuery.isNotEmpty
-                            ? 'Aramanızla eşleşen konu bulunamadı'
-                            : 'Bu kategoride konu bulunamadı',
+                        "Konular yükleniyor...",
                         style: TextStyle(
                           fontSize: 16,
-                          color: isDark ? Colors.white70 : Colors.black54,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey,
                         ),
                       ),
                     ],
                   ),
                 ),
               )
+            // When no topics are found after filtering and not loading
+            else if (filteredTopics.isEmpty && !effectiveLoading)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.search_off_rounded,
+                        size: 64,
+                        color: isDark ? Colors.grey[700] : Colors.grey[400],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        searchQuery.isNotEmpty
+                            ? 'Arama sonucu bulunamadı'
+                            : 'Bu kategoride konu bulunamadı',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                      ),
+                      if (searchQuery.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            _searchController.clear();
+                            ref.read(searchQueryProvider.notifier).state = '';
+                            ref.read(isSearchingProvider.notifier).state =
+                                false;
+                            _searchFocusNode.unfocus();
+                          },
+                          icon: const Icon(Icons.close),
+                          label: const Text('Aramayı Temizle'),
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              )
+            // Scrollable list of topics when there are topics to show
             else
               Expanded(
                 child: RefreshIndicator(
@@ -567,7 +605,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              
               isSearching
                   ? GestureDetector(
                       onTap: () {
@@ -1016,62 +1053,58 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ],
     );
   }
-   Widget _buildPremiumButton() {
+
+  Widget _buildPremiumButton() {
     return SubscriptionButton(
-  uiConfig: SubscriptionScreenUiConfig(
-         activePackageText: "Aktif paket",
-      description: "Hizmetimize abone olarak reklamları kaldırın ve tüm özelliklerin kilidini açın",
-      editingSavePercentageText: (value) =>
-          "${value}  % tasarruf et",
-      includesTitle: "İçerir",
-      popularBadgeText: "Popüler",
-      purchaseButtonTitle:"Abone Ol",
-      restorePurchases: "Satın Alımları Geri Yükle",
-      title: "Size en uygun planı seçin",
-      specialOfferTitle: "Özel Teklifi Göster",
-  
-      editingTrialDaysText: (value, periodUnit) {
-        switch (periodUnit) {
-          case PeriodUnit.day:
-            return "$value günlük deneme";
-          case PeriodUnit.month:
-            return "$value aylık deneme";
-          case PeriodUnit.year:
-            return "$value yıllık deneme";
-          case PeriodUnit.week:
-            return "$value haftalık deneme";
-          default:
-            return "";
-        }
-      },
-      features: [
-        FeatureItem(
-          title: "Tüm özelliklere sınırsız erişim",
-          icon: const Icon(Icons.check_circle),
+      uiConfig: SubscriptionScreenUiConfig(
+        activePackageText: "Aktif paket",
+        description:
+            "Hizmetimize abone olarak reklamları kaldırın ve tüm özelliklerin kilidini açın",
+        editingSavePercentageText: (value) => "${value}  % tasarruf et",
+        includesTitle: "İçerir",
+        popularBadgeText: "Popüler",
+        purchaseButtonTitle: "Abone Ol",
+        restorePurchases: "Satın Alımları Geri Yükle",
+        title: "Size en uygun planı seçin",
+        specialOfferTitle: "Özel Teklifi Göster",
+        editingTrialDaysText: (value, periodUnit) {
+          switch (periodUnit) {
+            case PeriodUnit.day:
+              return "$value günlük deneme";
+            case PeriodUnit.month:
+              return "$value aylık deneme";
+            case PeriodUnit.year:
+              return "$value yıllık deneme";
+            case PeriodUnit.week:
+              return "$value haftalık deneme";
+            default:
+              return "";
+          }
+        },
+        features: [
+          FeatureItem(
+            title: "Tüm özelliklere sınırsız erişim",
+            icon: const Icon(Icons.check_circle),
+          ),
+          FeatureItem(
+            title: "Reklamsız kullanım",
+            description: "Tüm Özelliklere reklamsız erişim",
+            icon: const Icon(Icons.analytics_outlined),
+          ),
+        ],
+        packagesTextConfig: PackagesTextConfig(
+          annualPackageText: "Yıllık Paket",
+          customPackageText: "Özel Paket",
+          lifetimePackageText: "Ömür Boyu",
+          monthlyPackageText: "Aylık Paket",
+          sixMonthPackageText: "6 Aylık Paket",
+          threeMonthPackageText: "3 Aylık Paket",
+          twoMonthPackageText: "2 Aylık Paket",
+          unknowPackageText: "Bilinmeyen Paket",
+          weeklyPackageText: "Haftalık Paket",
         ),
-        FeatureItem(
-          title: "Reklamsız kullanım",
-          description: "Tüm Özelliklere reklamsız erişim",
-          icon: const Icon(Icons.analytics_outlined),
-        ),
-       
-      ],
-      packagesTextConfig: PackagesTextConfig(
-        annualPackageText: "Yıllık Paket",
-        customPackageText: "Özel Paket",
-        lifetimePackageText: "Ömür Boyu",
-        monthlyPackageText: "Aylık Paket",
-        sixMonthPackageText: "6 Aylık Paket",
-        threeMonthPackageText: "3 Aylık Paket",
-        twoMonthPackageText: "2 Aylık Paket",
-        unknowPackageText: "Bilinmeyen Paket",
-        weeklyPackageText: "Haftalık Paket",
       ),
-    
-  ),
-      onPaywallResult: (result) {
- 
-      },
+      onPaywallResult: (result) {},
     );
   }
 }

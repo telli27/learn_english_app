@@ -71,7 +71,7 @@ class GrammarController extends StateNotifier<GrammarState> {
       );
 
       // Simulate a short delay for loading animation
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 100));
 
       // Verileri repository'den yükle
       final topics = _repository.getGrammarTopics();
@@ -122,7 +122,7 @@ class GrammarController extends StateNotifier<GrammarState> {
       }
 
       // Simulate a short delay for loading animation
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 100));
 
       // Find the topic by ID
       final topic = _repository.getGrammarTopic(topicId);
@@ -188,7 +188,7 @@ class GrammarController extends StateNotifier<GrammarState> {
       }
 
       // Simulate a short delay for loading animation
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 100));
 
       // Find the subtopic
       final subtopic = _repository.getGrammarSubtopic(topicId, subtopicId);

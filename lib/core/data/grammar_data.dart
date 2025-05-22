@@ -11,14 +11,59 @@ class GrammarData {
   static final GrammarVersionChecker _versionChecker = GrammarVersionChecker();
 
   static Future<void> loadTopics() async {
+    if (topics.isNotEmpty) {
+      return; // Eğer konular zaten yüklenmişse fonksiyondan çık
+    }
+
+    try {
+      // Önce önbellekten yüklemeyi dene
+      final prefs = await SharedPreferences.getInstance();
+      final cachedData = prefs.getString('grammar_data_json');
+
+      if (cachedData != null && cachedData.isNotEmpty) {
+        // Önbellekteki verileri kullan
+        try {
+          final dynamic decoded = jsonDecode(cachedData);
+
+          // Veri bir liste olabilir veya {topics: [...]} şeklinde bir nesne olabilir
+          if (decoded is List) {
+            // Doğrudan liste formatında
+            topics =
+                decoded.map((json) => GrammarTopic.fromJson(json)).toList();
+          } else if (decoded is Map && decoded.containsKey('topics')) {
+            // {topics: [...]} formatında
+            final topicsList = decoded['topics'] as List;
+            topics =
+                topicsList.map((json) => GrammarTopic.fromJson(json)).toList();
+          } else {
+            debugPrint(
+                'Önbellekteki veri geçerli bir formatta değil, GitHub\'dan yükleniyor...');
+            await _loadTopicsFromGitHub();
+            return;
+          }
+
+          // Hemen verileri kullanmaya başla ve arka planda güncel verileri kontrol et
+          _checkForUpdatesInBackground();
+          return;
+        } catch (e) {
+          debugPrint('Önbellekteki veriyi ayrıştırırken hata oluştu: $e');
+          // Hata durumunda GitHub'dan yükle
+          await _loadTopicsFromGitHub();
+          return;
+        }
+      }
+
+      // Önbellekte veri yoksa GitHub'dan yükle
+      await _loadTopicsFromGitHub();
+    } catch (e) {
+      print('Konular yüklenirken hata oluştu: $e');
+      rethrow;
+    }
+  }
+
+  static Future<void> _loadTopicsFromGitHub() async {
     try {
       debugPrint('Loading grammar topics...');
-
-      // Check if topics list is already populated
-      if (topics.isNotEmpty) {
-        debugPrint('Topics already loaded with ${topics.length} topics');
-        return;
-      }
 
       // Use the version checker to check and update grammar data
       topics = await _versionChecker.checkAndUpdateGrammarData();
@@ -102,5 +147,28 @@ class GrammarData {
     }
 
     debugPrint("Force check completed");
+  }
+
+  static void _checkForUpdatesInBackground() {
+    // Arka planda güncellemeleri kontrol et, kullanıcı deneyimini engellemeden
+    Future.microtask(() async {
+      try {
+        // Version checker ile güncellemeleri kontrol et
+        final versionChecker = GrammarVersionChecker();
+
+        // Verileri güncelle ve sonuçları al
+        final updatedTopics = await versionChecker.checkAndUpdateGrammarData();
+
+        // Eğer güncellenmiş konular boş değilse, güncelle
+        if (updatedTopics.isNotEmpty) {
+          topics = updatedTopics;
+          debugPrint('Konular arka planda güncellendi: ${topics.length} konu');
+        }
+      } catch (e) {
+        // Arka plan güncellemesi sırasında hata olursa, sessizce devam et
+        // Bu, kullanıcı deneyimini etkilemez
+        debugPrint('Arka planda güncelleme kontrol edilirken hata: $e');
+      }
+    });
   }
 }

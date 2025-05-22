@@ -17,18 +17,30 @@ class AuthWrapper extends ConsumerStatefulWidget {
 }
 
 class _AuthWrapperState extends ConsumerState<AuthWrapper> {
+  bool _isInitializing = true;
+
   @override
   void initState() {
     super.initState();
     // Check email verification status when widget initializes
-    _checkEmailVerification();
+    _initializeAuth();
   }
 
-  Future<void> _checkEmailVerification() async {
+  Future<void> _initializeAuth() async {
+    // Add a slight delay to wait for Firebase auth state to be fully initialized
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    // Check email verification status
     final authState = ref.read(authProvider);
     if (authState.isLoggedIn && !authState.isEmailVerified) {
-      // If user is logged in but email is not verified, check verification status
       await ref.read(authProvider.notifier).checkEmailVerification();
+    }
+
+    // Mark initialization as complete
+    if (mounted) {
+      setState(() {
+        _isInitializing = false;
+      });
     }
   }
 
@@ -36,8 +48,8 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
-    // Show loading indicator while checking auth state
-    if (authState.isLoading) {
+    // Show loading indicator while initialization or auth state check is in progress
+    if (_isInitializing || authState.isLoading) {
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(),

@@ -22,34 +22,78 @@ class _DailyPhrasesScreenState extends ConsumerState<DailyPhrasesScreen> {
       'phrases': [
         {'english': 'Hello!', 'turkish': 'Merhaba!'},
         {'english': 'Good morning!', 'turkish': 'Günaydın!'},
-        {'english': 'Good afternoon!', 'turkish': 'Tünaydın!'},
-        {'english': 'Good evening!', 'turkish': 'İyi akşamlar!'},
+        {
+          'english': 'Good afternoon!',
+          'turkish': 'Tünaydın!',
+          'phonetic': 'Good afta noon!'
+        },
+        {
+          'english': 'Good evening!',
+          'turkish': 'İyi akşamlar!',
+          'phonetic': 'Good eevning!'
+        },
         {'english': 'Good night!', 'turkish': 'İyi geceler!'},
-        {'english': 'How are you?', 'turkish': 'Nasılsın?'},
+        {
+          'english': 'How are you?',
+          'turkish': 'Nasılsın?',
+          'phonetic': 'How ar you?'
+        },
         {
           'english': 'I\'m fine, thank you.',
-          'turkish': 'İyiyim, teşekkür ederim.'
+          'turkish': 'İyiyim, teşekkür ederim.',
+          'phonetic': 'Aim fine, thank you.'
         },
         {
           'english': 'Nice to meet you!',
-          'turkish': 'Tanıştığımıza memnun oldum!'
+          'turkish': 'Tanıştığımıza memnun oldum!',
+          'phonetic': 'Nice to meet you!'
         },
         {'english': 'See you later!', 'turkish': 'Sonra görüşürüz!'},
-        {'english': 'See you tomorrow!', 'turkish': 'Yarın görüşürüz!'},
+        {
+          'english': 'See you tomorrow!',
+          'turkish': 'Yarın görüşürüz!',
+          'phonetic': 'See you tomorow!'
+        },
         {'english': 'Have a nice day!', 'turkish': 'İyi günler!'},
-        {'english': 'Have a good weekend!', 'turkish': 'İyi hafta sonları!'},
-        {'english': 'Welcome!', 'turkish': 'Hoş geldiniz!'},
-        {'english': 'Goodbye!', 'turkish': 'Hoşça kal!'},
-        {'english': 'Take care!', 'turkish': 'Kendine iyi bak!'},
+        {
+          'english': 'Have a good weekend!',
+          'turkish': 'İyi hafta sonları!',
+          'phonetic': 'Have a good weekend!'
+        },
+        {
+          'english': 'Welcome!',
+          'turkish': 'Hoş geldiniz!',
+          'phonetic': 'Welkam!'
+        },
+        {
+          'english': 'Goodbye!',
+          'turkish': 'Hoşça kal!',
+          'phonetic': 'Goodbai!'
+        },
+        {
+          'english': 'Take care!',
+          'turkish': 'Kendine iyi bak!',
+          'phonetic': 'Take kehr!'
+        },
         {
           'english': 'Long time no see!',
-          'turkish': 'Uzun zamandır görüşemedik!'
+          'turkish': 'Uzun zamandır görüşemedik!',
+          'phonetic': 'Long taim no see!'
         },
-        {'english': 'How\'s it going?', 'turkish': 'Nasıl gidiyor?'},
-        {'english': 'How have you been?', 'turkish': 'Nasıl gidiyordu?'},
+        {
+          'english': 'How\'s it going?',
+          'turkish': 'Nasıl gidiyor?',
+          'phonetic': 'Hows it going?'
+        },
+        {
+          'english': 'How have you been?',
+          'turkish': 'Nasıl gidiyordu?',
+          'phonetic': 'How have you bin?'
+        },
         {
           'english': 'It\'s nice to see you again!',
-          'turkish': 'Seni tekrar görmek güzel!'
+          'turkish': 'Seni tekrar görmek güzel!',
+          'phonetic': 'Its nice to see you agen!'
         },
         {'english': 'How was your day?', 'turkish': 'Günün nasıl geçti?'},
       ],
@@ -61,60 +105,104 @@ class _DailyPhrasesScreenState extends ConsumerState<DailyPhrasesScreen> {
       'phrases': [
         {
           'english': 'Can you help me?',
-          'turkish': 'Bana yardım edebilir misiniz?'
+          'turkish': 'Bana yardım edebilir misiniz?',
+          'phonetic': 'Ken you help mee?'
         },
-        {'english': 'Where is the bathroom?', 'turkish': 'Tuvalet nerede?'},
-        {'english': 'How much does it cost?', 'turkish': 'Ne kadar?'},
-        {'english': 'I need a taxi.', 'turkish': 'Bir taksiye ihtiyacım var.'},
+        {
+          'english': 'Where is the bathroom?',
+          'turkish': 'Tuvalet nerede?',
+          'phonetic': 'Wair iz the bathroom?'
+        },
+        {
+          'english': 'How much does it cost?',
+          'turkish': 'Ne kadar?',
+          'phonetic': 'How much duz it cost?'
+        },
+        {
+          'english': 'I need a taxi.',
+          'turkish': 'Bir taksiye ihtiyacım var.',
+          'phonetic': 'I need a taxi.'
+        },
         {
           'english': 'Is there a hotel nearby?',
-          'turkish': 'Yakınlarda bir otel var mı?'
+          'turkish': 'Yakınlarda bir otel var mı?',
+          'phonetic': 'Iz there a hotel nearbai?'
         },
         {
           'english': 'What time is the check-in?',
-          'turkish': 'Giriş saati kaçta?'
+          'turkish': 'Giriş saati kaçta?',
+          'phonetic': 'What taim iz the check in?'
         },
-        {'english': 'I have a reservation.', 'turkish': 'Rezervasyonum var.'},
+        {
+          'english': 'I have a reservation.',
+          'turkish': 'Rezervasyonum var.',
+          'phonetic': 'I hev a rezurveyshun.'
+        },
         {
           'english': 'Where is the train station?',
-          'turkish': 'Tren istasyonu nerede?'
+          'turkish': 'Tren istasyonu nerede?',
+          'phonetic': 'Wair iz the train steyshun?'
         },
         {
           'english': 'When does the bus leave?',
-          'turkish': 'Otobüs ne zaman kalkıyor?'
+          'turkish': 'Otobüs ne zaman kalkıyor?',
+          'phonetic': 'Wen duz the bus leev?'
         },
         {
           'english': 'I\'d like a ticket to...',
-          'turkish': '...\'e bir bilet istiyorum.'
+          'turkish': '...\'e bir bilet istiyorum.',
+          'phonetic': 'Aid laik a tikit to...'
         },
-        {'english': 'Is this seat taken?', 'turkish': 'Bu koltuk dolu mu?'},
+        {
+          'english': 'Is this seat taken?',
+          'turkish': 'Bu koltuk dolu mu?',
+          'phonetic': 'Iz this seat teyken?'
+        },
         {
           'english': 'Do you have a city map?',
-          'turkish': 'Şehir haritanız var mı?'
+          'turkish': 'Şehir haritanız var mı?',
+          'phonetic': 'Do you hev a siti map?'
         },
-        {'english': 'I\'m lost.', 'turkish': 'Kayboldum.'},
+        {
+          'english': 'I\'m lost.',
+          'turkish': 'Kayboldum.',
+          'phonetic': 'Aim lost.'
+        },
         {
           'english': 'How do I get to the airport?',
-          'turkish': 'Havalimanına nasıl gidebilirim?'
+          'turkish': 'Havalimanına nasıl gidebilirim?',
+          'phonetic': 'How do I get to the airpohrt?'
         },
         {
           'english': 'What\'s the check-out time?',
-          'turkish': 'Çıkış saati ne zaman?'
+          'turkish': 'Çıkış saati ne zaman?',
+          'phonetic': 'Wots the check out taim?'
         },
         {
           'english': 'I need to change money.',
-          'turkish': 'Para bozdurmalıyım.'
+          'turkish': 'Para bozdurmalıyım.',
+          'phonetic': 'I need to cheynj mani.'
         },
         {
           'english': 'Where can I rent a car?',
-          'turkish': 'Nereden araba kiralayabilirim?'
+          'turkish': 'Nereden araba kiralayabilirim?',
+          'phonetic': 'Wair ken I rent a car?'
         },
-        {'english': 'Is breakfast included?', 'turkish': 'Kahvaltı dahil mi?'},
+        {
+          'english': 'Is breakfast included?',
+          'turkish': 'Kahvaltı dahil mi?',
+          'phonetic': 'Iz brekfast inklooded?'
+        },
         {
           'english': 'Do you have any rooms available?',
-          'turkish': 'Boş odanız var mı?'
+          'turkish': 'Boş odanız var mı?',
+          'phonetic': 'Do you hev eni rooms aveylabl?'
         },
-        {'english': 'Can I get a receipt?', 'turkish': 'Fiş alabilir miyim?'},
+        {
+          'english': 'Can I get a receipt?',
+          'turkish': 'Fiş alabilir miyim?',
+          'phonetic': 'Ken I get a reeseet?'
+        },
       ],
     },
     {
@@ -616,8 +704,8 @@ class _PhraseDetailScreenState extends ConsumerState<PhraseDetailScreen> {
     // Set language to US English
     await _flutterTts.setLanguage("en-US");
 
-    // Set speech rate (slower for better pronunciation)
-    await _flutterTts.setSpeechRate(0.5);
+    // Set speech rate (much slower for clearer pronunciation)
+    await _flutterTts.setSpeechRate(0.3);
 
     // Set volume to maximum
     await _flutterTts.setVolume(1.0);
@@ -676,7 +764,8 @@ class _PhraseDetailScreenState extends ConsumerState<PhraseDetailScreen> {
     });
   }
 
-  Future<void> _speakPhrase(String phrase) async {
+  Future<void> _speakPhrase(
+      String phrase, Map<String, String> phraseData) async {
     if (_currentlyPlayingPhrase == phrase) {
       await _flutterTts.stop();
       setState(() {
@@ -691,11 +780,14 @@ class _PhraseDetailScreenState extends ConsumerState<PhraseDetailScreen> {
         _currentlyPlayingPhrase = phrase;
       });
 
+      // Use phonetic pronunciation if available, otherwise use the original phrase
+      String textToSpeak = phraseData['phonetic'] ?? phrase;
+
       // Use focus parameter on Android for better audio handling
       if (Platform.isAndroid) {
-        await _flutterTts.speak(phrase, focus: true);
+        await _flutterTts.speak(textToSpeak, focus: true);
       } else {
-        await _flutterTts.speak(phrase);
+        await _flutterTts.speak(textToSpeak);
       }
     }
   }
@@ -947,8 +1039,8 @@ class _PhraseDetailScreenState extends ConsumerState<PhraseDetailScreen> {
                                           ),
                                         ),
                                         InkWell(
-                                          onTap: () =>
-                                              _speakPhrase(phrase['english']!),
+                                          onTap: () => _speakPhrase(
+                                              phrase['english']!, phrase),
                                           child: Container(
                                             padding: const EdgeInsets.all(8),
                                             decoration: BoxDecoration(
