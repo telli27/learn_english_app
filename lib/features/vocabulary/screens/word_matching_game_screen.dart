@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math';
 import 'dart:async';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class WordMatchingGameScreen extends ConsumerStatefulWidget {
   const WordMatchingGameScreen({super.key});
@@ -203,84 +204,122 @@ class _WordMatchingGameScreenState
     );
   }
 
-  // *** IMPROVED SELECTION LOGIC - Fixed deselection ***
+  // *** TAMAMEN YENİLENMİŞ SEÇİM KALDIRMA YÖNTEMİ ***
   void _handleWordSelection(String word, bool isEnglish) {
     if (_isPaused) return;
 
-    print('Selected word: $word, isEnglish: $isEnglish');
-    print('Before: EN=${_selectedEnglishWord}, TR=${_selectedTurkishWord}');
+    // Debug için çok daha detaylı bilgi
+    print('☛☛☛ TIKLAMA ALINDI: $word (${isEnglish ? "İngilizce" : "Türkçe"})');
+    print(
+        '☛☛☛ SEÇİLİ KELİMELER: EN=${_selectedEnglishWord}, TR=${_selectedTurkishWord}');
 
+    // Eşleştirilmiş kelimelerin seçilmesini engelle
+    bool isMatched = _isWordMatched(word, isEnglish);
+    if (isMatched) {
+      print('⚠️ Bu kelime zaten eşleştirilmiş, seçilemez: $word');
+      return;
+    }
+
+    // Şu anda seçili mi?
+    final bool isCurrentlySelected = isEnglish
+        ? (_selectedEnglishWord == word)
+        : (_selectedTurkishWord == word);
+
+    print('☛☛☛ BU KELİME ZATEN SEÇİLİ Mİ: $isCurrentlySelected');
+
+    // ÖNEMLİ: Her durumda seçimi doğru şekilde değiştir
     setState(() {
       if (isEnglish) {
-        // If this English word is already selected, deselect it
-        if (_selectedEnglishWord == word) {
+        if (isCurrentlySelected) {
+          // Seçili İngilizce kelimeyi kaldır
           _selectedEnglishWord = null;
-          print('Deselected English word: $word');
+          print('✓✓✓ İngilizce seçim kaldırıldı: $word');
         } else {
-          // Select this English word (replacing any previous English selection)
+          // Yeni İngilizce kelime seç
           _selectedEnglishWord = word;
-          print('Selected English word: $word');
+          print('✓✓✓ İngilizce kelime seçildi: $word');
         }
       } else {
-        // If this Turkish word is already selected, deselect it
-        if (_selectedTurkishWord == word) {
+        if (isCurrentlySelected) {
+          // Seçili Türkçe kelimeyi kaldır
           _selectedTurkishWord = null;
-          print('Deselected Turkish word: $word');
+          print('✓✓✓ Türkçe seçim kaldırıldı: $word');
         } else {
-          // Select this Turkish word (replacing any previous Turkish selection)
+          // Yeni Türkçe kelime seç
           _selectedTurkishWord = word;
-          print('Selected Turkish word: $word');
+          print('✓✓✓ Türkçe kelime seçildi: $word');
         }
       }
     });
 
-    print('After: EN=${_selectedEnglishWord}, TR=${_selectedTurkishWord}');
+    print(
+        '☛☛☛ SEÇİM SONRASI: EN=${_selectedEnglishWord}, TR=${_selectedTurkishWord}');
   }
 
-  // Build a card for a word (English or Turkish)
+  // SADECE seçimi kaldırmak için özel bir fonksiyon
+  void _removeWordSelection(String word, bool isEnglish) {
+    print('🗑️ SEÇİM SİLİNİYOR: $word (${isEnglish ? "İngilizce" : "Türkçe"})');
+
+    setState(() {
+      if (isEnglish && _selectedEnglishWord == word) {
+        _selectedEnglishWord = null;
+        print('🗑️ İngilizce seçim silindi: $word');
+      } else if (!isEnglish && _selectedTurkishWord == word) {
+        _selectedTurkishWord = null;
+        print('🗑️ Türkçe seçim silindi: $word');
+      }
+    });
+  }
+
+  // Helper method to check if a word is already matched
+  bool _isWordMatched(String word, bool isEnglish) {
+    for (final pair in _matchedWords) {
+      if (isEnglish && pair.english == word) {
+        return true;
+      } else if (!isEnglish && pair.turkish == word) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // *** TAMAMEN YENİLENMİŞ KART YAPISI ***
   Widget _buildWordCard(String word, bool isEnglish, Color cardColor,
       Color textColor, int index) {
-    // Is this word currently selected?
+    // Bu kelime şu anda seçili mi?
     final bool isSelected = isEnglish
         ? (_selectedEnglishWord == word)
         : (_selectedTurkishWord == word);
 
-    // Is this word part of a completed match?
-    bool isMatched = false;
-    for (final pair in _matchedWords) {
-      if (isEnglish && pair.english == word) {
-        isMatched = true;
-        break;
-      } else if (!isEnglish && pair.turkish == word) {
-        isMatched = true;
-        break;
-      }
-    }
+    // Bu kelime eşleştirilmiş mi?
+    bool isMatched = _isWordMatched(word, isEnglish);
 
-    // Get the appropriate global key
+    // Uygun global key'i al
     final GlobalKey cardKey =
         isEnglish ? _englishKeys[word]! : _turkishKeys[word]!;
 
     return Container(
-      key: cardKey, // Add the global key here
+      key: cardKey,
       margin: const EdgeInsets.symmetric(vertical: 6),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () {
-          // Allow selection/deselection for non-matched words
+          // BASİT VE GÜÇLÜ bir şekilde tıklamayı işle
+          print(
+              '✋ KART TIKLANDI: $word, seçili: $isSelected, eşleştirildi: $isMatched');
+
+          // Sadece eşleştirilmemiş kelimelere izin ver
           if (!isMatched) {
-            print('Tapping word: $word, currently selected: $isSelected');
             _handleWordSelection(word, isEnglish);
           }
         },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+        child: Container(
           decoration: BoxDecoration(
             color: isSelected
-                ? const Color(0xFF6C5CE7)
+                ? const Color(0xFF6C5CE7) // Mor (seçili)
                 : isMatched
-                    ? Colors.green.withOpacity(0.2)
-                    : cardColor,
+                    ? Colors.green.withOpacity(0.2) // Yeşil (eşleştirilmiş)
+                    : cardColor, // Normal renk
             borderRadius: BorderRadius.circular(10),
             border: isSelected
                 ? Border.all(color: Colors.white, width: 2.0)
@@ -290,9 +329,9 @@ class _WordMatchingGameScreenState
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF6C5CE7).withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+                      color: const Color(0xFF6C5CE7).withOpacity(0.6),
+                      blurRadius: 10,
+                      spreadRadius: 1,
                     ),
                   ]
                 : null,
@@ -342,6 +381,15 @@ class _WordMatchingGameScreenState
     );
   }
 
+  // *** AÇIK VE NET SEÇİM KALDIRMA BUTONU ***
+  void _clearSelections() {
+    print('☛☛☛ TÜM SEÇİMLER KALDIRILDI');
+    setState(() {
+      _selectedEnglishWord = null;
+      _selectedTurkishWord = null;
+    });
+  }
+
   // *** FIXED LINE DRAWING LOGIC ***
   Widget _buildConnectionLine() {
     // Safety check - only draw if both words are selected
@@ -354,13 +402,15 @@ class _WordMatchingGameScreenState
       left: 0,
       right: 0,
       bottom: 0,
-      child: CustomPaint(
-        painter: ImprovedConnectionPainter(
-          selectedEnglishWord: _selectedEnglishWord!,
-          selectedTurkishWord: _selectedTurkishWord!,
-          englishKeys: _englishKeys,
-          turkishKeys: _turkishKeys,
-          contentKey: _contentKey,
+      child: IgnorePointer(
+        child: CustomPaint(
+          painter: ImprovedConnectionPainter(
+            selectedEnglishWord: _selectedEnglishWord!,
+            selectedTurkishWord: _selectedTurkishWord!,
+            englishKeys: _englishKeys,
+            turkishKeys: _turkishKeys,
+            contentKey: _contentKey,
+          ),
         ),
       ),
     );
@@ -381,12 +431,30 @@ class _WordMatchingGameScreenState
         _matchedWords.add(correctPair);
         _score += 10;
 
-        // Remove matched words from available lists
-        _availableEnglishWords.remove(_selectedEnglishWord);
-        _availableTurkishWords.remove(_selectedTurkishWord);
+        // Clear selections BEFORE removing from lists
+        final englishWordToRemove = _selectedEnglishWord!;
+        final turkishWordToRemove = _selectedTurkishWord!;
 
         _selectedEnglishWord = null;
         _selectedTurkishWord = null;
+
+        // Remove matched words from available lists
+        _availableEnglishWords.remove(englishWordToRemove);
+        _availableTurkishWords.remove(turkishWordToRemove);
+
+        // Remove keys for matched words to prevent issues
+        _englishKeys.remove(englishWordToRemove);
+        _turkishKeys.remove(turkishWordToRemove);
+
+        // Show toast notification for correct match
+        Fluttertoast.showToast(
+            msg: "Doğru eşleşme: +10 puan! 🎉",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.TOP,
+            timeInSecForIosWeb: 2,
+            backgroundColor: Colors.green,
+            textColor: Colors.white,
+            fontSize: 16.0);
 
         // Check if level completed
         if (_matchedWords.length == _currentWords.length) {
@@ -402,6 +470,16 @@ class _WordMatchingGameScreenState
 
         _selectedEnglishWord = null;
         _selectedTurkishWord = null;
+
+        // Show toast notification for incorrect match
+        Fluttertoast.showToast(
+            msg: "Yanlış eşleşme: -2 puan! ❌",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.TOP,
+            timeInSecForIosWeb: 2,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+            fontSize: 16.0);
       });
     }
   }
@@ -488,6 +566,15 @@ class _WordMatchingGameScreenState
         ),
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
+          // SEÇİMLERİ KALDIRMA BUTONU EKLENDİ
+          IconButton(
+            icon: const Icon(Icons.clear_all),
+            onPressed:
+                (_selectedEnglishWord != null || _selectedTurkishWord != null)
+                    ? _clearSelections
+                    : null,
+            tooltip: 'Seçimleri Kaldır',
+          ),
           IconButton(
             icon: Icon(_isPaused ? Icons.play_arrow : Icons.pause),
             onPressed: () {
@@ -660,37 +747,100 @@ class _WordMatchingGameScreenState
                 // Word lists
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Column(
                     children: [
-                      // English words column
+                      // Kelime listeleri - bottom padding ekleyelim
                       Expanded(
-                        child: ListView.builder(
-                          physics: const BouncingScrollPhysics(),
-                          itemCount: _availableEnglishWords.length,
-                          itemBuilder: (context, index) {
-                            final word = _availableEnglishWords[index];
-                            return _buildWordCard(
-                                word, true, cardColor, textColor, index);
-                          },
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                              bottom: 20), // Padding'i azalttım
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // English words column
+                              Expanded(
+                                child: ListView.builder(
+                                  physics: const BouncingScrollPhysics(),
+                                  itemCount: _availableEnglishWords.length,
+                                  itemBuilder: (context, index) {
+                                    final word = _availableEnglishWords[index];
+                                    return _buildWordCard(word, true, cardColor,
+                                        textColor, index);
+                                  },
+                                ),
+                              ),
+
+                              // Spacer
+                              const SizedBox(width: 20),
+
+                              // Turkish words column
+                              Expanded(
+                                child: ListView.builder(
+                                  physics: const BouncingScrollPhysics(),
+                                  itemCount: _availableTurkishWords.length,
+                                  itemBuilder: (context, index) {
+                                    final word = _availableTurkishWords[index];
+                                    return _buildWordCard(word, false,
+                                        cardColor, textColor, index);
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-
-                      // Spacer
-                      const SizedBox(width: 20),
-
-                      // Turkish words column
-                      Expanded(
-                        child: ListView.builder(
-                          physics: const BouncingScrollPhysics(),
-                          itemCount: _availableTurkishWords.length,
-                          itemBuilder: (context, index) {
-                            final word = _availableTurkishWords[index];
-                            return _buildWordCard(
-                                word, false, cardColor, textColor, index);
-                          },
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Center(
+                          child: GestureDetector(
+                            onTap: (_selectedEnglishWord != null &&
+                                    _selectedTurkishWord != null)
+                                ? _checkMatchWithButton
+                                : null,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 9),
+                              decoration: BoxDecoration(
+                                color: (_selectedEnglishWord != null &&
+                                        _selectedTurkishWord != null)
+                                    ? const Color(0xFF4B3FD8)
+                                    : Colors.grey.shade400,
+                                borderRadius: BorderRadius.circular(30),
+                                boxShadow: (_selectedEnglishWord != null &&
+                                        _selectedTurkishWord != null)
+                                    ? [
+                                        BoxShadow(
+                                          color: const Color(0xFF4B3FD8)
+                                              .withOpacity(0.4),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.compare_arrows,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "EŞLEŞTİR",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                      )
                     ],
                   ),
                 ),
@@ -700,35 +850,6 @@ class _WordMatchingGameScreenState
                     _selectedTurkishWord != null)
                   _buildConnectionLine(),
               ],
-            ),
-          ),
-
-          // Bottom spacer
-          const SizedBox(height: 20),
-
-          // Center match button (arrow)
-          GestureDetector(
-            onTap: _checkMatchWithButton,
-            child: Container(
-              width: 56,
-              height: 56,
-              margin: const EdgeInsets.only(bottom: 30),
-              decoration: BoxDecoration(
-                color: const Color(0xFF4B3FD8),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF4B3FD8).withOpacity(0.4),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.arrow_forward,
-                color: Colors.white,
-                size: 28,
-              ),
             ),
           ),
         ],
