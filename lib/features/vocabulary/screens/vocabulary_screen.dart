@@ -26,6 +26,7 @@ import '../widgets/daily_word_widget.dart';
 import '../widgets/sentence_builder_widget.dart';
 import 'package:intl/intl.dart';
 import 'notification_settings_screen.dart';
+import 'word_games_screen.dart';
 
 class VocabularyScreen extends ConsumerWidget {
   const VocabularyScreen({Key? key}) : super(key: key);
@@ -143,21 +144,21 @@ class VocabularyScreen extends ConsumerWidget {
 
               const SizedBox(height: 20),
 
-              // Pronunciation Practice Card
+              // Word Games Card
               _buildMenuCard(
                 context: context,
-                title: 'Telaffuz Pratiği',
-                subtitle: 'Kelimeleri doğru telaffuz edin',
-                icon: Icons.record_voice_over,
+                title: 'Kelime Oyunları',
+                subtitle: 'Eğlenerek kelime bilginizi artırın',
+                icon: Icons.sports_esports,
                 gradient: [
                   const Color(0xFFFF6B6B), // Red
                   const Color(0xFFEE5253), // Darker red
                 ],
                 onTap: () {
-                  // TODO: Navigate to pronunciation practice screen
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Telaffuz pratiği yakında eklenecek!'),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const WordGamesScreen(),
                     ),
                   );
                 },
