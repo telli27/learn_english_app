@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'word_matching_game_screen.dart';
+import 'level_selection_screen.dart';
 
 class WordGamesScreen extends ConsumerStatefulWidget {
   const WordGamesScreen({super.key});
@@ -257,7 +258,7 @@ class _WordGamesScreenState extends ConsumerState<WordGamesScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => const WordMatchingGameScreen(),
+          builder: (context) => const LevelSelectionScreen(),
         ),
       );
     } else {

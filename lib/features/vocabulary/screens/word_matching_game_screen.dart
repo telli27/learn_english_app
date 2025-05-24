@@ -3,9 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math';
 import 'dart:async';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:confetti/confetti.dart';
 
 class WordMatchingGameScreen extends ConsumerStatefulWidget {
-  const WordMatchingGameScreen({super.key});
+  final int initialLevel;
+
+  const WordMatchingGameScreen({
+    super.key,
+    this.initialLevel = 1,
+  });
 
   @override
   ConsumerState<WordMatchingGameScreen> createState() =>
@@ -17,10 +23,11 @@ class _WordMatchingGameScreenState
   bool _isGameActive = true;
   bool _isGameCompleted = false;
   int _score = 0;
-  int _currentLevel = 1;
+  late int _currentLevel;
   int _timeLeft = 60;
   bool _isPaused = false;
   Timer? _timer;
+  late ConfettiController _confettiController;
 
   String? _selectedEnglishWord;
   String? _selectedTurkishWord;
@@ -67,6 +74,9 @@ class _WordMatchingGameScreenState
   @override
   void initState() {
     super.initState();
+    _currentLevel = widget.initialLevel;
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 2));
     _setupLevel();
     _startTimer();
   }
@@ -74,6 +84,7 @@ class _WordMatchingGameScreenState
   @override
   void dispose() {
     _timer?.cancel();
+    _confettiController.dispose();
     super.dispose();
   }
 
@@ -137,17 +148,49 @@ class _WordMatchingGameScreenState
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Süre Doldu!'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: const Color(0xFF2A2E5A),
+        title: const Text(
+          'Süre Doldu!',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Puanınız: $_score'),
+            Container(
+              width: 80,
+              height: 80,
+              decoration: const BoxDecoration(
+                color: Color(0xFF1F2247),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.timer_off,
+                color: Color(0xFF6C5CE7),
+                size: 40,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Puanınız: $_score',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 8),
             Text(
-                'Eşleştirilen kelimeler: ${_matchedWords.length}/${_currentWords.length}'),
-            const SizedBox(height: 16),
+              'Eşleştirilen kelimeler: ${_matchedWords.length}/${_currentWords.length}',
+              style: const TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 24),
             const Text(
-                'Şu anki seviyeyi tekrar oynamak veya farklı bir seviyeye geçmek ister misiniz?'),
+              'Şu anki seviyeyi tekrar oynamak veya farklı bir seviyeye geçmek ister misiniz?',
+              style: TextStyle(color: Colors.white),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
         actions: [
@@ -156,7 +199,10 @@ class _WordMatchingGameScreenState
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('Çıkış'),
+            child: const Text(
+              'Çıkış',
+              style: TextStyle(color: Color(0xFFFF7675)),
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -168,7 +214,10 @@ class _WordMatchingGameScreenState
                 _startTimer();
               });
             },
-            child: const Text('Tekrar Oyna'),
+            child: const Text(
+              'Tekrar Oyna',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
           if (_currentLevel < _levels.length)
             TextButton(
@@ -182,7 +231,10 @@ class _WordMatchingGameScreenState
                   _startTimer();
                 });
               },
-              child: const Text('Sonraki Seviye'),
+              child: const Text(
+                'Sonraki Seviye',
+                style: TextStyle(color: Color(0xFF6C5CE7)),
+              ),
             ),
         ],
       ),
@@ -427,52 +479,215 @@ class _WordMatchingGameScreenState
 
       int timeBonus = _timeLeft;
       _score += timeBonus;
-
-      if (!_isGameCompleted) {
-        _currentLevel++;
-      }
     });
+
+    _confettiController.play();
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text(_isGameCompleted
-            ? 'Tebrikler! Oyunu Tamamladınız!'
-            : 'Seviye Tamamlandı!'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: const Color(0xFF2A2E5A),
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.topCenter,
           children: [
-            Text('Puanınız: $_score'),
-            const SizedBox(height: 8),
-            Text(
-              'Zaman Bonusu: +$_timeLeft puan',
-              style: const TextStyle(color: Colors.green),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 70, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _isGameCompleted
+                        ? 'Tebrikler! Oyunu Tamamladınız!'
+                        : 'Seviye $_currentLevel Tamamlandı!',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 25),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1F2247),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Doğru Eşleşmeler:',
+                              style: TextStyle(color: Colors.white70),
+                            ),
+                            Text(
+                              '${_matchedWords.length} / ${_currentWords.length}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Zaman Bonusu:',
+                              style: TextStyle(color: Colors.white70),
+                            ),
+                            Text(
+                              '+$_timeLeft puan',
+                              style: const TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Toplam Puan:',
+                              style: TextStyle(color: Colors.white70),
+                            ),
+                            Text(
+                              '$_score',
+                              style: const TextStyle(
+                                color: Color(0xFF6C5CE7),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  Text(
+                    _isGameCompleted
+                        ? 'Tüm seviyeleri başarıyla tamamladınız!'
+                        : 'Bir sonraki seviyeye geçmeye hazır mısınız?',
+                    style: const TextStyle(color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 25),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Navigator.pop(context);
+                        },
+                        child: const Text(
+                          'Ana Menü',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                      ),
+                      if (!_isGameCompleted)
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            setState(() {
+                              _currentLevel++;
+                              _setupLevel();
+                              _timeLeft = 60;
+                              _isPaused = false;
+                              _startTimer();
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6C5CE7),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                          ),
+                          child: const Text(
+                            'Sonraki Seviye',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      if (_isGameCompleted)
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6C5CE7),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                          ),
+                          child: const Text(
+                            'Bitir',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            Text(_isGameCompleted
-                ? 'Tüm seviyeleri başarıyla tamamladınız.'
-                : 'Bir sonraki seviyeye geçmeye hazır mısınız?'),
+            Positioned(
+              top: -50,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6C5CE7),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFF2A2E5A), width: 5),
+                ),
+                child: Icon(
+                  _isGameCompleted ? Icons.emoji_events : Icons.check_circle,
+                  color: Colors.white,
+                  size: 50,
+                ),
+              ),
+            ),
+            Positioned(
+              top: -60,
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirection: pi / 2,
+                maxBlastForce: 5,
+                minBlastForce: 1,
+                emissionFrequency: 0.03,
+                numberOfParticles: 20,
+                gravity: 0.1,
+                colors: const [
+                  Colors.green,
+                  Colors.blue,
+                  Colors.pink,
+                  Colors.orange,
+                  Colors.purple,
+                  Colors.yellow,
+                ],
+              ),
+            ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              if (_isGameCompleted) {
-                Navigator.pop(context);
-              } else {
-                setState(() {
-                  _setupLevel();
-                  _timeLeft = 60;
-                  _isPaused = false;
-                  _startTimer();
-                });
-              }
-            },
-            child: Text(_isGameCompleted ? 'Bitir' : 'Sonraki Seviye'),
-          ),
-        ],
       ),
     );
   }
@@ -511,7 +726,7 @@ class _WordMatchingGameScreenState
       body: Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
             decoration: const BoxDecoration(
               color: Color(0xFF6C5CE7),
               borderRadius: BorderRadius.only(
@@ -524,17 +739,18 @@ class _WordMatchingGameScreenState
               children: [
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(
                         Icons.star,
                         color: Colors.white,
-                        size: 16,
+                        size: 14,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -542,31 +758,42 @@ class _WordMatchingGameScreenState
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w500,
+                          fontSize: 13,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.emoji_events,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '$_score puan',
-                      style: const TextStyle(
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.emoji_events,
                         color: Colors.white,
-                        fontWeight: FontWeight.w500,
+                        size: 14,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 4),
+                      Text(
+                        '$_score puan',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: _timeLeft < 15
                         ? Colors.red.withOpacity(0.3)
@@ -574,11 +801,12 @@ class _WordMatchingGameScreenState
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(
                         Icons.timer,
                         color: Colors.white,
-                        size: 16,
+                        size: 14,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -586,6 +814,7 @@ class _WordMatchingGameScreenState
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w500,
+                          fontSize: 13,
                         ),
                       ),
                     ],
@@ -664,18 +893,18 @@ class _WordMatchingGameScreenState
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(bottom: 50),
+                        padding: const EdgeInsets.only(bottom: 50),
                         child: ElevatedButton.icon(
                           onPressed: (_selectedEnglishWord != null &&
                                   _selectedTurkishWord != null)
                               ? _checkMatchWithButton
                               : null,
-                          icon: Icon(
+                          icon: const Icon(
                             Icons.compare_arrows,
                             color: Colors.white,
                             size: 22,
                           ),
-                          label: Text(
+                          label: const Text(
                             "EŞLEŞTİR",
                             style: TextStyle(
                               color: Colors.white,
@@ -689,7 +918,7 @@ class _WordMatchingGameScreenState
                                 ? const Color(0xFF4B3FD8)
                                 : Colors.grey.shade400,
                             foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 horizontal: 40, vertical: 15),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30),
