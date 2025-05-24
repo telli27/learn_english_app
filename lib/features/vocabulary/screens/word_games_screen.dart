@@ -15,6 +15,7 @@ class _WordGamesScreenState extends ConsumerState<WordGamesScreen> {
   // Most valuable language learning games
   static const List<Map<String, dynamic>> _gameOptions = [
     {
+      'id': 'word_matching',
       'title': 'Kelime Eşleştirme',
       'description':
           'İngilizce kelimeleri Türkçe anlamlarıyla eşleştirerek daha hızlı öğrenin',
@@ -22,6 +23,7 @@ class _WordGamesScreenState extends ConsumerState<WordGamesScreen> {
       'color': Color(0xFF6C5CE7),
     },
     {
+      'id': 'word_recall',
       'title': 'Kelime Hatırlama',
       'description':
           'Gösterilen kelimeleri belirli bir süre sonra hatırlayarak kalıcı öğrenme sağlayın',
@@ -29,6 +31,7 @@ class _WordGamesScreenState extends ConsumerState<WordGamesScreen> {
       'color': Color(0xFF00B894),
     },
     {
+      'id': 'sentence_completion',
       'title': 'Cümle Tamamlama',
       'description':
           'Eksik kelimeleri doldurarak cümle kurma yeteneğinizi geliştirin',
@@ -254,30 +257,43 @@ class _WordGamesScreenState extends ConsumerState<WordGamesScreen> {
   }
 
   void _launchGame(Map<String, dynamic> game) {
-    // Launch the appropriate game screen based on title
-    if (game['title'] == 'Kelime Eşleştirme') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const WordMatchingGameScreen(),
-        ),
-      );
-    } else if (game['title'] == 'Kelime Hatırlama') {
-      // Seviyeler sayfasını aç
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const WordRecallLevelsScreen(),
-        ),
-      );
-    } else {
-      // Other games are coming soon
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${game['title']} oyunu yakında eklenecek!'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    // Launch the appropriate game screen based on game ID
+    switch (game['id']) {
+      case 'word_matching':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const WordMatchingGameScreen(),
+          ),
+        );
+        break;
+      case 'word_recall':
+        // Seviyeler sayfasını aç
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const WordRecallLevelsScreen(),
+          ),
+        );
+        break;
+      case 'sentence_completion':
+        // Other games are coming soon
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${game['title']} oyunu yakında eklenecek!'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        break;
+      default:
+        // Unknown game
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Bilinmeyen oyun: ${game['title']}'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        break;
     }
   }
 }
