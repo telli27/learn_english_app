@@ -68,3 +68,71 @@ class GameLevel {
   String toString() =>
       'GameLevel(id: $id, title: $title, difficulty: $difficulty, exercises: $exercises)';
 }
+
+/// A model representing a word for the recall game with its status
+class RecallWord {
+  final String english;
+  final String turkish;
+  final String hint;
+  bool isRevealed;
+  bool isRecalled;
+
+  RecallWord({
+    required this.english,
+    required this.turkish,
+    this.hint = '',
+    this.isRevealed = false,
+    this.isRecalled = false,
+  });
+
+  @override
+  String toString() =>
+      'RecallWord(english: $english, turkish: $turkish, hint: $hint, isRevealed: $isRevealed, isRecalled: $isRecalled)';
+}
+
+/// A model representing a recall exercise
+class RecallExercise {
+  final int id;
+  final int levelId;
+  final int orderInLevel;
+  final List<RecallWord> words;
+  final int studyTimeSeconds;
+  final int recallTimeSeconds;
+
+  const RecallExercise({
+    required this.id,
+    required this.levelId,
+    required this.orderInLevel,
+    required this.words,
+    this.studyTimeSeconds = 30,
+    this.recallTimeSeconds = 60,
+  });
+
+  @override
+  String toString() =>
+      'RecallExercise(id: $id, levelId: $levelId, orderInLevel: $orderInLevel, words: $words, studyTime: $studyTimeSeconds, recallTime: $recallTimeSeconds)';
+}
+
+/// A model representing a recall game level
+class RecallGameLevel {
+  final int id;
+  final String title;
+  final String description;
+  final String difficulty;
+  final List<RecallExercise> exercises;
+
+  const RecallGameLevel({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.difficulty,
+    required this.exercises,
+  });
+
+  int get wordCount => exercises.isNotEmpty ? exercises.first.words.length : 0;
+  int get exerciseCount => exercises.length;
+
+  @override
+  String toString() =>
+      'RecallGameLevel(id: $id, title: $title, difficulty: $difficulty, exercises: $exercises)';
+}
