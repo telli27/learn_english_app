@@ -7,6 +7,20 @@ class LevelSelectionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Tema durumunu al
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    // Tema'ya bağlı renkler
+    final primaryColor =
+        const Color(0xFF6C5CE7); // Ana mor renk tutarlı kalacak
+    final backgroundColor =
+        isDarkMode ? const Color(0xFF1F2247) : Colors.grey.shade50;
+    final cardColor = isDarkMode ? const Color(0xFF2A2E5A) : Colors.white;
+    final headerTextColor = Colors.white; // Başlık her zaman beyaz
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+    final secondaryTextColor = isDarkMode ? Colors.white70 : Colors.black54;
+
     final levels = [
       {
         'level': 1,
@@ -38,9 +52,9 @@ class LevelSelectionScreen extends ConsumerWidget {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1F2247),
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF6C5CE7),
+        backgroundColor: primaryColor,
         title: const Text(
           'Seviye Seçimi',
           style: TextStyle(
@@ -56,9 +70,9 @@ class LevelSelectionScreen extends ConsumerWidget {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-            decoration: const BoxDecoration(
-              color: Color(0xFF6C5CE7),
-              borderRadius: BorderRadius.only(
+            decoration: BoxDecoration(
+              color: primaryColor,
+              borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(30),
                 bottomRight: Radius.circular(30),
               ),
@@ -99,11 +113,11 @@ class LevelSelectionScreen extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
+              children: [
                 Text(
                   'Seviyeler',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: textColor,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -111,7 +125,7 @@ class LevelSelectionScreen extends ConsumerWidget {
                 Text(
                   'Seviyeni Seç',
                   style: TextStyle(
-                    color: Colors.white70,
+                    color: secondaryTextColor,
                     fontSize: 14,
                   ),
                 ),
@@ -125,7 +139,8 @@ class LevelSelectionScreen extends ConsumerWidget {
               itemCount: levels.length,
               itemBuilder: (context, index) {
                 final level = levels[index];
-                return _buildLevelCard(context, level);
+                return _buildLevelCard(context, level, cardColor, textColor,
+                    secondaryTextColor, isDarkMode);
               },
             ),
           ),
@@ -163,20 +178,28 @@ class LevelSelectionScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildLevelCard(BuildContext context, Map<String, dynamic> level) {
+  Widget _buildLevelCard(BuildContext context, Map<String, dynamic> level,
+      Color cardColor, Color textColor, Color secondaryTextColor, isDarkMode) {
+    final Color levelColor = level['color'];
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF2A2E5A),
+        color: cardColor,
+        border: isDarkMode
+            ? Border.all(color: Color(0xFF1F2247))
+            : Border.all(color: const Color.fromARGB(255, 233, 232, 232)),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: level['color'].withOpacity(0.3),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: isDarkMode
+            ? null
+            : [
+                BoxShadow(
+                  color: levelColor.withOpacity(0.1),
+                  spreadRadius: 0,
+                  blurRadius: 5,
+                  offset: const Offset(0, 2),
+                ),
+              ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -200,13 +223,13 @@ class LevelSelectionScreen extends ConsumerWidget {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: level['color'].withOpacity(0.2),
+                    color: levelColor.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: Center(
                     child: Icon(
                       level['icon'],
-                      color: level['color'],
+                      color: levelColor,
                       size: 30,
                     ),
                   ),
@@ -218,8 +241,8 @@ class LevelSelectionScreen extends ConsumerWidget {
                     children: [
                       Text(
                         level['title'],
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: textColor,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -227,8 +250,8 @@ class LevelSelectionScreen extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Text(
                         level['description'],
-                        style: const TextStyle(
-                          color: Colors.white70,
+                        style: TextStyle(
+                          color: secondaryTextColor,
                           fontSize: 14,
                         ),
                       ),
@@ -237,12 +260,14 @@ class LevelSelectionScreen extends ConsumerWidget {
                         children: [
                           _buildLevelInfoTag(
                             '${level['words']} kelime',
-                            const Color(0xFF2A2E5A),
+                            cardColor,
+                            secondaryTextColor,
                           ),
                           const SizedBox(width: 8),
                           _buildLevelInfoTag(
                             level['difficulty'],
-                            level['color'].withOpacity(0.9),
+                            levelColor.withOpacity(0.9),
+                            Colors.white,
                           ),
                         ],
                       ),
@@ -251,7 +276,7 @@ class LevelSelectionScreen extends ConsumerWidget {
                 ),
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: level['color'],
+                  color: levelColor,
                   size: 20,
                 ),
               ],
@@ -262,7 +287,10 @@ class LevelSelectionScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildLevelInfoTag(String text, Color bgColor) {
+  Widget _buildLevelInfoTag(String text, Color bgColor, Color textColor) {
+    final isDarkBg =
+        ThemeData.estimateBrightnessForColor(bgColor) == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -275,9 +303,7 @@ class LevelSelectionScreen extends ConsumerWidget {
       child: Text(
         text,
         style: TextStyle(
-          color: bgColor == const Color(0xFF2A2E5A)
-              ? Colors.white70
-              : Colors.white,
+          color: textColor,
           fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
