@@ -496,6 +496,20 @@ class ProfessionalWordRecallController extends StateNotifier<RecallGameState> {
     return score;
   }
 
+  /// Get user's answer for a specific word
+  String? getUserAnswerForWord(String wordId) {
+    final attempt = _attempts.where((a) => a.wordId == wordId).lastOrNull;
+    return attempt?.userInput.isEmpty == true ? null : attempt?.userInput;
+  }
+
+  /// Get all user attempts for review
+  List<RecallAttempt> get userAttempts => List.unmodifiable(_attempts);
+
+  /// Get user's attempt for a specific word
+  RecallAttempt? getAttemptForWord(String wordId) {
+    return _attempts.where((a) => a.wordId == wordId).lastOrNull;
+  }
+
   /// Get maximum streak from attempts
   int _getMaxStreak() {
     int maxStreak = 0;

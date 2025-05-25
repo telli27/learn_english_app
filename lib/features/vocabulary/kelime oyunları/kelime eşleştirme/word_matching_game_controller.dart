@@ -6,9 +6,105 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'game_data.dart';
 import '../../models/word_models.dart';
 
+/// Game state class to hold all the game data
+class WordMatchingGameState {
+  final GameLevel currentLevel;
+  final Exercise currentExercise;
+  final List<WordPair> currentWordPairs;
+  final int score;
+  final int totalLevelScore;
+  final int timeLeft;
+  final bool isPaused;
+  final bool isGameActive;
+  final bool isGameCompleted;
+  final List<WordPair> matchedPairs;
+  final List<WordPair> incorrectPairs;
+  final String? selectedEnglishWord;
+  final String? selectedTurkishWord;
+  final List<String> availableEnglishWords;
+  final List<String> availableTurkishWords;
+
+  const WordMatchingGameState({
+    required this.currentLevel,
+    required this.currentExercise,
+    required this.currentWordPairs,
+    required this.score,
+    required this.totalLevelScore,
+    required this.timeLeft,
+    required this.isPaused,
+    required this.isGameActive,
+    required this.isGameCompleted,
+    required this.matchedPairs,
+    required this.incorrectPairs,
+    required this.selectedEnglishWord,
+    required this.selectedTurkishWord,
+    required this.availableEnglishWords,
+    required this.availableTurkishWords,
+  });
+
+  WordMatchingGameState copyWith({
+    GameLevel? currentLevel,
+    Exercise? currentExercise,
+    List<WordPair>? currentWordPairs,
+    int? score,
+    int? totalLevelScore,
+    int? timeLeft,
+    bool? isPaused,
+    bool? isGameActive,
+    bool? isGameCompleted,
+    List<WordPair>? matchedPairs,
+    List<WordPair>? incorrectPairs,
+    String? selectedEnglishWord,
+    String? selectedTurkishWord,
+    List<String>? availableEnglishWords,
+    List<String>? availableTurkishWords,
+    bool clearSelectedEnglishWord = false,
+    bool clearSelectedTurkishWord = false,
+  }) {
+    return WordMatchingGameState(
+      currentLevel: currentLevel ?? this.currentLevel,
+      currentExercise: currentExercise ?? this.currentExercise,
+      currentWordPairs: currentWordPairs ?? this.currentWordPairs,
+      score: score ?? this.score,
+      totalLevelScore: totalLevelScore ?? this.totalLevelScore,
+      timeLeft: timeLeft ?? this.timeLeft,
+      isPaused: isPaused ?? this.isPaused,
+      isGameActive: isGameActive ?? this.isGameActive,
+      isGameCompleted: isGameCompleted ?? this.isGameCompleted,
+      matchedPairs: matchedPairs ?? this.matchedPairs,
+      incorrectPairs: incorrectPairs ?? this.incorrectPairs,
+      selectedEnglishWord: clearSelectedEnglishWord
+          ? null
+          : (selectedEnglishWord ?? this.selectedEnglishWord),
+      selectedTurkishWord: clearSelectedTurkishWord
+          ? null
+          : (selectedTurkishWord ?? this.selectedTurkishWord),
+      availableEnglishWords:
+          availableEnglishWords ?? this.availableEnglishWords,
+      availableTurkishWords:
+          availableTurkishWords ?? this.availableTurkishWords,
+    );
+  }
+
+  /// Check if all pairs have been matched
+  bool get isExerciseComplete => matchedPairs.length == currentWordPairs.length;
+
+  /// Check if a word is already matched
+  bool isWordMatched(String word, bool isEnglish) {
+    for (final pair in matchedPairs) {
+      if (isEnglish && pair.english == word) {
+        return true;
+      } else if (!isEnglish && pair.turkish == word) {
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
 /// Provider for the word matching game controller
-final wordMatchingGameControllerProvider =
-    Provider.autoDispose.family<WordMatchingGameController, int>(
+final wordMatchingGameControllerProvider = StateNotifierProvider.autoDispose
+    .family<WordMatchingGameController, WordMatchingGameState, int>(
   (ref, initialLevel) => WordMatchingGameController(
     initialLevelId: initialLevel,
     ref: ref,
@@ -16,37 +112,12 @@ final wordMatchingGameControllerProvider =
 );
 
 /// Controller class to manage the state and logic for the word matching game
-class WordMatchingGameController {
+class WordMatchingGameController extends StateNotifier<WordMatchingGameState> {
   final int initialLevelId;
-  final ProviderRef ref;
+  final AutoDisposeStateNotifierProviderRef ref;
 
   /// Game levels data
   final List<GameLevel> _levels;
-
-  /// Current game state
-  late GameLevel _currentLevel;
-  late Exercise _currentExercise;
-  late List<WordPair> _currentWordPairs;
-
-  /// Current game progress
-  int _score = 0;
-  int _totalLevelScore = 0;
-  int _timeLeft = 60;
-  bool _isPaused = false;
-  bool _isGameActive = true;
-  bool _isGameCompleted = false;
-
-  /// Game matching state
-  List<WordPair> _matchedPairs = [];
-  List<WordPair> _incorrectPairs = [];
-
-  /// Selected word tracking
-  String? _selectedEnglishWord;
-  String? _selectedTurkishWord;
-
-  /// Available words to display
-  late List<String> _availableEnglishWords;
-  late List<String> _availableTurkishWords;
 
   /// Timer for game countdown
   Timer? _timer;
@@ -55,63 +126,105 @@ class WordMatchingGameController {
   WordMatchingGameController({
     required this.initialLevelId,
     required this.ref,
-  }) : _levels = GameData.getLevels() {
+  })  : _levels = GameData.getLevels(),
+        super(_createInitialState(initialLevelId)) {
     _initializeGame();
+  }
+
+  /// Create initial state
+  static WordMatchingGameState _createInitialState(int initialLevelId) {
+    final levels = GameData.getLevels();
+    final currentLevel = levels.firstWhere(
+      (level) => level.id == initialLevelId,
+      orElse: () => levels.first,
+    );
+    final currentExercise = currentLevel.exercises.first;
+    final currentWordPairs = currentExercise.wordPairs;
+
+    final availableEnglishWords =
+        currentWordPairs.map((pair) => pair.english).toList()..shuffle();
+    final availableTurkishWords =
+        currentWordPairs.map((pair) => pair.turkish).toList()..shuffle();
+
+    return WordMatchingGameState(
+      currentLevel: currentLevel,
+      currentExercise: currentExercise,
+      currentWordPairs: currentWordPairs,
+      score: 0,
+      totalLevelScore: 0,
+      timeLeft: 60,
+      isPaused: false,
+      isGameActive: true,
+      isGameCompleted: false,
+      matchedPairs: [],
+      incorrectPairs: [],
+      selectedEnglishWord: null,
+      selectedTurkishWord: null,
+      availableEnglishWords: availableEnglishWords,
+      availableTurkishWords: availableTurkishWords,
+    );
   }
 
   /// Initialize the game state
   void _initializeGame() {
-    // Find the level with the matching ID
-    _currentLevel = _levels.firstWhere(
-      (level) => level.id == initialLevelId,
-      orElse: () => _levels.first,
-    );
-
-    // Set the first exercise
-    _loadExercise(1);
+    // Game is already initialized in the constructor
   }
 
   /// Load a specific exercise by its order in the level
   void _loadExercise(int exerciseOrder) {
+    debugPrint('Loading exercise: $exerciseOrder');
+
     // Find the exercise with the given order
-    _currentExercise = _currentLevel.exercises.firstWhere(
+    final currentExercise = state.currentLevel.exercises.firstWhere(
       (exercise) => exercise.orderInLevel == exerciseOrder,
     );
 
-    // Set the current word pairs
-    _currentWordPairs = _currentExercise.wordPairs;
+    debugPrint(
+        'Found exercise: ${currentExercise.orderInLevel} with ${currentExercise.wordPairs.length} word pairs');
 
-    // Reset matching state
-    _matchedPairs = [];
-    _incorrectPairs = [];
-    _selectedEnglishWord = null;
-    _selectedTurkishWord = null;
+    // Set the current word pairs
+    final currentWordPairs = currentExercise.wordPairs;
 
     // Create and shuffle available words
-    _availableEnglishWords =
-        _currentWordPairs.map((pair) => pair.english).toList()..shuffle();
-    _availableTurkishWords =
-        _currentWordPairs.map((pair) => pair.turkish).toList()..shuffle();
+    final availableEnglishWords =
+        currentWordPairs.map((pair) => pair.english).toList()..shuffle();
+    final availableTurkishWords =
+        currentWordPairs.map((pair) => pair.turkish).toList()..shuffle();
 
-    // Reset score if not the first exercise
-    if (exerciseOrder > 1) {
-      _score = 0;
-    }
+    // Update state
+    state = state.copyWith(
+      currentExercise: currentExercise,
+      currentWordPairs: currentWordPairs,
+      matchedPairs: [],
+      incorrectPairs: [],
+      clearSelectedEnglishWord: true,
+      clearSelectedTurkishWord: true,
+      availableEnglishWords: availableEnglishWords,
+      availableTurkishWords: availableTurkishWords,
+      score: exerciseOrder > 1 ? 0 : state.score,
+    );
+
+    debugPrint(
+        'Exercise loaded successfully: ${state.currentExercise.orderInLevel}');
   }
 
   /// Start the game timer
-  void startTimer(Function onTimerTick) {
+  void startTimer(Function onTimerTick, {Function? onTimeUp}) {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_isPaused) return;
+      if (state.isPaused) return;
 
-      if (_timeLeft > 0) {
-        _timeLeft--;
+      if (state.timeLeft > 0) {
+        state = state.copyWith(timeLeft: state.timeLeft - 1);
         onTimerTick();
       } else {
         _timer?.cancel();
-        _isPaused = true;
+        state = state.copyWith(isPaused: true);
         onTimerTick();
+        // Call the time up callback if provided
+        if (onTimeUp != null) {
+          onTimeUp();
+        }
       }
     });
   }
@@ -123,96 +236,86 @@ class WordMatchingGameController {
 
   /// Toggle pause state
   void togglePause() {
-    _isPaused = !_isPaused;
+    state = state.copyWith(isPaused: !state.isPaused);
+  }
+
+  /// Check if a word is already matched
+  bool isWordMatched(String word, bool isEnglish) {
+    return state.isWordMatched(word, isEnglish);
   }
 
   /// Select an English word
   void selectEnglishWord(String word) {
-    if (_isPaused) return;
+    if (state.isPaused) return;
 
     if (isWordMatched(word, true)) return;
 
-    if (_selectedEnglishWord == word) {
-      _selectedEnglishWord = null;
+    if (state.selectedEnglishWord == word) {
+      state = state.copyWith(clearSelectedEnglishWord: true);
     } else {
-      _selectedEnglishWord = word;
+      state = state.copyWith(selectedEnglishWord: word);
     }
   }
 
   /// Select a Turkish word
   void selectTurkishWord(String word) {
-    if (_isPaused) return;
+    if (state.isPaused) return;
 
     if (isWordMatched(word, false)) return;
 
-    if (_selectedTurkishWord == word) {
-      _selectedTurkishWord = null;
+    if (state.selectedTurkishWord == word) {
+      state = state.copyWith(clearSelectedTurkishWord: true);
     } else {
-      _selectedTurkishWord = word;
+      state = state.copyWith(selectedTurkishWord: word);
     }
   }
 
   /// Check if the currently selected words match
   bool checkMatch() {
-    if (_isPaused ||
-        _selectedEnglishWord == null ||
-        _selectedTurkishWord == null) {
+    if (state.isPaused ||
+        state.selectedEnglishWord == null ||
+        state.selectedTurkishWord == null) {
       return false;
     }
 
-    final correctPair = _currentWordPairs.firstWhere(
-      (pair) => pair.english == _selectedEnglishWord,
+    final correctPair = state.currentWordPairs.firstWhere(
+      (pair) => pair.english == state.selectedEnglishWord,
       orElse: () => WordPair(english: '', turkish: ''),
     );
 
-    if (correctPair.turkish == _selectedTurkishWord) {
+    if (correctPair.turkish == state.selectedTurkishWord) {
       // Add to matched pairs
-      _matchedPairs.add(correctPair);
-
-      // Add points
-      _score += 10;
-
-      // Remove from available words
-      _availableEnglishWords.remove(_selectedEnglishWord);
-      _availableTurkishWords.remove(_selectedTurkishWord);
-
-      // Clear selections
-      _selectedEnglishWord = null;
-      _selectedTurkishWord = null;
+      state = state.copyWith(
+        matchedPairs: [...state.matchedPairs, correctPair],
+        score: state.score + 10,
+        availableEnglishWords: state.availableEnglishWords
+            .where((w) => w != state.selectedEnglishWord)
+            .toList(),
+        availableTurkishWords: state.availableTurkishWords
+            .where((w) => w != state.selectedTurkishWord)
+            .toList(),
+        clearSelectedEnglishWord: true,
+        clearSelectedTurkishWord: true,
+      );
 
       return true;
     } else {
       // Add to incorrect pairs
-      _incorrectPairs.add(WordPair(
-        english: _selectedEnglishWord!,
-        turkish: _selectedTurkishWord!,
-      ));
-
-      // Deduct points
-      _score = max(0, _score - 2);
-
-      // Clear selections
-      _selectedEnglishWord = null;
-      _selectedTurkishWord = null;
+      state = state.copyWith(
+        incorrectPairs: [
+          ...state.incorrectPairs,
+          WordPair(
+            english: state.selectedEnglishWord!,
+            turkish: state.selectedTurkishWord!,
+          )
+        ],
+        score: max(0, state.score - 2),
+        clearSelectedEnglishWord: true,
+        clearSelectedTurkishWord: true,
+      );
 
       return false;
     }
-  }
-
-  /// Check if all pairs have been matched
-  bool get isExerciseComplete =>
-      _matchedPairs.length == _currentWordPairs.length;
-
-  /// Check if a word is already matched
-  bool isWordMatched(String word, bool isEnglish) {
-    for (final pair in _matchedPairs) {
-      if (isEnglish && pair.english == word) {
-        return true;
-      } else if (!isEnglish && pair.turkish == word) {
-        return true;
-      }
-    }
-    return false;
   }
 
   /// Complete the current exercise
@@ -221,38 +324,43 @@ class WordMatchingGameController {
     _timer?.cancel();
 
     // Add time bonus to score
-    int finalScore = _score + _timeLeft;
+    int finalScore = state.score + state.timeLeft;
 
     // Add to total level score
-    _totalLevelScore += finalScore;
-
-    // Check if this was the last exercise in the level
-    if (_currentExercise.orderInLevel == _currentLevel.exerciseCount) {
-      // Level complete
-      _isGameCompleted = initialLevelId >= _levels.length;
-    }
-
-    // Pause the game
-    _isPaused = true;
+    state = state.copyWith(
+      totalLevelScore: state.totalLevelScore + finalScore,
+      isGameCompleted: initialLevelId >= _levels.length,
+      isPaused: true,
+    );
   }
 
   /// Move to the next exercise
   void moveToNextExercise() {
+    // Calculate next exercise order
+    final nextExerciseOrder = state.currentExercise.orderInLevel + 1;
+
+    debugPrint(
+        'Moving to next exercise: ${state.currentExercise.orderInLevel} -> $nextExerciseOrder');
+
     // Reset game state for the next exercise
-    _score = 0;
-    _timeLeft = 60;
-    _isPaused = false;
+    state = state.copyWith(
+      score: 0,
+      timeLeft: 60,
+      isPaused: false,
+    );
 
     // Load the next exercise
-    _loadExercise(_currentExercise.orderInLevel + 1);
+    _loadExercise(nextExerciseOrder);
   }
 
   /// Load a specific exercise by its order in the level
   void loadExercise(int exerciseOrder) {
     // Reset game state for the selected exercise
-    _score = 0;
-    _timeLeft = 60;
-    _isPaused = false;
+    state = state.copyWith(
+      score: 0,
+      timeLeft: 60,
+      isPaused: false,
+    );
 
     // Load the exercise
     _loadExercise(exerciseOrder);
@@ -262,17 +370,17 @@ class WordMatchingGameController {
   void moveToNextLevel() {
     // Find the next level
     int nextLevelIndex =
-        _levels.indexWhere((level) => level.id == _currentLevel.id) + 1;
+        _levels.indexWhere((level) => level.id == state.currentLevel.id) + 1;
 
     if (nextLevelIndex < _levels.length) {
       // Set the next level
-      _currentLevel = _levels[nextLevelIndex];
-
-      // Reset game state for the new level
-      _score = 0;
-      _totalLevelScore = 0;
-      _timeLeft = 60;
-      _isPaused = false;
+      state = state.copyWith(
+        currentLevel: _levels[nextLevelIndex],
+        score: 0,
+        totalLevelScore: 0,
+        timeLeft: 60,
+        isPaused: false,
+      );
 
       // Load the first exercise of the new level
       _loadExercise(1);
@@ -281,25 +389,25 @@ class WordMatchingGameController {
 
   /// Reset the timer
   void resetTimer() {
-    _timeLeft = 60;
+    state = state.copyWith(timeLeft: 60);
   }
 
   /// Getters for the controller's state
-  int get score => _score;
-  int get timeLeft => _timeLeft;
-  int get totalLevelScore => _totalLevelScore;
-  bool get isPaused => _isPaused;
-  bool get isGameCompleted => _isGameCompleted;
+  int get score => state.score;
+  int get timeLeft => state.timeLeft;
+  int get totalLevelScore => state.totalLevelScore;
+  bool get isPaused => state.isPaused;
+  bool get isGameCompleted => state.isGameCompleted;
 
-  GameLevel get currentLevel => _currentLevel;
-  Exercise get currentExercise => _currentExercise;
-  List<WordPair> get matchedPairs => _matchedPairs;
+  GameLevel get currentLevel => state.currentLevel;
+  Exercise get currentExercise => state.currentExercise;
+  List<WordPair> get matchedPairs => state.matchedPairs;
 
-  String? get selectedEnglishWord => _selectedEnglishWord;
-  String? get selectedTurkishWord => _selectedTurkishWord;
+  String? get selectedEnglishWord => state.selectedEnglishWord;
+  String? get selectedTurkishWord => state.selectedTurkishWord;
 
-  List<String> get availableEnglishWords => _availableEnglishWords;
-  List<String> get availableTurkishWords => _availableTurkishWords;
+  List<String> get availableEnglishWords => state.availableEnglishWords;
+  List<String> get availableTurkishWords => state.availableTurkishWords;
 
   /// Clean up resources
   void dispose() {

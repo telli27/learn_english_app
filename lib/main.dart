@@ -239,6 +239,7 @@ class _MyAppState extends ConsumerState<MyApp> {
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/verification') {
+      
           final email = settings.arguments as String;
           return MaterialPageRoute(
             builder: (context) => VerificationScreen(email: email),

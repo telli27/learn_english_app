@@ -4,17 +4,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io';
 import 'package:revenue_cat_integration/service/revenue_cat_integration_service.dart';
 import '../game_enums.dart';
-import 'professional_word_recall_screen.dart';
+import 'word_matching_game_screen.dart';
 
-/// Modern Kelime Hatırlama Seviyeleri Ekranı
-class WordRecallLevelsScreen extends StatefulWidget {
-  const WordRecallLevelsScreen({super.key});
+/// Modern Kelime Eşleştirme Seviyeleri Ekranı
+class WordMatchingLevelsScreen extends StatefulWidget {
+  const WordMatchingLevelsScreen({super.key});
 
   @override
-  State<WordRecallLevelsScreen> createState() => _WordRecallLevelsScreenState();
+  State<WordMatchingLevelsScreen> createState() =>
+      _WordMatchingLevelsScreenState();
 }
 
-class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
+class _WordMatchingLevelsScreenState extends State<WordMatchingLevelsScreen>
     with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -23,20 +24,20 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
   bool _isPremiumRequired = false;
   bool _isLoadingPremiumStatus = true;
 
-  // Modern seviye tanımları
+  // Modern seviye tanımları - Gerçek oyun verilerine göre güncellendi
   static const List<Map<String, dynamic>> _levelOptions = [
     {
       'level': 1,
       'title': 'Başlangıç',
       'subtitle': 'Temel Kelimeler',
-      'description': 'Günlük hayatın en temel kelimeleri ile başlayın',
-      'exerciseCount': 8,
-      'wordCount': 5,
+      'description':
+          'Günlük hayatın en temel kelimeleri: meyve, ev eşyaları, renkler, yiyecekler ve vücut bölümleri',
+      'exerciseCount': 5,
+      'wordCount': 5, // Her alıştırmada 5 kelime çifti
       'icon': Icons.school_outlined,
       'gradientColors': [Color(0xFF4CAF50), Color(0xFF66BB6A)],
       'difficulty': 'Kolay',
-      'studyTime': '20s',
-      'recallTime': '40s',
+      'timeLimit': '60s',
       'difficultyEnum': DifficultyLevel.beginner,
       'progress': 1.0,
     },
@@ -45,14 +46,13 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
       'title': 'Orta Seviye',
       'subtitle': 'Günlük Konuşma',
       'description':
-          'İngilizce öğreniminde en çok kullanılan kelimeleri öğrenin',
-      'exerciseCount': 8,
-      'wordCount': 5,
+          'Sıfatlar, duygular, şehir yaşamı, meslekler, teknoloji ve günler ile günlük konuşmada kullanılan kelimeler',
+      'exerciseCount': 6,
+      'wordCount': 6, // Her alıştırmada 6 kelime çifti
       'icon': Icons.trending_up_outlined,
       'gradientColors': [Color(0xFF2196F3), Color(0xFF42A5F5)],
       'difficulty': 'Orta',
-      'studyTime': '25s',
-      'recallTime': '50s',
+      'timeLimit': '60s',
       'difficultyEnum': DifficultyLevel.intermediate,
       'progress': 1.0,
     },
@@ -60,30 +60,15 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
       'level': 3,
       'title': 'İleri Seviye',
       'subtitle': 'Akademik Kelimeler',
-      'description': 'İngilizce öğreniminde en çok gereken kelimeleri keşfedin',
-      'exerciseCount': 8,
-      'wordCount': 5,
+      'description':
+          'Başarı, siyaset, bilim, endüstri, sosyal bilimler ve çevre konularında akademik düzeyde kelimeler',
+      'exerciseCount': 7,
+      'wordCount': 7, // Her alıştırmada 7 kelime çifti
       'icon': Icons.emoji_events_outlined,
       'gradientColors': [Color(0xFFFF9800), Color(0xFFFFB74D)],
       'difficulty': 'Zor',
-      'studyTime': '30s',
-      'recallTime': '60s',
+      'timeLimit': '60s',
       'difficultyEnum': DifficultyLevel.advanced,
-      'progress': 1.0,
-    },
-    {
-      'level': 4,
-      'title': 'Uzman Seviye',
-      'subtitle': 'Profesyonel Kelimeler',
-      'description': 'En zorlu kelimelerle kendinizi test edin',
-      'exerciseCount': 6,
-      'wordCount': 5,
-      'icon': Icons.military_tech_outlined,
-      'gradientColors': [Color(0xFFE91E63), Color(0xFFF06292)],
-      'difficulty': 'Uzman',
-      'studyTime': '35s',
-      'recallTime': '70s',
-      'difficultyEnum': DifficultyLevel.expert,
       'progress': 1.0,
     },
   ];
@@ -131,6 +116,40 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
         _isLoadingPremiumStatus = false;
       });
     }
+  }
+
+  /// Check if premium features should be locked
+  /// Returns true if features should be locked (user needs premium)
+  bool _shouldLockPremiumFeatures() {
+    // If not on Android platform, don't check RevenueCat
+    if (!kIsWeb && !Platform.isAndroid) {
+      debugPrint(
+          'Not on Android platform, using Firebase isPremium: $_isPremiumRequired');
+      return _isPremiumRequired;
+    }
+
+    // If Firebase says premium is not required, don't lock
+    if (!_isPremiumRequired) {
+      debugPrint('Firebase isPremium is false, features unlocked');
+      return false;
+    }
+
+    // Firebase says premium is required, check RevenueCat subscription
+    final hasRevenueCatPremium =
+        RevenueCatIntegrationService.instance.isPremium.value;
+    debugPrint(
+        'Firebase isPremium: $_isPremiumRequired, RevenueCat isPremium: $hasRevenueCatPremium');
+
+    // If user has active subscription, don't lock
+    if (hasRevenueCatPremium) {
+      debugPrint('User has RevenueCat subscription, features unlocked');
+      return false;
+    }
+
+    // Firebase requires premium AND user doesn't have subscription = lock features
+    debugPrint(
+        'Premium required but user has no subscription, features locked');
+    return true;
   }
 
   @override
@@ -210,10 +229,10 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.psychology, color: Colors.white, size: 16),
+                    Icon(Icons.extension, color: Colors.white, size: 16),
                     SizedBox(width: 6),
                     Text(
-                      'Kelime Oyunu',
+                      'Kelime Eşleştirme',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -238,7 +257,7 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Kendi seviyende kelime öğrenmeye başla',
+            'Kendi seviyende kelime eşleştirme oyununa başla',
             style: TextStyle(
               color: Colors.white.withOpacity(0.8),
               fontSize: 16,
@@ -289,7 +308,7 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
               padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
               child: Column(
                 children: [
-                  // Levels - İlerleme durumu kartını kaldırdık
+                  // Levels
                   Expanded(
                     child: ListView.builder(
                       physics: const BouncingScrollPhysics(),
@@ -364,7 +383,8 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
                       ),
                       child: Icon(
                         isLocked
-                            ? Icons.workspace_premium
+                            ? Icons
+                                .workspace_premium // Premium icon for locked levels
                             : level['icon'] as IconData,
                         color: Colors.white,
                         size: 28,
@@ -441,8 +461,8 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
                       ),
                       const SizedBox(width: 12),
                       _buildStatChip(
-                        Icons.book_outlined,
-                        '${level['wordCount']} Kelime',
+                        Icons.extension_outlined,
+                        '${level['wordCount']} Kelime Çifti',
                       ),
                     ],
                   ),
@@ -459,7 +479,7 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Çalışma: ${level['studyTime']} • Hatırlama: ${level['recallTime']}',
+                        'Süre Limiti: ${level['timeLimit']}',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.8),
                           fontSize: 12,
@@ -505,29 +525,6 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
     );
   }
 
-  void _launchLevel(Map<String, dynamic> level) {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            ProfessionalWordRecallScreen(
-          difficulty: level['difficultyEnum'] as DifficultyLevel,
-        ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SlideTransition(
-            position: animation.drive(
-              Tween(begin: const Offset(1.0, 0.0), end: Offset.zero).chain(
-                CurveTween(curve: Curves.easeOutCubic),
-              ),
-            ),
-            child: child,
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 400),
-      ),
-    );
-  }
-
   /// Show premium subscription dialog
   void _showPremiumDialog() {
     showDialog(
@@ -536,12 +533,14 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.all(16),
+          insetPadding:
+              const EdgeInsets.all(16), // Reduced padding for more width
           child: Container(
-            width: double.infinity,
+            width: double.infinity, // Full width
             constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width - 32,
-              maxHeight: MediaQuery.of(context).size.height * 0.8,
+              maxWidth:
+                  MediaQuery.of(context).size.width - 32, // Responsive width
+              maxHeight: MediaQuery.of(context).size.height * 0.8, // Max height
             ),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
@@ -563,7 +562,7 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
               ],
             ),
             child: Padding(
-              padding: const EdgeInsets.all(28),
+              padding: const EdgeInsets.all(28), // Increased padding
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -593,20 +592,20 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
                     'Premium Üyelik Gerekli',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 26,
+                      fontSize: 26, // Increased from 24
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 16), // Increased spacing
 
                   // Description
                   Text(
-                    'Tüm seviyelere erişim için premium üyeliğe ihtiyacınız var. Premium ile sınırsız kelime öğrenin!',
+                    'Tüm seviyelere erişim için premium üyeliğe ihtiyacınız var. Premium ile orta ve ileri seviye kelime eşleştirme oyunlarına erişin!',
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.9),
-                      fontSize: 17,
+                      fontSize: 17, // Increased from 16
                       height: 1.4,
                     ),
                     textAlign: TextAlign.center,
@@ -628,12 +627,12 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
                       children: [
                         _buildPremiumFeature(
                           Icons.lock_open,
-                          'Tüm Seviyelere Erişim',
+                          'Orta ve İleri Seviye Erişimi',
                         ),
                         const SizedBox(height: 12),
                         _buildPremiumFeature(
-                          Icons.psychology,
-                          'Sınırsız Kelime Çalışması',
+                          Icons.extension,
+                          'Akademik Kelime Eşleştirme',
                         ),
                         const SizedBox(height: 12),
                         _buildPremiumFeature(
@@ -651,15 +650,18 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
                     children: [
                       // Cancel button
                       Expanded(
-                        flex: 2,
+                        flex: 2, // Increased flex to make it wider
                         child: Container(
-                          height: 56,
+                          height: 56, // Increased height
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(16),
+                            color: Colors.white
+                                .withOpacity(0.3), // More visible background
+                            borderRadius:
+                                BorderRadius.circular(16), // Increased radius
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.6),
-                              width: 2,
+                              color: Colors.white
+                                  .withOpacity(0.6), // More visible border
+                              width: 2, // Thicker border
                             ),
                           ),
                           child: TextButton.icon(
@@ -667,34 +669,35 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
                             icon: const Icon(
                               Icons.close_rounded,
                               color: Colors.white,
-                              size: 18,
+                              size: 18, // Slightly smaller icon
                             ),
                             label: const Text(
                               'Daha Sonra',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 15, // Slightly smaller font
+                                fontWeight: FontWeight.w700, // Bolder text
                               ),
                             ),
                             style: TextButton.styleFrom(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8), // Reduced padding
                             ),
                           ),
                         ),
                       ),
 
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 16), // Increased spacing
 
                       // Premium button
                       Expanded(
-                        flex: 3,
+                        flex: 3, // Increased flex to make it wider
                         child: Container(
-                          height: 56,
+                          height: 56, // Increased height
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius:
+                                BorderRadius.circular(16), // Increased radius
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.white.withOpacity(0.3),
@@ -718,19 +721,19 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
                             icon: const Icon(
                               Icons.star,
                               color: Color(0xFF667eea),
-                              size: 20,
+                              size: 20, // Increased icon size
                             ),
                             label: const Text(
                               'Premium Al',
                               style: TextStyle(
                                 color: Color(0xFF667eea),
-                                fontSize: 16,
+                                fontSize: 16, // Increased font size
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             style: TextButton.styleFrom(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8), // Reduced padding
                             ),
                           ),
                         ),
@@ -752,7 +755,7 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
         Icon(
           icon,
           color: Colors.white,
-          size: 22,
+          size: 22, // Increased icon size
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -760,7 +763,7 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
             text,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 15,
+              fontSize: 15, // Increased from 14
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -769,37 +772,26 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
     );
   }
 
-  /// Check if premium features should be locked
-  /// Returns true if features should be locked (user needs premium)
-  bool _shouldLockPremiumFeatures() {
-    // If not on Android platform, don't check RevenueCat
-    if (!kIsWeb && !Platform.isAndroid) {
-      debugPrint(
-          'Not on Android platform, using Firebase isPremium: $_isPremiumRequired');
-      return _isPremiumRequired;
-    }
-
-    // If Firebase says premium is not required, don't lock
-    if (!_isPremiumRequired) {
-      debugPrint('Firebase isPremium is false, features unlocked');
-      return false;
-    }
-
-    // Firebase says premium is required, check RevenueCat subscription
-    final hasRevenueCatPremium =
-        RevenueCatIntegrationService.instance.isPremium.value;
-    debugPrint(
-        'Firebase isPremium: $_isPremiumRequired, RevenueCat isPremium: $hasRevenueCatPremium');
-
-    // If user has active subscription, don't lock
-    if (hasRevenueCatPremium) {
-      debugPrint('User has RevenueCat subscription, features unlocked');
-      return false;
-    }
-
-    // Firebase requires premium AND user doesn't have subscription = lock features
-    debugPrint(
-        'Premium required but user has no subscription, features locked');
-    return true;
+  void _launchLevel(Map<String, dynamic> level) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            WordMatchingGameScreen(
+          initialLevel: level['level'] as int,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: animation.drive(
+              Tween(begin: const Offset(1.0, 0.0), end: Offset.zero).chain(
+                CurveTween(curve: Curves.easeOutCubic),
+              ),
+            ),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 400),
+      ),
+    );
   }
 }

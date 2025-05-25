@@ -190,7 +190,8 @@ class _ProfessionalWordRecallScreenState
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      onPressed: () => _showAdAndNavigateBack(),
+                      onPressed: () => Navigator.pop(
+                          context), // Direct navigation without ad
                       icon: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -241,20 +242,36 @@ class _ProfessionalWordRecallScreenState
                         ),
                       ],
                     ),
-                    IconButton(
-                      onPressed: () => controller.togglePause(),
-                      icon: Container(
+                    // Only show pause button during active phases, otherwise show completion icon
+                    if (gameState.phase == RecallGamePhase.study ||
+                        gameState.phase == RecallGamePhase.recall)
+                      IconButton(
+                        onPressed: () => controller.togglePause(),
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            gameState.isPaused ? Icons.play_arrow : Icons.pause,
+                            color: Colors.white,
+                          ),
+                        ),
+                      )
+                    else
+                      // Show completion icon for review/complete phases
+                      Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(
-                          gameState.isPaused ? Icons.play_arrow : Icons.pause,
+                        child: const Icon(
+                          Icons.check_circle,
                           color: Colors.white,
                         ),
                       ),
-                    ),
                   ],
                 ),
 
@@ -265,17 +282,35 @@ class _ProfessionalWordRecallScreenState
                   children: [
                     Expanded(
                       child: _buildInfoCard(
-                        icon: Icons.psychology,
-                        label: gameState.phase.displayName,
-                        value: _getPhaseProgress(gameState),
+                        icon: gameState.phase == RecallGamePhase.review ||
+                                gameState.phase == RecallGamePhase.complete
+                            ? Icons.assessment
+                            : Icons.psychology,
+                        label: gameState.phase == RecallGamePhase.review ||
+                                gameState.phase == RecallGamePhase.complete
+                            ? 'Değerlendirme'
+                            : gameState.phase.displayName,
+                        value: gameState.phase == RecallGamePhase.review ||
+                                gameState.phase == RecallGamePhase.complete
+                            ? 'Tamamlandı'
+                            : _getPhaseProgress(gameState),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildInfoCard(
-                        icon: Icons.timer,
-                        label: 'Süre',
-                        value: '${gameState.timeLeft}s',
+                        icon: gameState.phase == RecallGamePhase.review ||
+                                gameState.phase == RecallGamePhase.complete
+                            ? Icons.percent
+                            : Icons.timer,
+                        label: gameState.phase == RecallGamePhase.review ||
+                                gameState.phase == RecallGamePhase.complete
+                            ? 'Doğruluk'
+                            : 'Süre',
+                        value: gameState.phase == RecallGamePhase.review ||
+                                gameState.phase == RecallGamePhase.complete
+                            ? '${(gameState.accuracy * 100).toInt()}%'
+                            : '${gameState.timeLeft}s',
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -365,7 +400,7 @@ class _ProfessionalWordRecallScreenState
         progressText = 'Kelime Hatırlama Aşaması';
         break;
       case RecallGamePhase.review:
-        progressText = 'Sonuçlar Değerlendiriliyor';
+        progressText = 'Sonuçlar Hazır';
         break;
       case RecallGamePhase.complete:
         progressText = 'Alıştırma Tamamlandı';
@@ -561,13 +596,15 @@ class _ProfessionalWordRecallScreenState
             Expanded(
               child: GridView.builder(
                 physics: const BouncingScrollPhysics(),
-                padding:
-                    const EdgeInsets.only(bottom: 80), // Bottom padding for FAB
+                padding: const EdgeInsets.only(
+                    bottom: 120, top: 5), // More bottom padding for FAB
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 1.4,
+                  childAspectRatio:
+                      1.1, // Further reduced to make cards much taller
                   crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
+                  mainAxisSpacing:
+                      12, // Increased spacing for better visibility
                 ),
                 itemCount: gameState.currentWords.length,
                 itemBuilder: (context, index) {
@@ -630,63 +667,208 @@ class _ProfessionalWordRecallScreenState
       animation: _fadeController,
       builder: (context, child) {
         return AnimatedContainer(
-          duration: Duration(milliseconds: 200 + (index * 50)),
+          duration: Duration(milliseconds: 300 + (index * 100)),
           curve: Curves.easeOutBack,
           child: Container(
-            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.95),
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
+                  color: Color(widget.difficulty.colorValue).withOpacity(0.15),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                  spreadRadius: 2,
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
                   blurRadius: 8,
-                  offset: const Offset(0, 2),
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // İngilizce kelime - daha küçük
-                Text(
-                  word.english,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(widget.difficulty.colorValue),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Stack(
+                children: [
+                  // Colorful top section
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 40, // Increased height for better visibility
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(widget.difficulty.colorValue),
+                            Color(widget.difficulty.colorValue)
+                                .withOpacity(0.7),
+                          ],
+                        ),
+                      ),
+                      child: Stack(
+                        children: [
+                          // Decorative circles
+                          Positioned(
+                            top: -10,
+                            right: -10,
+                            child: Container(
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 8,
+                            left: -8,
+                            child: Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                          // Index number
+                          Positioned(
+                            top: 8,
+                            left: 12,
+                            child: Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '${index + 1}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                // Fonetik - daha küçük
-                Text(
-                  word.phonetic,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey[600],
-                    fontStyle: FontStyle.italic,
+
+                  // Main content area
+                  Positioned(
+                    top: 40, // Adjusted to match new top section height
+                    left: 0,
+                    right: 0,
+                    bottom: 5, // Leave space for bottom accent line
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8), // Better padding
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment
+                            .spaceEvenly, // Better distribution
+                        children: [
+                          // English word with special styling
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 6), // More padding
+                            decoration: BoxDecoration(
+                              color: Color(widget.difficulty.colorValue)
+                                  .withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Color(widget.difficulty.colorValue)
+                                    .withOpacity(0.2),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              word.english,
+                              style: TextStyle(
+                                fontSize: 14, // Increased font size
+                                fontWeight: FontWeight.w800,
+                                color: Color(widget.difficulty.colorValue),
+                                letterSpacing: 0.3,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+
+                          // Decorative arrow
+                          Icon(
+                            Icons.keyboard_double_arrow_down_rounded,
+                            color: Colors.grey[400],
+                            size: 14,
+                          ),
+
+                          // Turkish translation with container
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[50],
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Colors.grey[300]!,
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              word.turkish,
+                              style: const TextStyle(
+                                fontSize: 12, // Increased font size
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                                height: 1.3,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 3, // Allow more lines
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 6),
-                // Türkçe kelime
-                Text(
-                  word.turkish,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+
+                  // Bottom accent line
+                  Positioned(
+                    bottom: 0,
+                    left: 15,
+                    right: 15,
+                    child: Container(
+                      height: 2,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.transparent,
+                            Color(widget.difficulty.colorValue)
+                                .withOpacity(0.3),
+                            Colors.transparent,
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(1),
+                      ),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -754,7 +936,8 @@ class _ProfessionalWordRecallScreenState
     final progress =
         (gameState.currentWordIndex + 1) / gameState.currentWords.length;
 
-    return Padding(
+    return SingleChildScrollView(
+      // Make the entire phase scrollable
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -790,7 +973,7 @@ class _ProfessionalWordRecallScreenState
             ),
           ),
 
-          const SizedBox(height: 30),
+          const SizedBox(height: 20), // Reduced spacing
 
           // Enhanced word card with clean design
           AnimatedBuilder(
@@ -799,7 +982,7 @@ class _ProfessionalWordRecallScreenState
               return Transform.scale(
                 scale: _scaleAnimation.value,
                 child: Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(20), // Reduced padding
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -841,13 +1024,13 @@ class _ProfessionalWordRecallScreenState
                         textAlign: TextAlign.center,
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12), // Reduced spacing
 
                       // Hint section with improved design (only if hint is shown)
                       if (gameState.showHint) ...[
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(12), // Reduced padding
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
@@ -855,14 +1038,16 @@ class _ProfessionalWordRecallScreenState
                                 Colors.orange.withOpacity(0.05),
                               ],
                             ),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius:
+                                BorderRadius.circular(12), // Reduced radius
                             border: Border.all(
                                 color: Colors.amber.withOpacity(0.3)),
                           ),
                           child: Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.all(6),
+                                padding:
+                                    const EdgeInsets.all(4), // Reduced padding
                                 decoration: BoxDecoration(
                                   color: Colors.amber.withOpacity(0.2),
                                   shape: BoxShape.circle,
@@ -870,15 +1055,15 @@ class _ProfessionalWordRecallScreenState
                                 child: Icon(
                                   Icons.lightbulb,
                                   color: Colors.amber[700],
-                                  size: 18,
+                                  size: 16, // Reduced size
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 8), // Reduced spacing
                               Expanded(
                                 child: Text(
                                   currentWord.hint,
                                   style: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 12, // Reduced font size
                                     color: Colors.amber[800],
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -895,7 +1080,7 @@ class _ProfessionalWordRecallScreenState
             },
           ),
 
-          const SizedBox(height: 30),
+          const SizedBox(height: 20), // Reduced spacing
 
           // Enhanced input field
           Container(
@@ -960,7 +1145,7 @@ class _ProfessionalWordRecallScreenState
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 16), // Reduced spacing
 
           // Enhanced action buttons
           Column(
@@ -968,7 +1153,7 @@ class _ProfessionalWordRecallScreenState
               // Submit button (primary action)
               Container(
                 width: double.infinity,
-                height: 56,
+                height: 52, // Reduced height
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -993,12 +1178,13 @@ class _ProfessionalWordRecallScreenState
                       _inputController.clear();
                     }
                   },
-                  icon: const Icon(Icons.send_rounded, size: 22),
+                  icon:
+                      const Icon(Icons.send_rounded, size: 20), // Reduced size
                   label: const Text(
                     'CEVABI GÖNDER',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 16,
+                      fontSize: 15, // Reduced font size
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -1013,7 +1199,7 @@ class _ProfessionalWordRecallScreenState
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 12), // Reduced spacing
 
               // Secondary action buttons
               Row(
@@ -1021,7 +1207,7 @@ class _ProfessionalWordRecallScreenState
                   // Hint button
                   Expanded(
                     child: Container(
-                      height: 48,
+                      height: 44, // Reduced height
                       decoration: BoxDecoration(
                         color: Colors.amber[50],
                         borderRadius: BorderRadius.circular(14),
@@ -1034,14 +1220,14 @@ class _ProfessionalWordRecallScreenState
                         onPressed: () => controller.showHint(),
                         icon: Icon(
                           Icons.lightbulb_outline_rounded,
-                          size: 18,
+                          size: 16, // Reduced size
                           color: Colors.amber[700],
                         ),
                         label: Text(
                           'İpucu Al',
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                            fontSize: 13, // Reduced font size
                             color: Colors.amber[700],
                           ),
                         ),
@@ -1062,7 +1248,7 @@ class _ProfessionalWordRecallScreenState
                   // Skip button
                   Expanded(
                     child: Container(
-                      height: 48,
+                      height: 44, // Reduced height
                       decoration: BoxDecoration(
                         color: Colors.grey[100],
                         borderRadius: BorderRadius.circular(14),
@@ -1075,14 +1261,14 @@ class _ProfessionalWordRecallScreenState
                         onPressed: () => controller.skipCurrentWord(),
                         icon: Icon(
                           Icons.skip_next_rounded,
-                          size: 18,
+                          size: 16, // Reduced size
                           color: Colors.grey[600],
                         ),
                         label: Text(
                           'Atla',
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                            fontSize: 13, // Reduced font size
                             color: Colors.grey[600],
                           ),
                         ),
@@ -1102,7 +1288,7 @@ class _ProfessionalWordRecallScreenState
             ],
           ),
 
-          const Spacer(),
+          const SizedBox(height: 20), // Bottom spacing for scroll
         ],
       ),
     );
@@ -1302,6 +1488,100 @@ class _ProfessionalWordRecallScreenState
 
                 const SizedBox(height: 20),
 
+                // Show correct answers section if there are any
+                if (gameState.correctWords.isNotEmpty) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.check_circle_rounded,
+                              color: Colors.green[700],
+                              size: 24,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Doğru Cevaplar',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.green[700],
+                              ),
+                            ),
+                            const Spacer(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.green[50],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.green[200]!),
+                              ),
+                              child: Text(
+                                '${gameState.correctWords.length}/${gameState.currentWords.length}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.green[700],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Show first 3 correct words
+                        ...gameState.correctWords.take(3).map(
+                            (word) => _buildCorrectWordItem(word, controller)),
+
+                        // Show remaining count if more words exist
+                        if (gameState.correctWords.length > 3) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.green[50],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.more_horiz,
+                                    color: Colors.green[600]),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '+${gameState.correctWords.length - 3} doğru cevap daha',
+                                  style: TextStyle(
+                                    color: Colors.green[600],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+
                 // Words to review section - Only if there are words to review
                 if (gameState.incorrectWords.isNotEmpty ||
                     gameState.skippedWords.isNotEmpty) ...[
@@ -1343,15 +1623,21 @@ class _ProfessionalWordRecallScreenState
 
                         const SizedBox(height: 16),
 
-                        // Show words to review - limit to avoid overflow
-                        ...([
-                          ...gameState.incorrectWords.take(3).map((word) =>
-                              _buildWordReviewItem(word, 'Yanlış', Colors.red,
-                                  Icons.close_rounded)),
-                          ...gameState.skippedWords.take(3).map((word) =>
-                              _buildWordReviewItem(word, 'Atlandı',
-                                  Colors.orange, Icons.skip_next_rounded)),
-                        ].take(6)),
+                        // Show incorrect words with user answers
+                        ...gameState.incorrectWords
+                            .take(3)
+                            .map((word) => _buildDetailedWordReviewItem(
+                                  word,
+                                  'Yanlış',
+                                  Colors.red,
+                                  Icons.close_rounded,
+                                  controller,
+                                )),
+
+                        // Show skipped words
+                        ...gameState.skippedWords.take(3).map((word) =>
+                            _buildWordReviewItem(word, 'Atlandı', Colors.orange,
+                                Icons.skip_next_rounded)),
 
                         // Show remaining count if more words exist
                         if ((gameState.incorrectWords.length +
@@ -1459,129 +1745,207 @@ class _ProfessionalWordRecallScreenState
 
         // Fixed bottom buttons
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20), // Reduced from 24
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.95),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, -2),
-              ),
-            ],
+            // Removed the problematic white gradient background
+            color: Colors.transparent,
           ),
-          child: Row(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                flex: 2,
-                child: Container(
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.grey[300]!,
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () => _showAdAndNavigateBack(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      foregroundColor: Colors.grey[700],
-                      shadowColor: Colors.transparent,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.home_rounded, size: 18),
-                        SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            'Ana Menü',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+              // Modern floating action buttons
+              Row(
+                children: [
+                  // Home button - Floating circular design
+                  Expanded(
+                    flex: 2,
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(
+                          context), // Direct navigation without ad
+                      child: Container(
+                        height: 56, // Reduced from 64
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(28), // Adjusted
+                          border: Border.all(
+                            color: Colors.grey[200]!,
+                            width: 2,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 15, // Reduced
+                              offset: const Offset(0, 6), // Reduced
+                              spreadRadius: 0,
+                            ),
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                      ],
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 32, // Reduced from 40
+                              height: 32, // Reduced from 40
+                              decoration: BoxDecoration(
+                                color: Colors.blue[50],
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.home_rounded,
+                                color: Colors.blue[600],
+                                size: 18, // Reduced from 20
+                              ),
+                            ),
+                            const SizedBox(width: 8), // Reduced from 12
+                            Text(
+                              'Ana Menü',
+                              style: TextStyle(
+                                fontSize: 13, // Reduced from 15
+                                fontWeight: FontWeight.w700,
+                                color: Colors.grey[800],
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
+
+                  const SizedBox(width: 12), // Reduced from 16
+
+                  // Continue button - Premium gradient design
+                  Expanded(
+                    flex: 3,
+                    child: GestureDetector(
+                      onTap: () => _showAdAndMoveToNext(controller),
+                      child: Container(
+                        height: 56, // Reduced from 64
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              primaryColor,
+                              primaryColor.withOpacity(0.8),
+                              Color.lerp(primaryColor, Colors.purple, 0.2)!,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(28), // Adjusted
+                          boxShadow: [
+                            BoxShadow(
+                              color: primaryColor.withOpacity(0.4),
+                              blurRadius: 15, // Reduced from 20
+                              offset: const Offset(0, 6), // Reduced from 8
+                              spreadRadius: 0,
+                            ),
+                            BoxShadow(
+                              color: primaryColor.withOpacity(0.2),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Stack(
+                          children: [
+                            // Animated background pattern
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(28),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Colors.white.withOpacity(0.1),
+                                      Colors.transparent,
+                                      Colors.black.withOpacity(0.05),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Content
+                            Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 30, // Reduced from 36
+                                    height: 30, // Reduced from 36
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.3),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.arrow_forward_rounded,
+                                      color: Colors.white,
+                                      size: 16, // Reduced from 18
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8), // Reduced from 12
+                                  const Text(
+                                    'Devam Et',
+                                    style: TextStyle(
+                                      fontSize: 14, // Reduced from 16
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 3,
-                child: Container(
-                  height: 52,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        primaryColor,
-                        primaryColor.withOpacity(0.8),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: primaryColor.withOpacity(0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () => _showAdAndMoveToNext(controller),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      foregroundColor: Colors.white,
-                      shadowColor: Colors.transparent,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.arrow_forward_rounded, size: 18),
-                        SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            'Devam Et',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+
+              const SizedBox(height: 12), // Reduced from 16
+
+              // Progress indicator dots
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 5, // Reduced from 6
+                    height: 5, // Reduced from 6
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.3),
+                      shape: BoxShape.circle,
                     ),
                   ),
-                ),
+                  const SizedBox(width: 6), // Reduced from 8
+                  Container(
+                    width: 16, // Reduced from 20
+                    height: 5, // Reduced from 6
+                    decoration: BoxDecoration(
+                      color: primaryColor,
+                      borderRadius: BorderRadius.circular(2.5), // Adjusted
+                    ),
+                  ),
+                  const SizedBox(width: 6), // Reduced from 8
+                  Container(
+                    width: 5, // Reduced from 6
+                    height: 5, // Reduced from 6
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.3),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -1704,6 +2068,196 @@ class _ProfessionalWordRecallScreenState
                 fontWeight: FontWeight.w600,
                 color: color,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailedWordReviewItem(VocabularyWord word, String status,
+      Color color, IconData icon, ProfessionalWordRecallController controller) {
+    // Get user's actual answer from controller
+    final attempt = controller.getAttemptForWord(word.id);
+    String userAnswer = 'Cevap verilmedi';
+
+    if (attempt != null) {
+      if (attempt.wasSkipped) {
+        userAnswer = 'Atlandı';
+      } else if (attempt.userInput.isNotEmpty) {
+        userAnswer = attempt.userInput;
+      }
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 18),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  word.english,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  status,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // User's answer vs correct answer comparison
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Column(
+              children: [
+                // User's answer
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Icon(
+                        Icons.person,
+                        color: Colors.red[600],
+                        size: 14,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Verdiğiniz cevap:',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        userAnswer,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.red[700],
+                          fontStyle: userAnswer == 'Cevap verilmedi' ||
+                                  userAnswer == 'Atlandı'
+                              ? FontStyle.italic
+                              : FontStyle.normal,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                // Correct answer
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Icon(
+                        Icons.check_circle,
+                        color: Colors.green[600],
+                        size: 14,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Doğru cevap:',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        word.turkish,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green[700],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Show hint usage if applicable
+                if (attempt?.usedHint == true) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Icon(
+                          Icons.lightbulb,
+                          color: Colors.amber[600],
+                          size: 14,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'İpucu kullanıldı',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.amber[700],
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
             ),
           ),
         ],
@@ -1839,7 +2393,8 @@ class _ProfessionalWordRecallScreenState
                         ],
                       ),
                       child: ElevatedButton.icon(
-                        onPressed: () => _showAdAndNavigateBack(),
+                        onPressed: () => Navigator.pop(
+                            context), // Direct navigation without ad
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           foregroundColor: Color(widget.difficulty.colorValue),
@@ -1872,7 +2427,8 @@ class _ProfessionalWordRecallScreenState
                             Border.all(color: Colors.white.withOpacity(0.3)),
                       ),
                       child: ElevatedButton.icon(
-                        onPressed: () => _showAdAndNavigateBack(),
+                        onPressed: () => Navigator.pop(
+                            context), // Direct navigation without ad
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           foregroundColor: Colors.white,
@@ -1907,7 +2463,8 @@ class _ProfessionalWordRecallScreenState
                                   color: Colors.white.withOpacity(0.3)),
                             ),
                             child: ElevatedButton(
-                              onPressed: () => _showAdAndNavigateBack(),
+                              onPressed: () => Navigator.pop(
+                                  context), // Direct navigation without ad
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.transparent,
                                 foregroundColor: Colors.white,
@@ -2082,7 +2639,11 @@ class _ProfessionalWordRecallScreenState
             borderRadius: BorderRadius.circular(20),
           ),
           child: Container(
-            padding: const EdgeInsets.all(24),
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+              maxWidth: MediaQuery.of(context).size.width * 0.9,
+            ),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               gradient: LinearGradient(
@@ -2117,7 +2678,7 @@ class _ProfessionalWordRecallScreenState
                       child: Text(
                         'Alıştırma Seç',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1E293B),
                         ),
@@ -2125,131 +2686,144 @@ class _ProfessionalWordRecallScreenState
                     ),
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close),
+                      icon: const Icon(Icons.close, size: 20),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
-                // Exercise list
-                ...gameState.currentLevel.exercises
-                    .asMap()
-                    .entries
-                    .map((entry) {
-                  final index = entry.key;
-                  final exercise = entry.value;
-                  final isCurrentExercise =
-                      exercise.id == gameState.currentExercise.id;
+                // Scrollable exercise list
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: gameState.currentLevel.exercises
+                          .asMap()
+                          .entries
+                          .map((entry) {
+                        final index = entry.key;
+                        final exercise = entry.value;
+                        final isCurrentExercise =
+                            exercise.id == gameState.currentExercise.id;
 
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: isCurrentExercise
-                            ? null
-                            : () {
-                                Navigator.pop(context);
-                                // Burada alıştırma değiştirme fonksiyonu çağırılacak
-                                _changeExercise(controller, index);
-                              },
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: isCurrentExercise
-                                ? Color(widget.difficulty.colorValue)
-                                    .withOpacity(0.1)
-                                : Colors.grey[50],
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isCurrentExercise
-                                  ? Color(widget.difficulty.colorValue)
-                                  : Colors.grey[300]!,
-                              width: isCurrentExercise ? 2 : 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 40,
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: isCurrentExercise
+                                  ? null
+                                  : () {
+                                      Navigator.pop(context);
+                                      _changeExercise(controller, index);
+                                    },
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
                                   color: isCurrentExercise
                                       ? Color(widget.difficulty.colorValue)
-                                      : Colors.grey[400],
+                                          .withOpacity(0.1)
+                                      : Colors.grey[50],
                                   borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    '${index + 1}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
+                                  border: Border.all(
+                                    color: isCurrentExercise
+                                        ? Color(widget.difficulty.colorValue)
+                                            .withOpacity(0.2)
+                                        : Colors.grey[300]!,
+                                    width: isCurrentExercise ? 2 : 1,
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                child: Row(
                                   children: [
-                                    Text(
-                                      exercise.title,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
+                                    Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
                                         color: isCurrentExercise
-                                            ? Color(
-                                                widget.difficulty.colorValue)
-                                            : const Color(0xFF1E293B),
+                                            ? Color(widget
+                                                    .difficulty.colorValue)
+                                                .withOpacity(0.1)
+                                            : Colors.grey[400],
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '${index + 1}',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${exercise.words.length} kelime',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey[600],
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            exercise.title,
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: isCurrentExercise
+                                                  ? Color(widget
+                                                      .difficulty.colorValue)
+                                                  : const Color(0xFF1E293B),
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            '${exercise.words.length} kelime',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
+                                    if (isCurrentExercise) ...[
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 6, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: Color(
+                                              widget.difficulty.colorValue),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: const Text(
+                                          'Aktif',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ] else ...[
+                                      Icon(
+                                        Icons.arrow_forward_ios,
+                                        color: Colors.grey[400],
+                                        size: 14,
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
-                              if (isCurrentExercise) ...[
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Color(widget.difficulty.colorValue),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Text(
-                                    'Aktif',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ] else ...[
-                                Icon(
-                                  Icons.arrow_forward_ios,
-                                  color: Colors.grey[400],
-                                  size: 16,
-                                ),
-                              ],
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
+                        );
+                      }).toList(),
                     ),
-                  );
-                }).toList(),
+                  ),
+                ),
 
                 const SizedBox(height: 12),
 
@@ -2259,15 +2833,15 @@ class _ProfessionalWordRecallScreenState
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                     child: const Text(
                       'İptal',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         color: Colors.grey,
                       ),
                     ),
@@ -2368,6 +2942,95 @@ class _ProfessionalWordRecallScreenState
       // Load next ad for the upcoming exercise
       _loadInterstitialAdForGame();
     }
+  }
+
+  Widget _buildCorrectWordItem(
+      VocabularyWord word, ProfessionalWordRecallController controller) {
+    final attempt = controller.getAttemptForWord(word.id);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.green.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.green.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.check_circle, color: Colors.green[600], size: 16),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  word.english,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                Text(
+                  word.turkish,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Show additional info
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (attempt?.usedHint == true)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.lightbulb, color: Colors.amber[600], size: 10),
+                      const SizedBox(width: 2),
+                      Text(
+                        'İpucu',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.amber[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Doğru',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green[600],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
