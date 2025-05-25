@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'kelime eşleştirme/word_matching_game_screen.dart';
 import 'kelime eşleştirme/word_matching_levels_screen.dart';
 import 'kelime hatırlama/word_recall_levels_screen.dart';
+import 'cümle tamamlama/sentence_completion_levels_screen.dart';
 
 class WordGamesScreen extends ConsumerStatefulWidget {
   const WordGamesScreen({super.key});
@@ -278,11 +279,11 @@ class _WordGamesScreenState extends ConsumerState<WordGamesScreen> {
         );
         break;
       case 'sentence_completion':
-        // Other games are coming soon
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${game['title']} oyunu yakında eklenecek!'),
-            behavior: SnackBarBehavior.floating,
+        // Navigate to sentence completion levels screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const SentenceCompletionLevelsScreen(),
           ),
         );
         break;
