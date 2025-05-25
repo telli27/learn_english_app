@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
 import 'dart:math';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'word_recall_game_controller.dart';
+import '../../models/word_models.dart';
+import '../game_theme.dart';
 import 'package:confetti/confetti.dart';
 
-import '../controllers/word_recall_game_controller.dart';
-import '../models/word_models.dart';
-import '../themes/game_theme.dart';
 import 'word_recall_phase_widgets.dart';
 
 /// Modern Word Recall Game Screen with clean architecture

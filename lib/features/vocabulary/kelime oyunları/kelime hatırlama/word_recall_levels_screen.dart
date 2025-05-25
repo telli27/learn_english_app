@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../game_enums.dart';
 import 'professional_word_recall_screen.dart';
-import '../core/game_enums.dart';
 
 /// Modern Kelime Hatırlama Seviyeleri Ekranı
 class WordRecallLevelsScreen extends StatefulWidget {

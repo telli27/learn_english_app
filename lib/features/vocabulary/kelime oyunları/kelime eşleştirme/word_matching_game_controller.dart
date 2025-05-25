@@ -3,8 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/game_data.dart';
-import '../models/word_models.dart';
+import 'game_data.dart';
+import '../../models/word_models.dart';
 
 /// Provider for the word matching game controller
 final wordMatchingGameControllerProvider =

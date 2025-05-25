@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../controllers/word_recall_game_controller.dart';
+import 'kelime hatırlama/word_recall_game_controller.dart';
 
 /// Theme configuration for different game phases
 class GameTheme {

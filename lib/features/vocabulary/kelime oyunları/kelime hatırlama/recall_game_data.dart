@@ -1,4 +1,4 @@
-import '../models/word_models.dart';
+import '../../models/word_models.dart';
 
 /// Repository of recall game data including levels and exercises
 class RecallGameData {

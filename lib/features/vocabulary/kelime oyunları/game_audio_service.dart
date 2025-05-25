@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/game_enums.dart';
+import 'game_enums.dart';
 
 /// Provider for the game audio service
 final gameAudioServiceProvider = Provider<GameAudioService>(

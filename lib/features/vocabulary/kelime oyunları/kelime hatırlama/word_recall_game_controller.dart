@@ -2,9 +2,8 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../data/recall_game_data.dart';
-import '../models/word_models.dart';
+import 'recall_game_data.dart';
+import '../../models/word_models.dart';
 
 /// Provider for the word recall game controller
 final wordRecallGameControllerProvider =

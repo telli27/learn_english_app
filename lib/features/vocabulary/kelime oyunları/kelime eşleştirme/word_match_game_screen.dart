@@ -1,8 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/daily_word.dart';
-import '../providers/daily_word_provider.dart';
+import '../../models/daily_word.dart';
+import '../../providers/daily_word_provider.dart';
 import 'package:confetti/confetti.dart';
 
 class WordMatchGameScreen extends ConsumerStatefulWidget {
@@ -24,7 +24,6 @@ class _WordMatchGameScreenState extends ConsumerState<WordMatchGameScreen> {
   final int _maxRounds = 3;
   bool _roundComplete = false;
 
-  // Confetti controller for victory animation
   late ConfettiController _confettiController;
 
   @override
@@ -45,29 +44,23 @@ class _WordMatchGameScreenState extends ConsumerState<WordMatchGameScreen> {
     final allWords = ref.read(dailyWordProvider).valueOrNull ?? [];
 
     if (allWords.isEmpty) {
-      // Fallback if no words are loaded
       return;
     }
 
-    // Shuffle and select 5 random words for this round
     final shuffledWords = List<DailyWord>.from(allWords)..shuffle();
     _gameWords = shuffledWords.take(5).toList();
 
-    // Create separate lists for words and translations
     _wordOptions = _gameWords.map((word) => word.word).toList()..shuffle();
     _translationOptions = _gameWords.map((word) => word.translation).toList()
       ..shuffle();
 
-    // Reset matches
     _selectedMatches = {};
     _draggedWord = null;
     _roundComplete = false;
   }
 
   void _checkRoundCompletion() {
-    // Round is complete if all words have been matched
     if (_selectedMatches.length == _wordOptions.length) {
-      // Count correct matches
       int correctMatches = 0;
       for (int i = 0; i < _gameWords.length; i++) {
         final word = _gameWords[i].word;
@@ -78,12 +71,10 @@ class _WordMatchGameScreenState extends ConsumerState<WordMatchGameScreen> {
         }
       }
 
-      // Update score
       setState(() {
         _score += correctMatches;
         _roundComplete = true;
 
-        // Play confetti if all correct
         if (correctMatches == _wordOptions.length) {
           _confettiController.play();
         }
@@ -98,7 +89,6 @@ class _WordMatchGameScreenState extends ConsumerState<WordMatchGameScreen> {
         _setupGame();
       });
     } else {
-      // Game complete - show results dialog
       _showGameCompleteDialog();
     }
   }
@@ -112,7 +102,7 @@ class _WordMatchGameScreenState extends ConsumerState<WordMatchGameScreen> {
   }
 
   void _showGameCompleteDialog() {
-    final maxPossibleScore = _maxRounds * 5; // 5 words per round
+    final maxPossibleScore = _maxRounds * 5;
     final percentage = (_score / maxPossibleScore * 100).round();
 
     showDialog(

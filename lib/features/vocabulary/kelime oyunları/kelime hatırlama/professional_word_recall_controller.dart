@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../core/game_enums.dart';
-import '../models/game_models.dart';
-import '../data/professional_game_data.dart';
-import '../services/game_audio_service.dart';
-import '../services/achievement_service.dart';
+import '../game_enums.dart';
+import '../game_models.dart';
+import 'professional_game_data.dart';
+import '../game_audio_service.dart';
+import '../../services/achievement_service.dart';
 
 /// Provider for the professional word recall game controller
 final professionalWordRecallControllerProvider = StateNotifierProvider

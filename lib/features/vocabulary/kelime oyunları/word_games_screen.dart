@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'word_matching_game_screen.dart';
-import 'word_recall_levels_screen.dart';
+import 'kelime eşleştirme/word_matching_game_screen.dart';
+import 'kelime hatırlama/word_recall_levels_screen.dart';
 
 class WordGamesScreen extends ConsumerStatefulWidget {
   const WordGamesScreen({super.key});

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-
-import '../controllers/word_recall_game_controller.dart';
-import '../models/word_models.dart';
-import '../themes/game_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'word_recall_game_controller.dart';
+import '../../models/word_models.dart';
+import '../game_theme.dart';
 
 /// Study Phase Widget - Modern and clean design
 class StudyPhaseWidget extends StatelessWidget {
@@ -731,21 +731,33 @@ class CompletePhaseWidget extends StatelessWidget {
       builder: (context) => Row(
         children: [
           Expanded(
+            flex: 2,
             child: OutlinedButton.icon(
               onPressed: () => Navigator.of(context).pop(),
-              icon: const Icon(Icons.home),
-              label: const Text('Ana Menü'),
+              icon: const Icon(Icons.home, size: 16),
+              label: const Text(
+                'Ana Menü',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
+                ),
+                side: BorderSide(
+                  color: colorScheme.outline.withOpacity(0.5),
+                  width: 1.5,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
-            flex: 2,
+            flex: 3,
             child: ElevatedButton.icon(
               onPressed: onNextAction,
               icon: Icon(
@@ -754,19 +766,26 @@ class CompletePhaseWidget extends StatelessWidget {
                         ? Icons.celebration
                         : Icons.arrow_forward)
                     : Icons.skip_next,
+                size: 16,
               ),
               label: Text(
                 isLastExercise
                     ? (controller.isGameCompleted ? 'Bitir' : 'Sonraki Seviye')
                     : 'Sonraki Alıştırma',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: gameTheme.primaryColor,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+                elevation: 2,
               ),
             ),
           ),

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/game_enums.dart';
-import '../models/game_models.dart';
+import '../kelime oyunları/game_enums.dart';
+import '../kelime oyunları/game_models.dart';
 
 /// Provider for the achievement service
 final achievementServiceProvider = Provider<AchievementService>(

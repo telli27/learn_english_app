@@ -1,4 +1,4 @@
-import '../core/game_enums.dart';
+import 'game_enums.dart';
 
 /// A vocabulary word with comprehensive data
 class VocabularyWord {

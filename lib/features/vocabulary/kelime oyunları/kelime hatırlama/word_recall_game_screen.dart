@@ -5,8 +5,8 @@ import 'dart:async';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:confetti/confetti.dart';
 
-import '../controllers/word_recall_game_controller.dart';
-import '../models/word_models.dart';
+import 'word_recall_game_controller.dart';
+import '../../models/word_models.dart';
 
 /// Screen for the word recall game
 class WordRecallGameScreen extends ConsumerStatefulWidget {
@@ -818,7 +818,7 @@ class _WordRecallGameScreenState extends ConsumerState<WordRecallGameScreen> {
                         onPressed: _skipCurrentWord,
                         icon: const Icon(Icons.skip_next, color: Colors.grey),
                         label: const Text(
-                          'Kelimeyi Atla',
+                          'Atla',
                           style: TextStyle(color: Colors.grey),
                         ),
                       ),

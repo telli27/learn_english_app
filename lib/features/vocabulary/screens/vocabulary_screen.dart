@@ -26,7 +26,7 @@ import '../widgets/daily_word_widget.dart';
 import '../widgets/sentence_builder_widget.dart';
 import 'package:intl/intl.dart';
 import 'notification_settings_screen.dart';
-import 'word_games_screen.dart';
+import '../kelime oyunları/word_games_screen.dart';
 
 class VocabularyScreen extends ConsumerWidget {
   const VocabularyScreen({Key? key}) : super(key: key);

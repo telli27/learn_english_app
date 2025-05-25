@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'word_matching_game_screen.dart';
+import '../kelime oyunları/kelime eşleştirme/word_matching_game_screen.dart';
 
 class LevelSelectionScreen extends ConsumerWidget {
   const LevelSelectionScreen({super.key});

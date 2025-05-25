@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/game_enums.dart';
-import '../models/game_models.dart';
+import '../game_enums.dart';
+import '../game_models.dart';
 
 /// Provider for the professional game data repository
 final professionalGameDataProvider = Provider<ProfessionalGameDataRepository>(

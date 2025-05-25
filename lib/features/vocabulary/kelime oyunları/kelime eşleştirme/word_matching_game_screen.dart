@@ -5,8 +5,8 @@ import 'dart:async';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:confetti/confetti.dart';
 
-import '../controllers/word_matching_game_controller.dart';
-import '../models/word_models.dart';
+import 'word_matching_game_controller.dart';
+import '../../models/word_models.dart';
 
 /// Screen for the word matching game
 class WordMatchingGameScreen extends ConsumerStatefulWidget {
