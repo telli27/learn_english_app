@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
 import 'package:confetti/confetti.dart';
 import '../game_enums.dart';
 import '../game_models.dart';
 import 'professional_word_recall_controller.dart';
+import '../../../../core/services/ad_service.dart';
 
 /// Professional Word Recall Game Screen with modern design
 class ProfessionalWordRecallScreen extends ConsumerStatefulWidget {
@@ -42,12 +44,21 @@ class _ProfessionalWordRecallScreenState
   final TextEditingController _inputController = TextEditingController();
   final FocusNode _inputFocusNode = FocusNode();
 
+  // Ad service instance
+  final AdService _adService = AdService();
+
+  // Ad state tracking
+  bool _isShowingAd = false;
+
   @override
   void initState() {
     super.initState();
     _initializeAnimations();
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 3));
+
+    // Load interstitial ad when screen initializes
+    _loadInterstitialAdForGame();
   }
 
   void _initializeAnimations() {
@@ -179,7 +190,7 @@ class _ProfessionalWordRecallScreenState
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => _showAdAndNavigateBack(),
                       icon: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -400,6 +411,29 @@ class _ProfessionalWordRecallScreenState
 
   Widget _buildGameContent(
       RecallGameState gameState, ProfessionalWordRecallController controller) {
+    // Don't show game content if ad is showing
+    if (_isShowingAd) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Reklam gösteriliyor...',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return AnimatedBuilder(
       animation: _slideAnimation,
       builder: (context, child) {
@@ -1462,7 +1496,7 @@ class _ProfessionalWordRecallScreenState
                     ],
                   ),
                   child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => _showAdAndNavigateBack(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       foregroundColor: Colors.grey[700],
@@ -1517,7 +1551,7 @@ class _ProfessionalWordRecallScreenState
                     ],
                   ),
                   child: ElevatedButton(
-                    onPressed: () => controller.completeExercise(),
+                    onPressed: () => _showAdAndMoveToNext(controller),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       foregroundColor: Colors.white,
@@ -1805,7 +1839,7 @@ class _ProfessionalWordRecallScreenState
                         ],
                       ),
                       child: ElevatedButton.icon(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => _showAdAndNavigateBack(),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           foregroundColor: Color(widget.difficulty.colorValue),
@@ -1838,7 +1872,7 @@ class _ProfessionalWordRecallScreenState
                             Border.all(color: Colors.white.withOpacity(0.3)),
                       ),
                       child: ElevatedButton.icon(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => _showAdAndNavigateBack(),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           foregroundColor: Colors.white,
@@ -1873,7 +1907,7 @@ class _ProfessionalWordRecallScreenState
                                   color: Colors.white.withOpacity(0.3)),
                             ),
                             child: ElevatedButton(
-                              onPressed: () => Navigator.pop(context),
+                              onPressed: () => _showAdAndNavigateBack(),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.transparent,
                                 foregroundColor: Colors.white,
@@ -1927,7 +1961,7 @@ class _ProfessionalWordRecallScreenState
                               ],
                             ),
                             child: ElevatedButton(
-                              onPressed: () => controller.moveToNextExercise(),
+                              onPressed: () => _showAdAndMoveToNext(controller),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.transparent,
                                 foregroundColor:
@@ -2248,22 +2282,92 @@ class _ProfessionalWordRecallScreenState
   }
 
   /// Change to a different exercise
-  void _changeExercise(
-      ProfessionalWordRecallController controller, int exerciseIndex) {
-    // Gerçek alıştırma değiştirme
-    controller.changeToExercise(exerciseIndex);
+  Future<void> _changeExercise(
+      ProfessionalWordRecallController controller, int exerciseIndex) async {
+    // Show ad before changing exercise
+    if (_isShowingAd) return; // Prevent multiple ad calls
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Alıştırma ${exerciseIndex + 1} başlatıldı'),
-        backgroundColor: Color(widget.difficulty.colorValue),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+    _isShowingAd = true;
+    try {
+      debugPrint(
+          'Starting to show game interstitial ad before exercise change...');
+      await _adService.showInterstitialAdPlayGame();
+      debugPrint('Game interstitial ad completed before exercise change');
+    } catch (e) {
+      debugPrint('Failed to show game interstitial ad: $e');
+    } finally {
+      _isShowingAd = false;
+
+      // Change exercise only after ad is fully completed
+      controller.changeToExercise(exerciseIndex);
+
+      // Load next ad for the new exercise
+      _loadInterstitialAdForGame();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Alıştırma ${exerciseIndex + 1} başlatıldı'),
+          backgroundColor: Color(widget.difficulty.colorValue),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          duration: const Duration(seconds: 2),
         ),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+      );
+    }
+  }
+
+  // Load interstitial ad for showing after exercise completion (game specific)
+  Future<void> _loadInterstitialAdForGame() async {
+    try {
+      await _adService.loadInterstitialAdForGame();
+      debugPrint('Game interstitial ad loaded for word recall exercise');
+    } catch (e) {
+      debugPrint('Failed to load game interstitial ad: $e');
+    }
+  }
+
+  // Show interstitial ad and navigate back to main menu
+  Future<void> _showAdAndNavigateBack() async {
+    if (_isShowingAd) return; // Prevent multiple ad calls
+
+    _isShowingAd = true;
+    try {
+      debugPrint('Starting to show game interstitial ad...');
+      await _adService.showInterstitialAdPlayGame();
+      debugPrint('Game interstitial ad completed after exercise completion');
+    } catch (e) {
+      debugPrint('Failed to show game interstitial ad: $e');
+    } finally {
+      _isShowingAd = false;
+      // Navigate back only after ad is fully completed
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    }
+  }
+
+  // Show interstitial ad and move to next exercise
+  Future<void> _showAdAndMoveToNext(
+      ProfessionalWordRecallController controller) async {
+    if (_isShowingAd) return; // Prevent multiple ad calls
+
+    _isShowingAd = true;
+    try {
+      debugPrint(
+          'Starting to show game interstitial ad before next exercise...');
+      await _adService.showInterstitialAdPlayGame();
+      debugPrint('Game interstitial ad completed before next exercise');
+    } catch (e) {
+      debugPrint('Failed to show game interstitial ad: $e');
+    } finally {
+      _isShowingAd = false;
+      // Move to next exercise only after ad is fully completed
+      controller.moveToNextExercise();
+      // Load next ad for the upcoming exercise
+      _loadInterstitialAdForGame();
+    }
   }
 }
 

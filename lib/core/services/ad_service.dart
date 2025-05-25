@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -79,7 +80,7 @@ class AdService {
 
   // Geçiş reklamını göster
   Future<void> showInterstitialAd() async {
-   if (RevenueCatIntegrationService.instance.isPremium.value) return;
+    if (RevenueCatIntegrationService.instance.isPremium.value) return;
 
     if (_interstitialAdCount >= _adConfig.maxImpression) {
       debugPrint(
@@ -113,6 +114,80 @@ class AdService {
     );
 
     await _interstitialAd!.show();
+  }
+
+  // Geçiş reklamını göster (Oyunlar için - limit yok)
+  Future<void> showInterstitialAdPlayGame() async {
+    if (RevenueCatIntegrationService.instance.isPremium.value) return;
+
+    if (_interstitialAd == null) {
+      debugPrint('Interstitial ad not ready, loading...');
+      await loadInterstitialAdForGame();
+      // Reklam yüklendikten sonra tekrar dene
+      if (_interstitialAd != null) {
+        await showInterstitialAdPlayGame();
+      }
+      return;
+    }
+
+    // Completer to wait for ad to be fully dismissed
+    final Completer<void> adCompleter = Completer<void>();
+
+    _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (ad) {
+        ad.dispose();
+        _interstitialAd = null;
+        debugPrint('Game interstitial ad dismissed');
+        loadInterstitialAdForGame(); // Pre-load next ad
+
+        // Complete the future when ad is dismissed
+        if (!adCompleter.isCompleted) {
+          adCompleter.complete();
+        }
+      },
+      onAdFailedToShowFullScreenContent: (ad, error) {
+        debugPrint('Game interstitial ad failed to show: $error');
+        ad.dispose();
+        _interstitialAd = null;
+        loadInterstitialAdForGame();
+
+        // Complete the future even if ad failed
+        if (!adCompleter.isCompleted) {
+          adCompleter.complete();
+        }
+      },
+      onAdShowedFullScreenContent: (ad) {
+        debugPrint('Game interstitial ad showed');
+      },
+    );
+
+    await _interstitialAd!.show();
+
+    // Wait for the ad to be fully dismissed before returning
+    await adCompleter.future;
+    debugPrint('Game interstitial ad process completed');
+  }
+
+  // Oyunlar için reklam yükle (limit yok)
+  Future<void> loadInterstitialAdForGame() async {
+    final adUnitId = _adConfig.interstitialAdUnitId;
+    debugPrint(
+        'Loading game interstitial ad with ID: $adUnitId (platform: ${_adConfig.platform}, isTestMode: ${_adConfig.isTestMode})');
+
+    await InterstitialAd.load(
+      adUnitId: adUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          debugPrint('Game interstitial ad loaded');
+          _interstitialAd = ad;
+        },
+        onAdFailedToLoad: (error) {
+          debugPrint('Game interstitial ad failed to load: $error');
+          _interstitialAd = null;
+        },
+      ),
+    );
   }
 
   // Ödüllü reklam yükle
