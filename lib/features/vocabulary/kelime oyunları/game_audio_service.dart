@@ -49,6 +49,36 @@ class GameAudioService {
       case SoundEffect.transition:
         HapticFeedback.mediumImpact();
         break;
+      case SoundEffect.gameStart:
+        HapticFeedback.mediumImpact();
+        break;
+      case SoundEffect.timeUp:
+        HapticFeedback.heavyImpact();
+        break;
+      case SoundEffect.wordSelect:
+        HapticFeedback.lightImpact();
+        break;
+      case SoundEffect.wordDeselect:
+        HapticFeedback.selectionClick();
+        break;
+      case SoundEffect.clear:
+        HapticFeedback.mediumImpact();
+        break;
+      case SoundEffect.hint:
+        HapticFeedback.lightImpact();
+        break;
+      case SoundEffect.partialCorrect:
+        HapticFeedback.lightImpact();
+        break;
+      case SoundEffect.pause:
+        HapticFeedback.selectionClick();
+        break;
+      case SoundEffect.resume:
+        HapticFeedback.selectionClick();
+        break;
+      case SoundEffect.restart:
+        HapticFeedback.mediumImpact();
+        break;
     }
   }
 

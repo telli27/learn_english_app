@@ -5,6 +5,7 @@ import 'kelime eşleştirme/word_matching_game_screen.dart';
 import 'kelime eşleştirme/word_matching_levels_screen.dart';
 import 'kelime hatırlama/word_recall_levels_screen.dart';
 import 'cümle tamamlama/sentence_completion_levels_screen.dart';
+import 'cümle kurma/sentence_building_levels_screen.dart';
 
 class WordGamesScreen extends ConsumerStatefulWidget {
   const WordGamesScreen({super.key});
@@ -39,6 +40,14 @@ class _WordGamesScreenState extends ConsumerState<WordGamesScreen> {
           'Eksik kelimeleri doldurarak cümle kurma yeteneğinizi geliştirin',
       'icon': Icons.format_align_left,
       'color': Color(0xFFFF7675),
+    },
+    {
+      'id': 'sentence_building',
+      'title': 'Cümle Kurma',
+      'description':
+          'Verilen kelimelerden doğru cümle kurarak gramer bilginizi pekiştirin',
+      'icon': Icons.construction,
+      'color': Color(0xFF74B9FF),
     },
   ];
 
@@ -284,6 +293,15 @@ class _WordGamesScreenState extends ConsumerState<WordGamesScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => const SentenceCompletionLevelsScreen(),
+          ),
+        );
+        break;
+      case 'sentence_building':
+        // Navigate to sentence building levels screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const SentenceBuildingLevelsScreen(),
           ),
         );
         break;

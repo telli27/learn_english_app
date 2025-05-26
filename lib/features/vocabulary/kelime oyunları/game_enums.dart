@@ -65,7 +65,11 @@ enum AchievementType {
   speedMaster('Hız Ustası', 'Zamanın yarısında tamamladın'),
   streak('Seri', 'Ardışık doğru cevaplar'),
   levelComplete('Seviye Tamamı', 'Seviyeyi tamamladın'),
-  dedication('Azim', 'Günlük hedefine ulaştın');
+  dedication('Azim', 'Günlük hedefine ulaştın'),
+  perfectLevel(
+      'Mükemmel Seviye', 'Seviyedeki tüm alıştırmaları mükemmel yaptın'),
+  speedDemon('Hız Şeytanı', 'Ortalama 30 saniyenin altında tamamladın'),
+  noHints('İpucu Yok', 'Hiç ipucu kullanmadan tamamladın');
 
   const AchievementType(this.title, this.description);
 
@@ -82,7 +86,17 @@ enum SoundEffect {
   levelComplete,
   buttonTap,
   wordReveal,
-  transition
+  transition,
+  gameStart,
+  timeUp,
+  wordSelect,
+  wordDeselect,
+  clear,
+  hint,
+  partialCorrect,
+  pause,
+  resume,
+  restart
 }
 
 /// Animation types for UI feedback

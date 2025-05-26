@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io';
 import 'package:revenue_cat_integration/service/revenue_cat_integration_service.dart';
 
-import 'sentence_completion_data.dart';
+import 'enhanced_sentence_completion_data.dart';
 import 'sentence_completion_game_screen.dart';
 import '../../../../core/services/ad_service.dart';
 
@@ -128,7 +128,7 @@ class _SentenceCompletionLevelsScreenState
     final textColor = isDarkMode ? Colors.white : const Color(0xFF2C3550);
 
     // Get levels data
-    final levels = SentenceCompletionData.getLevels();
+    final levels = EnhancedSentenceCompletionData.getLevels();
 
     return Scaffold(
       backgroundColor: backgroundColor,

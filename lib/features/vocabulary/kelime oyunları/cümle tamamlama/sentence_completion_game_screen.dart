@@ -5,7 +5,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:confetti/confetti.dart';
 
 import 'sentence_completion_controller.dart';
-import 'sentence_completion_data.dart';
+import 'enhanced_sentence_completion_data.dart';
 import '../../../../core/services/ad_service.dart';
 
 /// Screen for the sentence completion game

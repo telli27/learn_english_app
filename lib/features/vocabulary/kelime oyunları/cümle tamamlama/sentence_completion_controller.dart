@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'sentence_completion_data.dart';
+import 'enhanced_sentence_completion_data.dart';
 
 /// Game state class to hold all the sentence completion game data
 class SentenceCompletionGameState {
@@ -127,14 +127,14 @@ class SentenceCompletionGameController
   SentenceCompletionGameController({
     required this.initialLevelId,
     required this.ref,
-  })  : _levels = SentenceCompletionData.getLevels(),
+  })  : _levels = EnhancedSentenceCompletionData.getLevels(),
         super(_createInitialState(initialLevelId)) {
     _initializeGame();
   }
 
   /// Create initial state
   static SentenceCompletionGameState _createInitialState(int initialLevelId) {
-    final levels = SentenceCompletionData.getLevels();
+    final levels = EnhancedSentenceCompletionData.getLevels();
     final currentLevel = levels.firstWhere(
       (level) => level.id == initialLevelId,
       orElse: () => levels.first,

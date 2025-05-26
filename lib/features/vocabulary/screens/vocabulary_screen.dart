@@ -88,18 +88,7 @@ class VocabularyScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(16.0),
           child: ListView(
             children: [
-              // Streak counter and daily goal
-              _buildStreakWidget(
-                  context, 7, 10, isDark, accentColor, cardColor, textColor),
-
-              const SizedBox(height: 20),
-
-              // Daily Word section
-              _buildDailyWordWidget(context, isDark, accentColor, cardColor,
-                  textColor, secondaryTextColor),
-
-              const SizedBox(height: 20),
-
+            
               // Flashcards Card
               _buildMenuCard(
                 context: context,
@@ -164,27 +153,7 @@ class VocabularyScreen extends ConsumerWidget {
                 },
               ),
 
-              const SizedBox(height: 20),
-
-              // Sentence Builder Card
-              _buildMenuCard(
-                context: context,
-                title: 'Cümle Kurma',
-                subtitle: 'Kelimelerden anlamlı cümleler oluşturun',
-                icon: Icons.format_quote,
-                gradient: [
-                  const Color(0xFF26DE81), // Green
-                  const Color(0xFF20BD72), // Darker green
-                ],
-                onTap: () {
-                  // TODO: Navigate to sentence builder screen
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Cümle kurma yakında eklenecek!'),
-                    ),
-                  );
-                },
-              ),
+          
 
               const SizedBox(height: 20),
 
