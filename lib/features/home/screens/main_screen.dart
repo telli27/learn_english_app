@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../core/utils/constants/colors.dart';
-import '../../../screens/sentence_practice_screen.dart';
 import 'home_screen.dart';
 import '../../../features/settings/screens/settings_screen.dart';
 import '../../../auth/providers/auth_provider.dart';
@@ -190,7 +189,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   final List<Widget> _screens = [
     HomeScreen(),
-    SentencePracticeScreen(),
     DailyPhrasesScreen(),
     VocabularyScreen(), 
     SettingsScreen(),
@@ -246,11 +244,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w400),
             items: [
               _buildNavItem(Icons.home_rounded, 'Anasayfa', 0),
-              _buildNavItem(Icons.text_fields_rounded, 'Cümle Kurma', 1),
-              _buildNavItem(Icons.chat_bubble_outline, 'Konuşma', 2),
+              _buildNavItem(Icons.chat_bubble_outline, 'Konuşma', 1),
               _buildNavItem(Icons.menu_book_rounded, 'Kelimeler',
-                  3), // Added vocabulary nav item
-              _buildNavItem(Icons.settings_rounded, 'Ayarlar', 4),
+                  2), // Added vocabulary nav item
+              _buildNavItem(Icons.settings_rounded, 'Ayarlar', 3),
             ],
           ),
         ),

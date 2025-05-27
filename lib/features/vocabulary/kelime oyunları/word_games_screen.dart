@@ -115,7 +115,7 @@ class _WordGamesScreenState extends ConsumerState<WordGamesScreen> {
           ),
 
           // Coming soon section
-          Padding(
+         /* Padding(
             padding: const EdgeInsets.all(16),
             child: Container(
               width: double.infinity,
@@ -163,7 +163,7 @@ class _WordGamesScreenState extends ConsumerState<WordGamesScreen> {
                 ],
               ),
             ),
-          ),
+          ),*/
         ],
       ),
     );

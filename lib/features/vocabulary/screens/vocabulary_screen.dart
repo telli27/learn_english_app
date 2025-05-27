@@ -14,19 +14,17 @@ import '../../../auth/providers/auth_provider.dart';
 import '../../../core/providers/topic_progress_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/flashcard.dart';
-import '../providers/flashcard_provider.dart';
 import '../providers/daily_word_provider.dart';
 import '../providers/study_progress_provider.dart';
 import '../providers/sentence_builder_provider.dart';
 import '../widgets/flashcard_widget.dart';
 import '../widgets/category_filter.dart';
-import '../widgets/quiz_widget.dart';
 import '../widgets/custom_card_form.dart';
-import '../widgets/daily_word_widget.dart';
 import '../widgets/sentence_builder_widget.dart';
 import 'package:intl/intl.dart';
 import 'notification_settings_screen.dart';
 import '../kelime oyunları/word_games_screen.dart';
+import '../listening_practice/screens/listening_practice_screen.dart';
 
 class VocabularyScreen extends ConsumerWidget {
   const VocabularyScreen({Key? key}) : super(key: key);
@@ -88,7 +86,6 @@ class VocabularyScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(16.0),
           child: ListView(
             children: [
-            
               // Flashcards Card
               _buildMenuCard(
                 context: context,
@@ -99,14 +96,7 @@ class VocabularyScreen extends ConsumerWidget {
                   accentColor,
                   accentColor.withOpacity(0.8),
                 ],
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const FlashcardsScreen(),
-                    ),
-                  );
-                },
+                onTap: () {},
               ),
 
               const SizedBox(height: 20),
@@ -121,14 +111,7 @@ class VocabularyScreen extends ConsumerWidget {
                   const Color(0xFF8C64F5), // Purple
                   const Color(0xFF6A4AE3), // Darker purple
                 ],
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const QuizScreen(),
-                    ),
-                  );
-                },
+                onTap: () {},
               ),
 
               const SizedBox(height: 20),
@@ -153,8 +136,6 @@ class VocabularyScreen extends ConsumerWidget {
                 },
               ),
 
-          
-
               const SizedBox(height: 20),
 
               // Listening Practice Card
@@ -168,10 +149,10 @@ class VocabularyScreen extends ConsumerWidget {
                   const Color(0xFFFA8231), // Darker orange
                 ],
                 onTap: () {
-                  // TODO: Navigate to listening practice screen
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Dinleme pratiği yakında eklenecek!'),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ListeningPracticeScreen(),
                     ),
                   );
                 },
@@ -615,450 +596,6 @@ class VocabularyScreen extends ConsumerWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// Separate screen for flashcards
-class FlashcardsScreen extends ConsumerStatefulWidget {
-  const FlashcardsScreen({Key? key}) : super(key: key);
-
-  @override
-  ConsumerState<FlashcardsScreen> createState() => _FlashcardsScreenState();
-}
-
-class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
-  int _currentIndex = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final flashcardsAsync = ref.watch(filteredFlashcardsProvider);
-
-    // Define custom color scheme
-    final primaryColor = const Color(0xFF5E73E1);
-    final secondaryColor = const Color(0xFFED6B5B);
-    final backgroundColor =
-        isDark ? const Color(0xFF303952) : const Color(0xFFF7F9FC);
-    final textColor = isDark ? Colors.white : const Color(0xFF2C3A47);
-    final subtleColor = const Color(0xFF8395A7);
-
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(
-          'Kelime Kartları',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: textColor,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: isDark ? Colors.black12 : Colors.white.withOpacity(0.9),
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: IconButton(
-            icon: Icon(
-              Icons.arrow_back,
-              color: subtleColor,
-            ),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ),
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [
-              backgroundColor,
-              isDark ? const Color(0xFF222f52) : const Color(0xFFEBF3FA),
-            ],
-          ),
-        ),
-        child: Stack(
-          children: [
-            // Background pattern
-            Positioned.fill(
-              child: CustomPaint(
-                painter: BackgroundPatternPainter(
-                  primaryColor: primaryColor.withOpacity(0.03),
-                  secondaryColor: secondaryColor.withOpacity(0.03),
-                  isDark: isDark,
-                ),
-              ),
-            ),
-
-            // Main content
-            SafeArea(
-              child: flashcardsAsync.when(
-                data: (flashcards) {
-                  if (flashcards.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.menu_book,
-                            size: 64,
-                            color: subtleColor.withOpacity(0.5),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Bu kategoride kelime kartı bulunmamaktadır',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: subtleColor,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return Column(
-                    children: [
-                      // Flashcard
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: FlashcardWidget(
-                            flashcard: flashcards[_currentIndex],
-                            accentColor: primaryColor,
-                            backgroundColor:
-                                isDark ? const Color(0xFF252B43) : Colors.white,
-                          ),
-                        ),
-                      ),
-
-                      // Card progress and controls
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                        child: Column(
-                          children: [
-                            // Progress indicator
-                            Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              width: MediaQuery.of(context).size.width * 0.8,
-                              height: 5,
-                              decoration: BoxDecoration(
-                                color: subtleColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(3),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.8 *
-                                        ((_currentIndex + 1) /
-                                            flashcards.length),
-                                    decoration: BoxDecoration(
-                                      color: primaryColor,
-                                      borderRadius: BorderRadius.circular(3),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // Text indicator
-                            Text(
-                              '${_currentIndex + 1} / ${flashcards.length}',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: subtleColor,
-                              ),
-                            ),
-
-                            const SizedBox(height: 24),
-
-                            // Navigation buttons
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                // Previous button
-                                _buildNavigationButton(
-                                  icon: Icons.arrow_back_ios_rounded,
-                                  enabled: _currentIndex > 0,
-                                  onPressed: _currentIndex > 0
-                                      ? () => setState(() => _currentIndex--)
-                                      : null,
-                                  isDark: isDark,
-                                  accentColor: primaryColor,
-                                  backgroundColor: backgroundColor,
-                                  subtleColor: subtleColor,
-                                ),
-
-                                // Shuffle button
-                                ElevatedButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      if (flashcards.length > 1) {
-                                        int newIndex;
-                                        do {
-                                          newIndex = Random()
-                                              .nextInt(flashcards.length);
-                                        } while (newIndex == _currentIndex);
-                                        _currentIndex = newIndex;
-                                      }
-                                    });
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: primaryColor,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 24, vertical: 14),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    elevation: 2,
-                                  ),
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.shuffle, size: 18),
-                                      SizedBox(width: 10),
-                                      Text(
-                                        'Karıştır',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                // Next button
-                                _buildNavigationButton(
-                                  icon: Icons.arrow_forward_ios_rounded,
-                                  enabled:
-                                      _currentIndex < flashcards.length - 1,
-                                  onPressed: _currentIndex <
-                                          flashcards.length - 1
-                                      ? () => setState(() => _currentIndex++)
-                                      : null,
-                                  isDark: isDark,
-                                  accentColor: primaryColor,
-                                  backgroundColor: backgroundColor,
-                                  subtleColor: subtleColor,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                },
-                loading: () => Center(
-                  child: CircularProgressIndicator(
-                    color: primaryColor,
-                  ),
-                ),
-                error: (_, __) => Center(
-                  child: Text(
-                    'Kelime kartları yüklenemedi',
-                    style: TextStyle(
-                      color: subtleColor,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavigationButton({
-    required IconData icon,
-    required bool enabled,
-    required VoidCallback? onPressed,
-    required bool isDark,
-    required Color accentColor,
-    required Color backgroundColor,
-    required Color subtleColor,
-  }) {
-    final buttonColor = enabled
-        ? isDark
-            ? const Color(0xFF252B43)
-            : Colors.white
-        : backgroundColor.withOpacity(0.5);
-
-    final iconColor = enabled ? accentColor : subtleColor.withOpacity(0.4);
-
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: buttonColor,
-        foregroundColor: iconColor,
-        shape: const CircleBorder(),
-        padding: const EdgeInsets.all(16),
-        elevation: enabled ? 2 : 0,
-      ),
-      child: Icon(icon, size: 20),
-    );
-  }
-}
-
-// Background pattern painter for the screen
-class BackgroundPatternPainter extends CustomPainter {
-  final Color primaryColor;
-  final Color secondaryColor;
-  final bool isDark;
-
-  BackgroundPatternPainter({
-    required this.primaryColor,
-    required this.secondaryColor,
-    required this.isDark,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Create dots pattern
-    final dotPaint = Paint()
-      ..color = primaryColor
-      ..strokeWidth = 1
-      ..style = PaintingStyle.fill;
-
-    final spacing = 30.0;
-
-    // Draw dots pattern
-    for (double x = 0; x < size.width; x += spacing) {
-      for (double y = 0; y < size.height; y += spacing) {
-        if ((x / spacing).floor() % 2 == (y / spacing).floor() % 2) {
-          canvas.drawCircle(Offset(x, y), 1.2, dotPaint);
-        }
-      }
-    }
-
-    // Draw decorative elements
-    final decorPaint = Paint()
-      ..color = secondaryColor
-      ..style = PaintingStyle.fill;
-
-    // Top right blob
-    canvas.drawCircle(
-        Offset(size.width * 0.9, size.height * 0.15), 100, decorPaint);
-
-    // Bottom left blob
-    canvas.drawCircle(
-        Offset(size.width * 0.1, size.height * 0.85), 80, decorPaint);
-  }
-
-  @override
-  bool shouldRepaint(BackgroundPatternPainter oldDelegate) =>
-      oldDelegate.primaryColor != primaryColor ||
-      oldDelegate.secondaryColor != secondaryColor ||
-      oldDelegate.isDark != isDark;
-}
-
-// Separate screen for quiz
-class QuizScreen extends ConsumerWidget {
-  const QuizScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final flashcardsAsync = ref.watch(filteredFlashcardsProvider);
-
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(
-          'Quiz',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: isDark ? Colors.black38 : Colors.white70,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: IconButton(
-            icon: Icon(
-              Icons.arrow_back,
-              color: isDark ? Colors.white70 : Colors.black54,
-            ),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ),
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: isDark
-              ? const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF242424), Color(0xFF1A1A1A)],
-                )
-              : LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.purple.shade50, Colors.white],
-                ),
-        ),
-        child: SafeArea(
-          child: flashcardsAsync.when(
-            data: (flashcards) {
-              if (flashcards.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.quiz,
-                        size: 64,
-                        color: isDark ? Colors.white38 : Colors.black26,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Quiz için kelime kartı bulunamadı',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: isDark ? Colors.white70 : Colors.black54,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                );
-              }
-
-              return QuizWidget(flashcards: flashcards);
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => Center(
-              child: Text(
-                'Kelime kartları yüklenemedi',
-                style: TextStyle(
-                  color: isDark ? Colors.white70 : Colors.black54,
-                ),
-              ),
-            ),
-          ),
         ),
       ),
     );
