@@ -57,6 +57,7 @@ dependencies:
       url: https://github.com/huseyinuckun/revenuecat_integration.git
       ref: master
   flutter_tts: ^4.2.2
+  hugeicons: ^0.0.11
 
 
 

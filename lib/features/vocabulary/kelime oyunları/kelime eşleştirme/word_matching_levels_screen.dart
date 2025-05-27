@@ -707,17 +707,12 @@ class _WordMatchingLevelsScreenState extends State<WordMatchingLevelsScreen>
                             ],
                           ),
                           child: TextButton.icon(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              // TODO: Navigate to premium subscription page
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content:
-                                      Text('Premium abonelik sayfası açılacak'),
-                                  backgroundColor: Colors.orange,
-                                ),
-                              );
-                            },
+                            onPressed: () async {
+                          Navigator.pop(context);
+                          // Navigate to premium purchase screen
+                          await RevenueCatIntegrationService.instance
+                              .goToSubscriptionPage(context);
+                        },
                             icon: const Icon(
                               Icons.star,
                               color: Color(0xFF667eea),

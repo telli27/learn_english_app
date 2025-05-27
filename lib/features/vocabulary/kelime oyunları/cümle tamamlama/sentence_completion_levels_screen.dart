@@ -619,10 +619,12 @@ class _SentenceCompletionLevelsScreenState
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        // TODO: Navigate to subscription screen
-                      },
+                      onPressed: () async {
+                          Navigator.pop(context);
+                          // Navigate to premium purchase screen
+                          await RevenueCatIntegrationService.instance
+                              .goToSubscriptionPage(context);
+                        },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: primaryColor,

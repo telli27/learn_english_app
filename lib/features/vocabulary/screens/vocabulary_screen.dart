@@ -149,12 +149,19 @@ class VocabularyScreen extends ConsumerWidget {
                   const Color(0xFFFA8231), // Darker orange
                 ],
                 onTap: () {
-                  Navigator.push(
+                    ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content:
+                                      Text('Çok Yakında'),
+                                  backgroundColor: Colors.orange,
+                                ),
+                              );
+                 /* Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => const ListeningPracticeScreen(),
                     ),
-                  );
+                  );*/
                 },
               ),
             ],

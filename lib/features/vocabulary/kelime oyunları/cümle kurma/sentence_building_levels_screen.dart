@@ -12,7 +12,6 @@ import 'sentence_building_data.dart';
 import 'sentence_building_game_screen.dart';
 import '../../../../core/services/ad_service.dart';
 
-/// Modern and beautiful screen for displaying sentence building game levels
 class SentenceBuildingLevelsScreen extends ConsumerStatefulWidget {
   const SentenceBuildingLevelsScreen({super.key});
 
@@ -24,16 +23,12 @@ class SentenceBuildingLevelsScreen extends ConsumerStatefulWidget {
 class _SentenceBuildingLevelsScreenState
     extends ConsumerState<SentenceBuildingLevelsScreen>
     with TickerProviderStateMixin {
-  /// Firebase premium status
   bool _isPremiumRequired = false;
 
-  /// Loading states
   bool _isLoadingFirebase = true;
 
-  /// Ad service
   final AdService _adService = AdService();
 
-  /// Animation controllers
   late AnimationController _headerAnimationController;
   late AnimationController _cardsAnimationController;
   late Animation<double> _headerAnimation;
@@ -54,7 +49,6 @@ class _SentenceBuildingLevelsScreenState
     super.dispose();
   }
 
-  /// Initialize animations
   void _initializeAnimations() {
     _headerAnimationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -74,19 +68,16 @@ class _SentenceBuildingLevelsScreenState
       curve: Curves.easeOutCubic,
     );
 
-    // Start animations
     _headerAnimationController.forward();
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) _cardsAnimationController.forward();
     });
   }
 
-  /// Load premium status from Firebase
   Future<void> _loadPremiumStatus() async {
     await _loadFirebasePremiumStatus();
   }
 
-  /// Load premium status from Firebase
   Future<void> _loadFirebasePremiumStatus() async {
     try {
       final doc = await FirebaseFirestore.instance
@@ -115,41 +106,33 @@ class _SentenceBuildingLevelsScreenState
     }
   }
 
-  /// Check if premium features should be locked
-  /// Returns true if features should be locked (user needs premium)
   bool _shouldLockPremiumFeatures() {
-    // If not on Android platform, don't check RevenueCat
     if (!kIsWeb && !Platform.isAndroid) {
       debugPrint(
           'Not on Android platform, using Firebase isPremium: $_isPremiumRequired');
       return _isPremiumRequired;
     }
 
-    // If Firebase says premium is not required, don't lock
     if (!_isPremiumRequired) {
       debugPrint('Firebase isPremium is false, features unlocked');
       return false;
     }
 
-    // Firebase says premium is required, check RevenueCat subscription
     final hasRevenueCatPremium =
         RevenueCatIntegrationService.instance.isPremium.value;
     debugPrint(
         'Firebase isPremium: $_isPremiumRequired, RevenueCat isPremium: $hasRevenueCatPremium');
 
-    // If user has active subscription, don't lock
     if (hasRevenueCatPremium) {
       debugPrint('User has RevenueCat subscription, features unlocked');
       return false;
     }
 
-    // Firebase requires premium AND user doesn't have subscription = lock features
     debugPrint(
         'Premium required but user has no subscription, features locked');
     return true;
   }
 
-  /// Load interstitial ad
   Future<void> _loadInterstitialAd() async {
     try {
       await _adService.loadInterstitialAd();
@@ -164,14 +147,12 @@ class _SentenceBuildingLevelsScreenState
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    // Enhanced theme colors with gradients
     final primaryColor = const Color(0xFF8B5CF6);
     final secondaryColor = const Color(0xFF7C3AED);
     final accentColor = const Color(0xFF6366F1);
     final backgroundColor =
         isDarkMode ? const Color(0xFF0F0F23) : const Color(0xFFF8FAFC);
 
-    // Get levels data
     final levels = SentenceBuildingDataRepository.getAllLevels();
 
     return Scaffold(
@@ -195,7 +176,6 @@ class _SentenceBuildingLevelsScreenState
             ),
           ),
 
-          // Enhanced levels grid
           SliverPadding(
             padding: const EdgeInsets.all(20),
             sliver: AnimatedBuilder(
@@ -231,7 +211,6 @@ class _SentenceBuildingLevelsScreenState
             ),
           ),
 
-          // Bottom spacing
           const SliverToBoxAdapter(
             child: SizedBox(height: 40),
           ),
@@ -240,7 +219,6 @@ class _SentenceBuildingLevelsScreenState
     );
   }
 
-  /// Build enhanced animated header
   Widget _buildEnhancedHeader(
     Color primaryColor,
     Color secondaryColor,
@@ -278,7 +256,6 @@ class _SentenceBuildingLevelsScreenState
       ),
       child: Stack(
         children: [
-          // Animated background pattern
           Positioned.fill(
             child: CustomPaint(
               painter: _GeometricPatternPainter(
@@ -286,15 +263,12 @@ class _SentenceBuildingLevelsScreenState
               ),
             ),
           ),
-
-          // Content
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Navigation and title
                   Row(
                     children: [
                       Container(
@@ -338,10 +312,7 @@ class _SentenceBuildingLevelsScreenState
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 24),
-
-                  // Description with enhanced styling
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -394,10 +365,7 @@ class _SentenceBuildingLevelsScreenState
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
-                  // Enhanced stats row
                   Row(
                     children: [
                       Expanded(
@@ -434,7 +402,6 @@ class _SentenceBuildingLevelsScreenState
     );
   }
 
-  /// Build enhanced stat chip
   Widget _buildEnhancedStatChip({
     required IconData icon,
     required String label,
@@ -472,7 +439,6 @@ class _SentenceBuildingLevelsScreenState
     );
   }
 
-  /// Build enhanced level card with modern design
   Widget _buildEnhancedLevelCard({
     required SentenceBuildingLevel level,
     required Color primaryColor,
@@ -519,7 +485,6 @@ class _SentenceBuildingLevelsScreenState
             ),
             child: Stack(
               children: [
-                // Background gradient overlay
                 if (!isLocked)
                   Positioned.fill(
                     child: Container(
@@ -536,17 +501,13 @@ class _SentenceBuildingLevelsScreenState
                       ),
                     ),
                   ),
-
-                // Content
                 Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header with icon and difficulty
                       Row(
                         children: [
-                          // Enhanced level icon
                           Container(
                             width: 64,
                             height: 64,
@@ -606,10 +567,7 @@ class _SentenceBuildingLevelsScreenState
                               ],
                             ),
                           ),
-
                           const SizedBox(width: 20),
-
-                          // Title and description
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -666,8 +624,6 @@ class _SentenceBuildingLevelsScreenState
                               ],
                             ),
                           ),
-
-                          // Difficulty badge
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 6),
@@ -692,10 +648,7 @@ class _SentenceBuildingLevelsScreenState
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 24),
-
-                      // Enhanced stats section
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -756,10 +709,7 @@ class _SentenceBuildingLevelsScreenState
                           ],
                         ),
                       ),
-
                       const SizedBox(height: 24),
-
-                      // Enhanced action button
                       Container(
                         width: double.infinity,
                         height: 56,
@@ -849,7 +799,6 @@ class _SentenceBuildingLevelsScreenState
     );
   }
 
-  /// Build enhanced stat item
   Widget _buildEnhancedStatItem({
     required IconData icon,
     required String label,
@@ -893,7 +842,6 @@ class _SentenceBuildingLevelsScreenState
     );
   }
 
-  /// Get difficulty color
   Color _getDifficultyColor(DifficultyLevel difficulty) {
     switch (difficulty) {
       case DifficultyLevel.beginner:
@@ -907,7 +855,6 @@ class _SentenceBuildingLevelsScreenState
     }
   }
 
-  /// Get difficulty text
   String _getDifficultyText(DifficultyLevel difficulty) {
     switch (difficulty) {
       case DifficultyLevel.beginner:
@@ -921,9 +868,7 @@ class _SentenceBuildingLevelsScreenState
     }
   }
 
-  /// Navigate to level
   void _navigateToLevel(SentenceBuildingLevel level) async {
-    // Show interstitial ad before starting the game
     try {
       await _adService.showInterstitialAd();
       debugPrint(
@@ -942,7 +887,6 @@ class _SentenceBuildingLevelsScreenState
     }
   }
 
-  /// Show enhanced premium dialog
   void _showEnhancedPremiumDialog() {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
@@ -971,7 +915,6 @@ class _SentenceBuildingLevelsScreenState
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Premium icon
               Container(
                 width: 80,
                 height: 80,
@@ -994,9 +937,7 @@ class _SentenceBuildingLevelsScreenState
                   size: 40,
                 ),
               ),
-
               const SizedBox(height: 24),
-
               Text(
                 'Premium Özellik',
                 style: TextStyle(
@@ -1005,9 +946,7 @@ class _SentenceBuildingLevelsScreenState
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 16),
-
               Text(
                 'Bu seviye premium kullanıcılar için ayrılmıştır. Premium üyelik satın alarak tüm seviyelere erişim sağlayabilirsiniz.',
                 style: TextStyle(
@@ -1017,9 +956,7 @@ class _SentenceBuildingLevelsScreenState
                 ),
                 textAlign: TextAlign.center,
               ),
-
               const SizedBox(height: 32),
-
               Row(
                 children: [
                   Expanded(
@@ -1047,9 +984,11 @@ class _SentenceBuildingLevelsScreenState
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           Navigator.pop(context);
                           // Navigate to premium purchase screen
+                          await RevenueCatIntegrationService.instance
+                              .goToSubscriptionPage(context);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
@@ -1080,7 +1019,6 @@ class _SentenceBuildingLevelsScreenState
   }
 }
 
-/// Custom painter for geometric background pattern
 class _GeometricPatternPainter extends CustomPainter {
   final Color color;
 
@@ -1092,19 +1030,15 @@ class _GeometricPatternPainter extends CustomPainter {
       ..color = color
       ..style = PaintingStyle.fill;
 
-    // Draw geometric shapes
     for (int i = 0; i < 20; i++) {
       final x = (i * 50.0) % size.width;
       final y = (i * 30.0) % size.height;
 
       if (i % 3 == 0) {
-        // Draw circles
         canvas.drawCircle(Offset(x, y), 3, paint);
       } else if (i % 3 == 1) {
-        // Draw squares
         canvas.drawRect(Rect.fromLTWH(x, y, 6, 6), paint);
       } else {
-        // Draw triangles
         final path = Path();
         path.moveTo(x, y);
         path.lineTo(x + 6, y + 6);
