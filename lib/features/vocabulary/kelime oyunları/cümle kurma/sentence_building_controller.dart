@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../game_enums.dart';
 import '../game_audio_service.dart';
-import '../../services/achievement_service.dart';
+import '../../../../core/services/ad_service.dart';
 import 'sentence_building_models.dart';
 import 'sentence_building_data.dart';
 
@@ -13,7 +14,6 @@ final sentenceBuildingControllerProvider = StateNotifierProvider.autoDispose
   (ref, levelId) => SentenceBuildingController(
     levelId: levelId,
     audioService: ref.watch(gameAudioServiceProvider),
-    achievementService: ref.watch(achievementServiceProvider),
   ),
 );
 
@@ -22,10 +22,11 @@ class SentenceBuildingController
     extends StateNotifier<SentenceBuildingGameState> {
   final String levelId;
   final GameAudioService audioService;
-  final AchievementService achievementService;
+  final AdService _adService = AdService();
 
   Timer? _gameTimer;
   Timer? _feedbackTimer;
+  Timer? _adCheckTimer;
   final List<SentenceBuildingAttempt> _attempts = [];
   DateTime? _sessionStartTime;
   DateTime? _exerciseStartTime;
@@ -33,9 +34,9 @@ class SentenceBuildingController
   SentenceBuildingController({
     required this.levelId,
     required this.audioService,
-    required this.achievementService,
   }) : super(_createInitialState()) {
     _initializeGame();
+    _preloadAds(); // Pre-load ads when controller is created
   }
 
   static SentenceBuildingGameState _createInitialState() {
@@ -124,6 +125,7 @@ class SentenceBuildingController
     );
 
     _startGameTimer();
+    _startAdCheckTimer();
     audioService.playSound(SoundEffect.gameStart);
   }
 
@@ -298,6 +300,70 @@ class SentenceBuildingController
         audioService.playSound(SoundEffect.hint);
       }
     }
+  }
+
+  /// Check if rewarded ad can be shown for hints
+  bool canShowRewardedAdForHints() {
+    debugPrint('Checking rewarded ad availability for sentence building:');
+    debugPrint('- Can use hint: ${state.canUseHint}');
+    debugPrint('- Hints used: ${state.hintsUsed}');
+    debugPrint('- Max hints: ${state.maxHints}');
+    debugPrint('- Rewarded ad ready: ${_adService.isRewardedAdReady}');
+
+    // If hints are available, no need for ad
+    if (state.canUseHint) return false;
+
+    // Check if rewarded ad is ready
+    return _adService.isRewardedAdReady;
+  }
+
+  /// Get rewarded ad ready status
+  bool get isRewardedAdReady => _adService.isRewardedAdReady;
+
+  /// Manually try to reload rewarded ad
+  Future<void> tryReloadRewardedAd() async {
+    debugPrint('Manual rewarded ad reload requested');
+    await _preloadAds();
+  }
+
+  /// Show rewarded ad to get 3 more hints
+  Future<bool> showRewardedAdForHints() async {
+    if (!canShowRewardedAdForHints()) {
+      debugPrint(
+          'Cannot show rewarded ad: not available or hints still available');
+      return false;
+    }
+
+    // Pause the timer while watching ad
+    pauseGame();
+
+    bool adWatched = false;
+
+    try {
+      debugPrint('Showing rewarded ad for hints...');
+      await _adService.showRewardedAd(
+        onRewarded: () {
+          debugPrint('Rewarded ad completed successfully');
+          // Grant 3 more hints
+          state = state.copyWith(
+            hintsUsed: 0, // Reset hints to 0 (giving 3 more)
+            maxHints: 3,
+          );
+          adWatched = true;
+        },
+      );
+
+      // Pre-load next rewarded ad
+      _preloadAds();
+    } catch (e) {
+      debugPrint('Error showing rewarded ad: $e');
+      return false;
+    } finally {
+      // Resume the timer after ad
+      resumeGame();
+    }
+
+    return adWatched;
   }
 
   /// Submit the current sentence (public method)
@@ -521,35 +587,7 @@ class SentenceBuildingController
     );
 
     audioService.playSound(SoundEffect.levelComplete);
-    _checkAchievements();
     _saveGameSession();
-  }
-
-  /// Check for achievements
-  void _checkAchievements() {
-    final perfectSentences = _attempts.where((a) => a.isCorrect).length;
-    final totalSentences = _attempts.length;
-
-    // Perfect level achievement
-    if (perfectSentences == totalSentences && totalSentences > 0) {
-      // TODO: Implement achievement system
-    }
-
-    // Speed achievement
-    final avgTime = _attempts.isNotEmpty
-        ? _attempts
-                .map((a) => a.timeToComplete.inSeconds)
-                .reduce((a, b) => a + b) /
-            _attempts.length
-        : 0;
-    if (avgTime < 30 && perfectSentences > 0) {
-      // TODO: Implement achievement system
-    }
-
-    // No hints achievement
-    if (_attempts.every((a) => !a.usedHint) && perfectSentences > 0) {
-      // TODO: Implement achievement system
-    }
   }
 
   /// Save game session
@@ -581,7 +619,6 @@ class SentenceBuildingController
   /// Pause the game
   void pauseGame() {
     if (state.phase == SentenceBuildingPhase.building && !state.isPaused) {
-      _stopGameTimer();
       state = state.copyWith(isPaused: true);
       audioService.playSound(SoundEffect.pause);
     }
@@ -589,9 +626,8 @@ class SentenceBuildingController
 
   /// Resume the game
   void resumeGame() {
-    if (state.phase == SentenceBuildingPhase.building && state.isPaused) {
+    if (state.isPaused) {
       state = state.copyWith(isPaused: false);
-      _startGameTimer();
       audioService.playSound(SoundEffect.resume);
     }
   }
@@ -633,10 +669,43 @@ class SentenceBuildingController
     }
   }
 
+  /// Pre-load ads for better user experience
+  Future<void> _preloadAds() async {
+    try {
+      await _adService.loadRewardedAd();
+      if (_adService.isRewardedAdReady) {
+        debugPrint(
+            'Rewarded ad pre-loaded successfully for sentence building game');
+      } else {
+        debugPrint('Rewarded ad failed to pre-load - no ad available');
+      }
+    } catch (e) {
+      debugPrint('Failed to pre-load rewarded ad: $e');
+    }
+  }
+
+  /// Start timer to periodically check ad status
+  void _startAdCheckTimer() {
+    _adCheckTimer?.cancel();
+    _adCheckTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      // Try to load rewarded ad if not ready
+      if (!_adService.isRewardedAdReady) {
+        debugPrint('Attempting to reload rewarded ad...');
+        _preloadAds();
+      }
+    });
+  }
+
+  /// Move to next exercise (public method)
+  void nextExercise() {
+    _nextExercise();
+  }
+
   @override
   void dispose() {
     _stopGameTimer();
     _feedbackTimer?.cancel();
+    _adCheckTimer?.cancel();
     super.dispose();
   }
 }

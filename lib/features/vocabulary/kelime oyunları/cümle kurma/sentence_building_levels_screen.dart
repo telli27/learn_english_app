@@ -188,6 +188,7 @@ class _SentenceBuildingLevelsScreenState
                       final delay = index * 0.1;
                       final animationValue = math.max(0.0,
                           math.min(1.0, (_cardsAnimation.value - delay) / 0.3));
+                          
 
                       return Transform.translate(
                         offset: Offset(0, 30 * (1 - animationValue)),
@@ -447,7 +448,8 @@ class _SentenceBuildingLevelsScreenState
     required bool isDarkMode,
     required int index,
   }) {
-    final isLocked = _shouldLockPremiumFeatures() && level.id != '1';
+    final isLocked = _shouldLockPremiumFeatures() && level.id != 'level_1';
+    
     final cardColor = isDarkMode ? const Color(0xFF1A1D29) : Colors.white;
     final textColor = isDarkMode ? Colors.white : const Color(0xFF1F2937);
 

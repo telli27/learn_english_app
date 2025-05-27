@@ -1011,8 +1011,16 @@ class _SentenceBuildingGameScreenState
         gameState.phase == SentenceBuildingPhase.building &&
         !gameState.isPaused;
     final hintsRemaining = math.max(0, 3 - gameState.hintsUsed);
+    final canShowRewardedAd = !canUseHint &&
+        gameState.phase == SentenceBuildingPhase.building &&
+        !gameState.isPaused &&
+        controller.canShowRewardedAdForHints(); // Check if ad is ready
+    final isAdLoading = !canUseHint &&
+        gameState.phase == SentenceBuildingPhase.building &&
+        !gameState.isPaused &&
+        !controller.isRewardedAdReady;
 
-    return SizedBox(
+    Widget button = SizedBox(
       width: 48,
       height: 48,
       child: Stack(
@@ -1023,17 +1031,46 @@ class _SentenceBuildingGameScreenState
                     HapticFeedback.lightImpact();
                     _showHintDialog(controller, gameState);
                   }
-                : null,
+                : canShowRewardedAd
+                    ? () {
+                        HapticFeedback.lightImpact();
+                        _showRewardedAdDialog(controller, gameState);
+                      }
+                    : isAdLoading
+                        ? () {
+                            // Show info about ad loading and try to reload
+                            HapticFeedback.lightImpact();
+
+                            // Try to reload ad manually
+                            controller.tryReloadRewardedAd();
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Row(
+                                  children: [
+                                    Icon(Icons.refresh, color: Colors.white),
+                                    SizedBox(width: 8),
+                                    Text('Reklam yeniden yükleniyor...'),
+                                  ],
+                                ),
+                                backgroundColor: Colors.orange,
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        : null,
             style: OutlinedButton.styleFrom(
-              foregroundColor: canUseHint ? primaryColor : Colors.grey,
+              foregroundColor: (canUseHint || canShowRewardedAd || isAdLoading)
+                  ? primaryColor
+                  : Colors.grey,
               side: BorderSide(
-                  color: canUseHint
+                  color: (canUseHint || canShowRewardedAd || isAdLoading)
                       ? primaryColor.withOpacity(0.5)
                       : Colors.grey.withOpacity(0.3),
                   width: 1.5),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
-              backgroundColor: canUseHint
+              backgroundColor: (canUseHint || canShowRewardedAd || isAdLoading)
                   ? (isDarkMode
                       ? primaryColor.withOpacity(0.1)
                       : primaryColor.withOpacity(0.05))
@@ -1043,9 +1080,17 @@ class _SentenceBuildingGameScreenState
               padding: EdgeInsets.zero,
             ),
             child: Icon(
-              canUseHint ? Icons.lightbulb : Icons.lightbulb_outline,
+              canUseHint
+                  ? Icons.lightbulb
+                  : canShowRewardedAd
+                      ? Icons.play_circle_filled
+                      : isAdLoading
+                          ? Icons.refresh
+                          : Icons.lightbulb_outline,
               size: 20,
-              color: canUseHint ? primaryColor : Colors.grey,
+              color: (canUseHint || canShowRewardedAd || isAdLoading)
+                  ? primaryColor
+                  : Colors.grey,
             ),
           ),
           if (canUseHint && hintsRemaining > 0)
@@ -1071,9 +1116,69 @@ class _SentenceBuildingGameScreenState
                 ),
               ),
             ),
+          if (canShowRewardedAd)
+            Positioned(
+              top: 2,
+              right: 2,
+              child: Container(
+                width: 16,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: Colors.green, // Yeşil = hazır
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.video_library,
+                    color: Colors.white,
+                    size: 10,
+                  ),
+                ),
+              ),
+            ),
+          if (isAdLoading)
+            Positioned(
+              top: 2,
+              right: 2,
+              child: Container(
+                width: 16,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: Colors.orange, // Turuncu = yükleniyor
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Center(
+                  child: SizedBox(
+                    width: 8,
+                    height: 8,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
+
+    // Add tooltip for better user experience
+    if (isAdLoading) {
+      return Tooltip(
+        message: 'Reklam yükleniyor...',
+        child: button,
+      );
+    } else if (!canUseHint &&
+        !canShowRewardedAd &&
+        gameState.phase == SentenceBuildingPhase.building) {
+      return Tooltip(
+        message: 'Reklam şu anda mevcut değil',
+        child: button,
+      );
+    }
+
+    return button;
   }
 
   /// Show professional hint dialog
@@ -1882,6 +1987,9 @@ class _SentenceBuildingGameScreenState
     if (gameState.currentExerciseIndex + 1 >=
         gameState.currentLevel.exercises.length) {
       _showLevelCompletionDialog(gameState);
+    } else {
+      // Move to next exercise using the public method
+      controller.nextExercise();
     }
   }
 
@@ -2159,6 +2267,206 @@ class _SentenceBuildingGameScreenState
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Show rewarded ad dialog for hints
+  void _showRewardedAdDialog(SentenceBuildingController controller,
+      SentenceBuildingGameState gameState) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final primaryColor = const Color(0xFF8B5CF6);
+    final dialogBgColor = isDarkMode ? const Color(0xFF2A2E5A) : Colors.white;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: dialogBgColor,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.play_circle_filled,
+                      color: Colors.green,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Ödüllü Reklam',
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Text(
+                          '3 yeni ipucu hakkı kazanın',
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Ad content
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.green.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.video_library,
+                      color: Colors.green,
+                      size: 32,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Kısa bir reklam izleyerek 3 yeni ipucu hakkı kazanabilirsiniz.',
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Reklam sırasında oyun duraklatılacaktır.',
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white70 : Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Action buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: TextButton.styleFrom(
+                        foregroundColor:
+                            isDarkMode ? Colors.white70 : Colors.grey[600],
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        'İptal',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final currentContext = context;
+                        Navigator.of(currentContext).pop();
+
+                        // Show rewarded ad directly (no loading needed since it's pre-loaded)
+                        final success =
+                            await controller.showRewardedAdForHints();
+
+                        // Show result message
+                        if (mounted && currentContext.mounted) {
+                          if (success) {
+                            // Show success message
+                            ScaffoldMessenger.of(currentContext).showSnackBar(
+                              SnackBar(
+                                content: const Row(
+                                  children: [
+                                    Icon(Icons.check_circle,
+                                        color: Colors.white),
+                                    SizedBox(width: 8),
+                                    Text(
+                                        'Tebrikler! 3 yeni ipucu hakkı kazandınız!'),
+                                  ],
+                                ),
+                                backgroundColor: Colors.green,
+                                duration: const Duration(seconds: 3),
+                              ),
+                            );
+                          } else {
+                            // Show error message
+                            ScaffoldMessenger.of(currentContext).showSnackBar(
+                              SnackBar(
+                                content: const Row(
+                                  children: [
+                                    Icon(Icons.error, color: Colors.white),
+                                    SizedBox(width: 8),
+                                    Text(
+                                        'Reklam gösterilemedi. Lütfen tekrar deneyin.'),
+                                  ],
+                                ),
+                                backgroundColor: Colors.red,
+                                duration: const Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        'Reklam İzle',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

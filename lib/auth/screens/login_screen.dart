@@ -253,28 +253,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       body: SafeArea(
         child: Stack(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isDark
-                        ? Colors.white.withOpacity(0.1)
-                        : Colors.black.withOpacity(0.05),
-                  ),
-                  child: Icon(
-                    Icons.arrow_back_rounded,
-                    color: isDark ? Colors.white70 : Colors.black54,
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.pop(context);
-                  HapticFeedback.lightImpact();
-                },
-              ),
-            ),
             GestureDetector(
               onTap: () {
                 // Hide keyboard when tapping outside of text fields

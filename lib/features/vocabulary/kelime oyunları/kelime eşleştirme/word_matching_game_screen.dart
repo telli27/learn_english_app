@@ -95,6 +95,11 @@ class _WordMatchingGameScreenState extends ConsumerState<WordMatchingGameScreen>
     // Load interstitial ad for game
     _loadInterstitialAdForGame();
 
+    // Debug: Print ad service status
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _adService.printAdStatus();
+    });
+
     // Start opening animation and countdown
     _startOpeningSequence();
   }
@@ -885,6 +890,9 @@ class _WordMatchingGameScreenState extends ConsumerState<WordMatchingGameScreen>
                       ElevatedButton(
                         onPressed: () {
                           Navigator.pop(context);
+                          // Debug: Print ad status before showing ad
+                          debugPrint('=== DEVAM ET BUTTON PRESSED ===');
+                          _adService.printAdStatus();
                           _showAdAndMoveToNext(controller);
                         },
                         style: ElevatedButton.styleFrom(
@@ -1330,32 +1338,46 @@ class _WordMatchingGameScreenState extends ConsumerState<WordMatchingGameScreen>
 
   /// Load interstitial ad for showing after exercise completion (game specific)
   Future<void> _loadInterstitialAdForGame() async {
+    debugPrint('=== WORD MATCHING: LOADING INTERSTITIAL AD ===');
     try {
       await _adService.loadInterstitialAdForGame();
-      debugPrint('Game interstitial ad loaded for word matching exercise');
+      debugPrint(
+          '✅ Game interstitial ad loaded successfully for word matching');
+      debugPrint('Ad ready status: ${_adService.isInterstitialAdReady}');
     } catch (e) {
-      debugPrint('Failed to load game interstitial ad: $e');
+      debugPrint('❌ Failed to load game interstitial ad: $e');
     }
   }
 
   /// Show interstitial ad and move to next exercise
   Future<void> _showAdAndMoveToNext(
       WordMatchingGameController controller) async {
-    if (_isShowingAd) return; // Prevent multiple ad calls
+    if (_isShowingAd) {
+      debugPrint('Ad is already showing, ignoring request');
+      return; // Prevent multiple ad calls
+    }
 
+    debugPrint('=== WORD MATCHING: STARTING AD AND NEXT EXERCISE ===');
     _isShowingAd = true;
+
     try {
       debugPrint(
-          'Starting to show game interstitial ad before next exercise...');
+          'Current exercise: ${controller.currentExercise.orderInLevel}');
+      debugPrint('Attempting to show interstitial ad...');
+
       await _adService.showInterstitialAdPlayGame();
-      debugPrint('Game interstitial ad completed before next exercise');
+      debugPrint('✅ Interstitial ad process completed successfully');
     } catch (e) {
-      debugPrint('Failed to show game interstitial ad: $e');
+      debugPrint('❌ Failed to show interstitial ad: $e');
+      // Continue with game flow even if ad fails
     } finally {
       _isShowingAd = false;
+      debugPrint('Ad showing flag reset');
 
       // Move to next exercise only after ad is fully completed
+      debugPrint('Moving to next exercise...');
       controller.moveToNextExercise();
+      debugPrint('Next exercise: ${controller.currentExercise.orderInLevel}');
 
       // Show opening animation for new exercise
       if (mounted) {
@@ -1363,11 +1385,15 @@ class _WordMatchingGameScreenState extends ConsumerState<WordMatchingGameScreen>
           _showOpeningAnimation = true;
         });
         _startOpeningSequence();
+        debugPrint('Opening animation started for new exercise');
       }
 
       // Load next ad for the upcoming exercise
+      debugPrint('Pre-loading next ad...');
       _loadInterstitialAdForGame();
     }
+
+    debugPrint('=== WORD MATCHING: AD AND NEXT EXERCISE COMPLETED ===');
   }
 
   /// Start opening animation and countdown
