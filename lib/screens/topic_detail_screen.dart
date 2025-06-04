@@ -8,6 +8,7 @@ import '../utils/constants/colors.dart';
 import '../core/providers/topic_progress_provider.dart';
 import '../auth/providers/auth_provider.dart';
 import 'dart:async';
+import 'package:flutter_tts/flutter_tts.dart';
 
 class TopicDetailScreen extends ConsumerStatefulWidget {
   final String topicId;
@@ -24,10 +25,15 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
   double _currentProgress = 0.0;
   int _lastPosition = 0;
   bool _isUserScrolling = false;
+  late FlutterTts flutterTts;
 
   @override
   void initState() {
     super.initState();
+    flutterTts = FlutterTts();
+    flutterTts.setLanguage("en-US");
+    flutterTts.setSpeechRate(0.45);
+    flutterTts.setPitch(1.0);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref
@@ -58,6 +64,7 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
 
   @override
   void dispose() {
+    flutterTts.stop();
     _scrollController.removeListener(_updateProgressOnScroll);
     _scrollController.dispose();
     _progressTimer?.cancel();
@@ -486,22 +493,56 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
           ),
         );
       } else if (line.trim().startsWith('-')) {
+        // Gramer formülü: İngilizce ve Türkçe kısmı ayır
+        // Format: - I/you/we/they + V1 (fiilin yalın hali) veya - G
+        final trimmed = line.trim().substring(1).trim(); // '-' işaretini at
+        String rule = trimmed;
+        String explanation = '';
+        // Parantez varsa ayır
+        final parenIndex = trimmed.indexOf('(');
+        if (parenIndex != -1 && trimmed.endsWith(')')) {
+          rule = trimmed.substring(0, parenIndex).trim();
+          explanation =
+              trimmed.substring(parenIndex + 1, trimmed.length - 1).trim();
+        }
         widgets.add(
           Padding(
-            padding: const EdgeInsets.only(left: 0, top: 4, bottom: 4),
-            child: Text(
-              line,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                height: 1.5,
-                color: isDark
-                    ? Colors.white.withOpacity(0.9)
-                    : AppColors.textPrimary,
-              ),
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: grammarRuleCard(rule, explanation, isDark),
           ),
         );
+      } else if (line.trim().startsWith('Örnek:')) {
+        // Örnek cümleleri ayır: İngilizce ve Türkçe kısmı
+        // Format: Örnek: "I work every day." (Her gün çalışırım.)
+        final exampleRegex = RegExp(r'Örnek:\s*"(.+?)"\s*\((.+?)\)');
+        final match = exampleRegex.firstMatch(line);
+        if (match != null) {
+          final english = match.group(1) ?? '';
+          final turkish = match.group(2) ?? '';
+          widgets.add(
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: exampleCard(english, turkish, isDark),
+            ),
+          );
+        } else {
+          // Eğer format uymuyorsa düz metin olarak ekle
+          widgets.add(
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Text(
+                line,
+                style: TextStyle(
+                  fontSize: 15,
+                  height: 1.5,
+                  color: isDark
+                      ? Colors.white.withOpacity(0.85)
+                      : AppColors.textPrimary,
+                ),
+              ),
+            ),
+          );
+        }
       } else {
         widgets.add(
           Padding(
@@ -522,5 +563,131 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
     }
 
     return widgets;
+  }
+
+  // Örnek cümleler için özel kart widget'ı
+  Widget exampleCard(String english, String turkish, bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.blueGrey.shade900 : Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isDark ? Colors.blueGrey.shade700 : Colors.blue.shade100,
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Ses ikonu daha yukarı ve sağ köşede
+          Positioned(
+            top: -18,
+            right: -12,
+            child: IconButton(
+              icon: Icon(Icons.volume_up, color: Colors.blue, size: 22),
+              tooltip: 'İngilizceyi seslendir',
+              onPressed: () async {
+                await flutterTts.stop();
+                await flutterTts.speak(english);
+              },
+            ),
+          ),
+          // Kart içeriği
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.lightbulb, color: Colors.blue, size: 18),
+                  const SizedBox(width: 6),
+                  Text(
+                    "Örnek",
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                english,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                turkish,
+                style: TextStyle(
+                  fontStyle: FontStyle.normal,
+                  color: isDark ? Colors.grey[300] : Colors.grey[700],
+                  fontSize: 14,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Gramer formülleri için özel kart widget'ı
+  Widget grammarRuleCard(String rule, String explanation, bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+        ),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.menu_book_outlined, color: Colors.blueGrey, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  rule,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15.5,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                if (explanation.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    explanation,
+                    style: TextStyle(
+                      fontStyle: FontStyle.normal,
+                      color: isDark ? Colors.grey[300] : Colors.grey[700],
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

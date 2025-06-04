@@ -105,48 +105,7 @@ class VocabularyScreen extends ConsumerWidget {
                   );
                 },
               ),
-              const SizedBox(height: 20),
-              // Flashcards Card
-              _buildMenuCard(
-                context: context,
-                title: 'Kelime Kartları',
-                subtitle: 'İngilizce kelimeler öğrenin',
-                icon: Icons.menu_book,
-                gradient: [
-                  accentColor,
-                  accentColor.withOpacity(0.8),
-                ],
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Çok Yakında'),
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 20),
-
-              // Quiz Card
-              _buildMenuCard(
-                context: context,
-                title: 'Quiz',
-                subtitle: 'Bilginizi test edin',
-                icon: Icons.quiz,
-                gradient: [
-                  const Color(0xFF8C64F5), // Purple
-                  const Color(0xFF6A4AE3), // Darker purple
-                ],
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Çok Yakında'),
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
-                },
-              ),
+            
 
               const SizedBox(height: 20),
 
