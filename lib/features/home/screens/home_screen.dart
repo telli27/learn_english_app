@@ -669,7 +669,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   _buildPremiumButton(),
                   // Account button - redirects to login/profile
-                  GestureDetector(
+                /*  GestureDetector(
                     onTap: () {
                       final isLoggedIn = ref.read(authProvider).isLoggedIn;
                       if (isLoggedIn) {
@@ -720,7 +720,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               size: 22,
                             ),
                     ),
-                  ),
+                  ),*/
                   // Search button
                   GestureDetector(
                     onTap: () {

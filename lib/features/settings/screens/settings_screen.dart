@@ -63,7 +63,7 @@ class SettingsScreen extends ConsumerWidget {
                       builder: (context) => const PrivacyPolicyScreen()));
             },
           ),
-          _buildSettingCard(
+           /* _buildSettingCard(
             context,
             icon: Icons.lightbulb_outline,
             title: 'Özellik İsteği',
@@ -77,7 +77,7 @@ class SettingsScreen extends ConsumerWidget {
                       builder: (context) => const FeatureRequestScreen()));
             },
           ),
-        
+        */
 
           /* _buildSettingCard(
             context,

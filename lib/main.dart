@@ -224,7 +224,7 @@ class _MyAppState extends ConsumerState<MyApp> {
           }
 
           // If everything is good, show the AuthWrapper that will handle auth flow
-          return const AuthWrapper();
+          return const MainScreen();//AuthWrapper();
         },
         loading: () => const LoadingScreen(
             message: 'İnternet bağlantısı kontrol ediliyor...'),
@@ -238,13 +238,13 @@ class _MyAppState extends ConsumerState<MyApp> {
         '/verification': (context) => VerificationScreen(email: ''),
       },
       onGenerateRoute: (settings) {
-        if (settings.name == '/verification') {
+       /* if (settings.name == '/verification') {
       
           final email = settings.arguments as String;
           return MaterialPageRoute(
             builder: (context) => VerificationScreen(email: email),
           );
-        }
+        }*/
         return null;
       },
     );
