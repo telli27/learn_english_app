@@ -3,22 +3,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenue_cat_integration/revenue_cat_integration.dart';
 import 'package:revenue_cat_integration/widgets/subscription_button.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../../core/providers.dart';
+import '../../../core/providers/locale_provider.dart';
 import '../../../core/utils/constants/colors.dart';
 import 'privacy_policy_screen.dart';
 import 'feature_request_screen.dart';
+import 'language_selection_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
-   SettingsScreen({Key? key}) : super(key: key);
+  SettingsScreen({Key? key}) : super(key: key);
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = ref.watch(isDarkModeProvider);
-   _auth.currentUser?.reload();
+    final l10n = AppLocalizations.of(context)!;
+    final currentLocale = ref.watch(localeProvider);
+    _auth.currentUser?.reload();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ayarlar'),
+        title: Text(l10n.settings),
         centerTitle: true,
         elevation: 0,
       ),
@@ -26,12 +31,18 @@ class SettingsScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         children: [
           // App settings section
-          _buildSectionHeader(context, 'Uygulama Ayarları', isDark),
+          _buildSectionHeader(context, l10n.settings, isDark),
+          _buildLanguageCard(
+            context,
+            isDark: isDark,
+            l10n: l10n,
+            currentLocale: currentLocale,
+          ),
           _buildSettingCard(
             context,
             icon: Icons.dark_mode_outlined,
-            title: 'Karanlık Mod',
-            subtitle: 'Uygulama görünümünü değiştirin',
+            title: l10n.dark_mode,
+            subtitle: l10n.dark_mode_description,
             trailing: Switch(
               value: isDark,
               onChanged: (value) {
@@ -48,12 +59,12 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Info section
-          _buildSectionHeader(context, 'Bilgi', isDark),
+          _buildSectionHeader(context, l10n.info, isDark),
           _buildSettingCard(
             context,
             icon: Icons.privacy_tip_outlined,
-            title: 'Gizlilik Sözleşmesi',
-            subtitle: 'Gizlilik politikamızı görüntüleyin',
+            title: l10n.privacy,
+            subtitle: l10n.privacy,
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             isDark: isDark,
             onTap: () {
@@ -63,7 +74,7 @@ class SettingsScreen extends ConsumerWidget {
                       builder: (context) => const PrivacyPolicyScreen()));
             },
           ),
-           /* _buildSettingCard(
+          /* _buildSettingCard(
             context,
             icon: Icons.lightbulb_outline,
             title: 'Özellik İsteği',
@@ -119,6 +130,106 @@ class SettingsScreen extends ConsumerWidget {
           fontSize: 16,
           fontWeight: FontWeight.bold,
           color: isDark ? AppColors.primary : AppColors.primary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageCard(
+    BuildContext context, {
+    required bool isDark,
+    required AppLocalizations l10n,
+    required Locale currentLocale,
+  }) {
+    // Language map with flags and names
+    final languageMap = {
+      'tr': {'name': l10n.turkish, 'flag': '🇹🇷'},
+      'es': {'name': l10n.spanish, 'flag': '🇪🇸'},
+      'fr': {'name': l10n.french, 'flag': '🇫🇷'},
+      'pt': {'name': l10n.portuguese, 'flag': '🇵🇹'},
+      'it': {'name': l10n.italian, 'flag': '🇮🇹'},
+    };
+
+    final currentLanguage = languageMap[currentLocale.languageCode] ??
+        {'name': l10n.turkish, 'flag': '🇹🇷'};
+
+    return Card(
+      elevation: 0,
+      color: isDark ? const Color(0xFF242424) : Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: isDark
+              ? Colors.white.withOpacity(0.05)
+              : Colors.grey.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      margin: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const LanguageSelectionScreen(),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.primary.withOpacity(0.1)
+                      : AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.language_outlined,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.language,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          currentLanguage['flag']!,
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          currentLanguage['name']!,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDark ? Colors.white70 : Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, size: 16),
+            ],
+          ),
         ),
       ),
     );
@@ -198,5 +309,4 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
- 
 }

@@ -10,63 +10,31 @@ class GrammarData {
   static List<GrammarTopic> topics = [];
   static final GrammarVersionChecker _versionChecker = GrammarVersionChecker();
 
-  static Future<void> loadTopics() async {
-    if (topics.isNotEmpty) {
-      return; // Eğer konular zaten yüklenmişse fonksiyondan çık
-    }
+  static Future<void> loadTopics({String languageCode = 'tr'}) async {
+    print("📚 GrammarData.loadTopics called with language: $languageCode");
+    print("📊 Current topics count: ${topics.length}");
+
+    // Always check version and load data, don't skip based on existing topics
+    // because topics might be for a different language
 
     try {
-      // Önce önbellekten yüklemeyi dene
-      final prefs = await SharedPreferences.getInstance();
-      final cachedData = prefs.getString('grammar_data_json');
-
-      if (cachedData != null && cachedData.isNotEmpty) {
-        // Önbellekteki verileri kullan
-        try {
-          final dynamic decoded = jsonDecode(cachedData);
-
-          // Veri bir liste olabilir veya {topics: [...]} şeklinde bir nesne olabilir
-          if (decoded is List) {
-            // Doğrudan liste formatında
-            topics =
-                decoded.map((json) => GrammarTopic.fromJson(json)).toList();
-          } else if (decoded is Map && decoded.containsKey('topics')) {
-            // {topics: [...]} formatında
-            final topicsList = decoded['topics'] as List;
-            topics =
-                topicsList.map((json) => GrammarTopic.fromJson(json)).toList();
-          } else {
-            debugPrint(
-                'Önbellekteki veri geçerli bir formatta değil, GitHub\'dan yükleniyor...');
-            await _loadTopicsFromGitHub();
-            return;
-          }
-
-          // Hemen verileri kullanmaya başla ve arka planda güncel verileri kontrol et
-          _checkForUpdatesInBackground();
-          return;
-        } catch (e) {
-          debugPrint('Önbellekteki veriyi ayrıştırırken hata oluştu: $e');
-          // Hata durumunda GitHub'dan yükle
-          await _loadTopicsFromGitHub();
-          return;
-        }
-      }
-
-      // Önbellekte veri yoksa GitHub'dan yükle
-      await _loadTopicsFromGitHub();
+      // Always use version checker for proper version control and language support
+      await _loadTopicsFromGitHub(languageCode);
     } catch (e) {
       print('Konular yüklenirken hata oluştu: $e');
       rethrow;
     }
   }
 
-  static Future<void> _loadTopicsFromGitHub() async {
+  static Future<void> _loadTopicsFromGitHub(String languageCode) async {
     try {
-      debugPrint('Loading grammar topics...');
+      debugPrint('Loading grammar topics for language: $languageCode...');
 
       // Use the version checker to check and update grammar data
-      topics = await _versionChecker.checkAndUpdateGrammarData();
+      debugPrint('Calling checkAndUpdateGrammarData...');
+      topics = await _versionChecker.checkAndUpdateGrammarData(
+          languageCode: languageCode);
+      debugPrint('checkAndUpdateGrammarData returned ${topics.length} topics');
 
       if (topics.isEmpty) {
         debugPrint(
@@ -76,11 +44,15 @@ class GrammarData {
         final prefs = await SharedPreferences.getInstance();
 
         // Remove existing data to force fresh download
+        debugPrint('Removing existing SharedPreferences data...');
         await prefs.remove(GrammarVersionChecker.VERSION_KEY);
-        await prefs.remove(GrammarVersionChecker.GRAMMAR_DATA_KEY);
+        await prefs
+            .remove(GrammarVersionChecker.getGrammarDataKey(languageCode));
 
         // Try again
-        topics = await _versionChecker.checkAndUpdateGrammarData();
+        debugPrint('Retry calling checkAndUpdateGrammarData...');
+        topics = await _versionChecker.checkAndUpdateGrammarData(
+            languageCode: languageCode);
 
         if (topics.isEmpty) {
           debugPrint('Still unable to load grammar data after forced attempt');
@@ -98,7 +70,8 @@ class GrammarData {
   }
 
   // This method should be called after loadTopics, passing the current BuildContext
-  static void showUpdateDialogIfNeeded(BuildContext context) {
+  static void showUpdateDialogIfNeeded(BuildContext context,
+      {String languageCode = 'tr'}) {
     debugPrint(
         "Checking if update dialog should be shown: hasNewVersion=${_versionChecker.hasNewVersion}, newVersionData=${_versionChecker.newVersionData}");
 
@@ -115,7 +88,7 @@ class GrammarData {
       // Mark this version as having shown the dialog
       debugPrint(
           "Marking update dialog as shown for version ${_versionChecker.remoteVersion}");
-      _versionChecker.markUpdateDialogShown();
+      _versionChecker.markUpdateDialogShown(languageCode: languageCode);
     } else {
       if (!_versionChecker.hasNewVersion) {
         debugPrint("No update dialog needed: hasNewVersion is false");
@@ -127,29 +100,27 @@ class GrammarData {
   }
 
   // Force check for updates by clearing SharedPreferences
-  static Future<void> forceCheckForUpdates(BuildContext context) async {
+  static Future<void> forceCheckForUpdates(BuildContext context,
+      {String languageCode = 'tr'}) async {
     debugPrint("Forcing check for updates by clearing SharedPreferences");
 
-    // Clear SharedPreferences first
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(GrammarVersionChecker.VERSION_KEY);
-    await prefs.remove(GrammarVersionChecker.GRAMMAR_DATA_KEY);
-    await prefs.remove(GrammarVersionChecker.LAST_SHOWN_VERSION_KEY);
+    // Clear all data for language switching
+    await GrammarVersionChecker.clearAllData();
 
     debugPrint("SharedPreferences cleared, now loading topics again");
 
     // Reload topics
-    await loadTopics();
+    await loadTopics(languageCode: languageCode);
 
     // Show dialog if needed
     if (context.mounted) {
-      showUpdateDialogIfNeeded(context);
+      showUpdateDialogIfNeeded(context, languageCode: languageCode);
     }
 
     debugPrint("Force check completed");
   }
 
-  static void _checkForUpdatesInBackground() {
+  static void _checkForUpdatesInBackground(String languageCode) {
     // Arka planda güncellemeleri kontrol et, kullanıcı deneyimini engellemeden
     Future.microtask(() async {
       try {
@@ -157,7 +128,8 @@ class GrammarData {
         final versionChecker = GrammarVersionChecker();
 
         // Verileri güncelle ve sonuçları al
-        final updatedTopics = await versionChecker.checkAndUpdateGrammarData();
+        final updatedTopics = await versionChecker.checkAndUpdateGrammarData(
+            languageCode: languageCode);
 
         // Eğer güncellenmiş konular boş değilse, güncelle
         if (updatedTopics.isNotEmpty) {

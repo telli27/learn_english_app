@@ -9,6 +9,8 @@ import '../core/providers/topic_progress_provider.dart';
 import '../auth/providers/auth_provider.dart';
 import 'dart:async';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:revenue_cat_integration/service/revenue_cat_integration_service.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class TopicDetailScreen extends ConsumerStatefulWidget {
   final String topicId;
@@ -58,6 +60,8 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
             }
           });
         }
+        // Load banner ad
+        adService.loadBannerAd();
       }
     });
   }
@@ -95,7 +99,8 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  'Bu konuda %${progress.toInt()} ilerleme kaydetmişsiniz',
+                  AppLocalizations.of(context)!
+                      .progressMessage(progress.toInt()),
                   style: const TextStyle(color: Colors.white),
                   textAlign: TextAlign.center,
                 ),
@@ -181,23 +186,23 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
 
     switch (milestone) {
       case 25:
-        message = 'Güzel gidiyorsun! %25 tamamlandı';
+        message = AppLocalizations.of(context)!.milestone25;
         backgroundColor = Colors.blue;
         break;
       case 50:
-        message = 'Yarıyı tamamladın! Harika ilerleme';
+        message = AppLocalizations.of(context)!.milestone50;
         backgroundColor = Colors.green;
         break;
       case 75:
-        message = 'Çok iyi! %75 tamamlandı';
+        message = AppLocalizations.of(context)!.milestone75;
         backgroundColor = Colors.orange;
         break;
       case 100:
-        message = 'Tebrikler! Konuyu tamamen bitirdin';
+        message = AppLocalizations.of(context)!.milestone100;
         backgroundColor = Colors.purple;
         break;
       default:
-        message = 'İyi gidiyorsun!';
+        message = AppLocalizations.of(context)!.milestoneDefault;
         backgroundColor = Colors.blue;
     }
 
@@ -239,7 +244,7 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
       (t) => t.id == widget.topicId,
       orElse: () => GrammarTopic(
         id: '',
-        title: 'Konu bulunamadı',
+        title: AppLocalizations.of(context)!.topicNotFound,
         description: '',
         examples: [],
         color: 'blue',
@@ -250,7 +255,7 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
     if (topic.id.isEmpty) {
       return Scaffold(
         appBar: AppBar(),
-        body: const Center(child: Text('Konu bulunamadı')),
+        body: Center(child: Text(AppLocalizations.of(context)!.topicNotFound)),
       );
     }
 
@@ -287,6 +292,25 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
                   // ...
 
                   const SizedBox(height: 50),
+
+                  // Banner Ad
+                  RevenueCatIntegrationService.instance.isPremium.value == true
+                      ? Container()
+                      : Consumer(
+                          builder: (context, ref, child) {
+                            final adService = ref.watch(adServiceProvider);
+                            final bannerAd = adService.getBannerAdWidget();
+                            if (bannerAd != null) {
+                              return Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 16.0),
+                                  child: bannerAd,
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
                 ]),
               ),
             ),
@@ -436,8 +460,7 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
     String grammarContent = topic.grammar_structure;
 
     if (grammarContent.isEmpty) {
-      grammarContent =
-          'Bu konu için detaylı gramer bilgileri henüz eklenmemiştir.';
+      grammarContent = AppLocalizations.of(context)!.noGrammarDetails;
     }
 
     widgets.add(
@@ -585,7 +608,7 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
             right: -12,
             child: IconButton(
               icon: Icon(Icons.volume_up, color: Colors.blue, size: 22),
-              tooltip: 'İngilizceyi seslendir',
+              tooltip: AppLocalizations.of(context)!.pronounceEnglish,
               onPressed: () async {
                 await flutterTts.stop();
                 await flutterTts.speak(english);
@@ -602,7 +625,7 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
                   Icon(Icons.lightbulb, color: Colors.blue, size: 18),
                   const SizedBox(width: 6),
                   Text(
-                    "Örnek",
+                    AppLocalizations.of(context)!.example,
                     style: TextStyle(
                       color: Colors.blue,
                       fontWeight: FontWeight.bold,

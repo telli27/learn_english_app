@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../../core/providers.dart';
 import '../../../core/utils/constants/colors.dart';
 import 'home_screen.dart';
@@ -15,6 +16,7 @@ import '../../../features/vocabulary/screens/vocabulary_screen.dart';
 void showUserMenu(BuildContext context, WidgetRef ref, bool isDark) {
   final authState = ref.read(authProvider);
   final isLoggedIn = authState.isLoggedIn;
+  final l10n = AppLocalizations.of(context)!;
 
   if (!isLoggedIn) {
     // Kullanıcı giriş yapmamışsa giriş ekranına yönlendir
@@ -130,7 +132,7 @@ void showUserMenu(BuildContext context, WidgetRef ref, bool isDark) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          'Çıkış yapıldı',
+                          l10n.logged_out,
                           textAlign: TextAlign.center,
                           style: TextStyle(fontWeight: FontWeight.w500),
                         ),
@@ -157,7 +159,7 @@ void showUserMenu(BuildContext context, WidgetRef ref, bool isDark) {
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Çıkış Yap',
+                          l10n.logout,
                           style: TextStyle(
                             color: Colors.red,
                             fontSize: 14,
@@ -190,7 +192,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   final List<Widget> _screens = [
     HomeScreen(),
     DailyPhrasesScreen(),
-    VocabularyScreen(), 
+    VocabularyScreen(),
     SettingsScreen(),
   ];
 
@@ -205,6 +207,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final isDark = ref.watch(isDarkModeProvider);
     final authState = ref.watch(authProvider);
     final isLoggedIn = authState.isLoggedIn;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: _screens[_selectedIndex],
@@ -243,11 +246,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
             unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w400),
             items: [
-              _buildNavItem(Icons.home_rounded, 'Anasayfa', 0),
-              _buildNavItem(Icons.chat_bubble_outline, 'Konuşma', 1),
-              _buildNavItem(Icons.menu_book_rounded, 'Kelimeler',
-                  2), // Added vocabulary nav item
-              _buildNavItem(Icons.settings_rounded, 'Ayarlar', 3),
+              _buildNavItem(Icons.home_rounded, l10n.home_page, 0),
+              _buildNavItem(Icons.chat_bubble_outline, l10n.conversation, 1),
+              _buildNavItem(Icons.menu_book_rounded, l10n.words, 2),
+              _buildNavItem(Icons.settings_rounded, l10n.settings, 3),
             ],
           ),
         ),

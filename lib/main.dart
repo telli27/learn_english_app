@@ -11,9 +11,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:revenue_cat_integration/revenue_cat_integration.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'firebase_options.dart';
 import 'core/providers.dart';
 import 'core/providers/connectivity_provider.dart';
+import 'core/providers/locale_provider.dart';
 import 'features/home/screens/main_screen.dart';
 import 'core/utils/constants/theme.dart';
 import 'core/data/grammar_data.dart';
@@ -26,6 +30,7 @@ import 'core/screens/loading_screen.dart';
 import 'core/screens/weak_connection_screen.dart';
 import 'features/settings/screens/terms_of_use_screen.dart';
 import 'features/settings/screens/privacy_policy_screen.dart';
+import 'features/settings/screens/language_selection_screen.dart';
 
 Future<void> checkForUpdate() async {
   try {
@@ -64,8 +69,28 @@ void main() async {
   // Google Mobile Ads'i başlat
   await MobileAds.instance.initialize();
 
-  // Dilbilgisi verilerini JSON dosyasından yükle
-  await GrammarData.loadTopics();
+  // Load initial language data for app startup
+  print("⚡ App starting, loading initial language data...");
+  try {
+    // Get saved locale or default to Turkish
+    final prefs = await SharedPreferences.getInstance();
+    final localeString = prefs.getString('selected_locale');
+    String languageCode = 'tr'; // default
+
+    if (localeString != null) {
+      final parts = localeString.split('_');
+      if (parts.isNotEmpty) {
+        languageCode = parts[0];
+      }
+    }
+
+    print("🌍 Loading data for language: $languageCode");
+    await GrammarData.loadTopics(languageCode: languageCode);
+    print("✅ Initial language data loaded successfully");
+  } catch (e) {
+    print("❌ Error loading initial language data: $e");
+    // Continue anyway, data will be loaded later
+  }
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
       overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom]);
   SystemChrome.setPreferredOrientations([
@@ -144,7 +169,11 @@ class _MyAppState extends ConsumerState<MyApp> {
       if (GrammarData.topics.isEmpty) {
         // If topics are not loaded, force loading from GitHub
         debugPrint('Topics are empty, loading from GitHub...');
-        await GrammarData.loadTopics();
+        // Get current language code from locale provider
+        final currentLocale = ref.read(localeProvider);
+        final languageCode = currentLocale.languageCode;
+        debugPrint('Loading topics for language: $languageCode');
+        await GrammarData.loadTopics(languageCode: languageCode);
       }
       setState(() {
         _topicsLoaded = true;
@@ -192,6 +221,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeControllerProvider);
     final connectivityStatus = ref.watch(connectivityProvider);
+    final currentLocale = ref.watch(localeProvider);
 
     // Return a MaterialApp with the correct content based on connectivity
     return MaterialApp(
@@ -200,6 +230,20 @@ class _MyAppState extends ConsumerState<MyApp> {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
+      locale: currentLocale,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('tr', ''), // Turkish
+        Locale('es', ''), // Spanish
+        Locale('fr', ''), // French
+        Locale('pt', ''), // Portuguese
+        Locale('it', ''), // Italian
+      ],
       home: connectivityStatus.when(
         data: (isConnected) {
           // If there's no internet, show no internet screen
@@ -224,7 +268,7 @@ class _MyAppState extends ConsumerState<MyApp> {
           }
 
           // If everything is good, show the AuthWrapper that will handle auth flow
-          return const MainScreen();//AuthWrapper();
+          return const MainScreen(); //AuthWrapper();
         },
         loading: () => const LoadingScreen(
             message: 'İnternet bağlantısı kontrol ediliyor...'),
@@ -236,9 +280,10 @@ class _MyAppState extends ConsumerState<MyApp> {
         '/terms_of_use': (context) => const TermsOfUseScreen(),
         '/privacy_policy': (context) => const PrivacyPolicyScreen(),
         '/verification': (context) => VerificationScreen(email: ''),
+        '/language_selection': (context) => const LanguageSelectionScreen(),
       },
       onGenerateRoute: (settings) {
-       /* if (settings.name == '/verification') {
+        /* if (settings.name == '/verification') {
       
           final email = settings.arguments as String;
           return MaterialPageRoute(

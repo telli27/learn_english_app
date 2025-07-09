@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io';
 import 'package:revenue_cat_integration/service/revenue_cat_integration_service.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../game_enums.dart';
 import 'word_matching_game_screen.dart';
 
@@ -25,53 +26,53 @@ class _WordMatchingLevelsScreenState extends State<WordMatchingLevelsScreen>
   bool _isLoadingPremiumStatus = true;
 
   // Modern seviye tanımları - Gerçek oyun verilerine göre güncellendi
-  static const List<Map<String, dynamic>> _levelOptions = [
-    {
-      'level': 1,
-      'title': 'Başlangıç',
-      'subtitle': 'Temel Kelimeler',
-      'description':
-          'Günlük hayatın en temel kelimeleri: meyve, ev eşyaları, renkler, yiyecekler ve vücut bölümleri',
-      'exerciseCount': 5,
-      'wordCount': 5, // Her alıştırmada 5 kelime çifti
-      'icon': Icons.school_outlined,
-      'gradientColors': [Color(0xFF4CAF50), Color(0xFF66BB6A)],
-      'difficulty': 'Kolay',
-      'timeLimit': '60s',
-      'difficultyEnum': DifficultyLevel.beginner,
-      'progress': 1.0,
-    },
-    {
-      'level': 2,
-      'title': 'Orta Seviye',
-      'subtitle': 'Günlük Konuşma',
-      'description':
-          'Sıfatlar, duygular, şehir yaşamı, meslekler, teknoloji ve günler ile günlük konuşmada kullanılan kelimeler',
-      'exerciseCount': 6,
-      'wordCount': 6, // Her alıştırmada 6 kelime çifti
-      'icon': Icons.trending_up_outlined,
-      'gradientColors': [Color(0xFF2196F3), Color(0xFF42A5F5)],
-      'difficulty': 'Orta',
-      'timeLimit': '60s',
-      'difficultyEnum': DifficultyLevel.intermediate,
-      'progress': 1.0,
-    },
-    {
-      'level': 3,
-      'title': 'İleri Seviye',
-      'subtitle': 'Akademik Kelimeler',
-      'description':
-          'Başarı, siyaset, bilim, endüstri, sosyal bilimler ve çevre konularında akademik düzeyde kelimeler',
-      'exerciseCount': 7,
-      'wordCount': 7, // Her alıştırmada 7 kelime çifti
-      'icon': Icons.emoji_events_outlined,
-      'gradientColors': [Color(0xFFFF9800), Color(0xFFFFB74D)],
-      'difficulty': 'Zor',
-      'timeLimit': '60s',
-      'difficultyEnum': DifficultyLevel.advanced,
-      'progress': 1.0,
-    },
-  ];
+  List<Map<String, dynamic>> _getLevelOptions() {
+    return [
+      {
+        'level': 1,
+        'title': AppLocalizations.of(context)!.beginner_level,
+        'subtitle': 'basic_words',
+        'description': AppLocalizations.of(context)!.basic_daily_words_desc,
+        'exerciseCount': 5,
+        'wordCount': 5, // Her alıştırmada 5 kelime çifti
+        'icon': Icons.school_outlined,
+        'gradientColors': [Color(0xFF4CAF50), Color(0xFF66BB6A)],
+        'difficulty': AppLocalizations.of(context)!.easy,
+        'timeLimit': '60s',
+        'difficultyEnum': DifficultyLevel.beginner,
+        'progress': 1.0,
+      },
+      {
+        'level': 2,
+        'title': AppLocalizations.of(context)!.intermediate_level,
+        'subtitle': 'daily_words',
+        'description':
+            AppLocalizations.of(context)!.daily_conversation_words_desc,
+        'exerciseCount': 6,
+        'wordCount': 6, // Her alıştırmada 6 kelime çifti
+        'icon': Icons.trending_up_outlined,
+        'gradientColors': [Color(0xFF2196F3), Color(0xFF42A5F5)],
+        'difficulty': AppLocalizations.of(context)!.medium,
+        'timeLimit': '60s',
+        'difficultyEnum': DifficultyLevel.intermediate,
+        'progress': 1.0,
+      },
+      {
+        'level': 3,
+        'title': AppLocalizations.of(context)!.advanced_level,
+        'subtitle': 'academic_words',
+        'description': AppLocalizations.of(context)!.academic_level_words_desc,
+        'exerciseCount': 7,
+        'wordCount': 7, // Her alıştırmada 7 kelime çifti
+        'icon': Icons.emoji_events_outlined,
+        'gradientColors': [Color(0xFFFF9800), Color(0xFFFFB74D)],
+        'difficulty': AppLocalizations.of(context)!.hard,
+        'timeLimit': '60s',
+        'difficultyEnum': DifficultyLevel.advanced,
+        'progress': 1.0,
+      },
+    ];
+  }
 
   @override
   void initState() {
@@ -226,14 +227,14 @@ class _WordMatchingLevelsScreenState extends State<WordMatchingLevelsScreen>
                     color: Colors.white.withOpacity(0.3),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.extension, color: Colors.white, size: 16),
-                    SizedBox(width: 6),
+                    const Icon(Icons.extension, color: Colors.white, size: 16),
+                    const SizedBox(width: 6),
                     Text(
-                      'Kelime Eşleştirme',
-                      style: TextStyle(
+                      AppLocalizations.of(context)!.word_matching,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -246,9 +247,9 @@ class _WordMatchingLevelsScreenState extends State<WordMatchingLevelsScreen>
           ),
           const SizedBox(height: 20),
           // Main title
-          const Text(
-            'Seviyeni Seç',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.level_select,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 32,
               fontWeight: FontWeight.bold,
@@ -257,7 +258,7 @@ class _WordMatchingLevelsScreenState extends State<WordMatchingLevelsScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Kendi seviyende kelime eşleştirme oyununa başla',
+            AppLocalizations.of(context)!.choose_matching_level,
             style: TextStyle(
               color: Colors.white.withOpacity(0.8),
               fontSize: 16,
@@ -312,13 +313,13 @@ class _WordMatchingLevelsScreenState extends State<WordMatchingLevelsScreen>
                   Expanded(
                     child: ListView.builder(
                       physics: const BouncingScrollPhysics(),
-                      itemCount: _levelOptions.length,
+                      itemCount: _getLevelOptions().length,
                       itemBuilder: (context, index) {
                         return Transform.translate(
                           offset: Offset(0,
                               (1 - _fadeAnimation.value.clamp(0.0, 1.0)) * 50),
                           child: _buildModernLevelCard(
-                            _levelOptions[index],
+                            _getLevelOptions()[index],
                             index,
                           ),
                         );
@@ -404,7 +405,7 @@ class _WordMatchingLevelsScreenState extends State<WordMatchingLevelsScreen>
                             ),
                           ),
                           Text(
-                            level['subtitle'],
+                            _getLocalizedSubtitle(level['subtitle']),
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.8),
                               fontSize: 14,
@@ -440,7 +441,7 @@ class _WordMatchingLevelsScreenState extends State<WordMatchingLevelsScreen>
                 // Description
                 Text(
                   isLocked
-                      ? 'Bu seviye premium üyelik gerektirir. Tıklayarak premium olun!'
+                      ? AppLocalizations.of(context)!.premium_access_description
                       : level['description'],
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.9),
@@ -457,12 +458,12 @@ class _WordMatchingLevelsScreenState extends State<WordMatchingLevelsScreen>
                     children: [
                       _buildStatChip(
                         Icons.assignment_outlined,
-                        '${level['exerciseCount']} Alıştırma',
+                        '${level['exerciseCount']} ${AppLocalizations.of(context)!.exercises}',
                       ),
                       const SizedBox(width: 12),
                       _buildStatChip(
                         Icons.extension_outlined,
-                        '${level['wordCount']} Kelime Çifti',
+                        '${level['wordCount']} ${AppLocalizations.of(context)!.word_pairs}',
                       ),
                     ],
                   ),
@@ -479,7 +480,7 @@ class _WordMatchingLevelsScreenState extends State<WordMatchingLevelsScreen>
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Süre Limiti: ${level['timeLimit']}',
+                        '${AppLocalizations.of(context)!.time_limit}: ${level['timeLimit']}',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.8),
                           fontSize: 12,
@@ -526,6 +527,20 @@ class _WordMatchingLevelsScreenState extends State<WordMatchingLevelsScreen>
   }
 
   /// Show premium subscription dialog
+  /// Get localized subtitle based on key
+  String _getLocalizedSubtitle(String key) {
+    switch (key) {
+      case 'basic_words':
+        return AppLocalizations.of(context)!.basic_words;
+      case 'daily_words':
+        return AppLocalizations.of(context)!.daily_words;
+      case 'academic_words':
+        return AppLocalizations.of(context)!.academic_words;
+      default:
+        return key;
+    }
+  }
+
   void _showPremiumDialog() {
     showDialog(
       context: context,
@@ -588,9 +603,9 @@ class _WordMatchingLevelsScreenState extends State<WordMatchingLevelsScreen>
                   const SizedBox(height: 20),
 
                   // Title
-                  const Text(
-                    'Premium Üyelik Gerekli',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.of(context)!.premium_membership_required,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 26, // Increased from 24
                       fontWeight: FontWeight.bold,
@@ -602,7 +617,7 @@ class _WordMatchingLevelsScreenState extends State<WordMatchingLevelsScreen>
 
                   // Description
                   Text(
-                    'Tüm seviyelere erişim için premium üyeliğe ihtiyacınız var. Premium ile orta ve ileri seviye kelime eşleştirme oyunlarına erişin!',
+                    AppLocalizations.of(context)!.premium_unlock_description,
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.9),
                       fontSize: 17, // Increased from 16
@@ -627,17 +642,18 @@ class _WordMatchingLevelsScreenState extends State<WordMatchingLevelsScreen>
                       children: [
                         _buildPremiumFeature(
                           Icons.lock_open,
-                          'Orta ve İleri Seviye Erişimi',
+                          AppLocalizations.of(context)!
+                              .intermediate_advanced_access,
                         ),
                         const SizedBox(height: 12),
                         _buildPremiumFeature(
                           Icons.extension,
-                          'Akademik Kelime Eşleştirme',
+                          AppLocalizations.of(context)!.academic_word_matching,
                         ),
                         const SizedBox(height: 12),
                         _buildPremiumFeature(
                           Icons.trending_up,
-                          'Gelişmiş İstatistikler',
+                          AppLocalizations.of(context)!.advanced_statistics,
                         ),
                       ],
                     ),
@@ -671,9 +687,9 @@ class _WordMatchingLevelsScreenState extends State<WordMatchingLevelsScreen>
                               color: Colors.white,
                               size: 18, // Slightly smaller icon
                             ),
-                            label: const Text(
-                              'Daha Sonra',
-                              style: TextStyle(
+                            label: Text(
+                              AppLocalizations.of(context)!.later,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 15, // Slightly smaller font
                                 fontWeight: FontWeight.w700, // Bolder text
@@ -708,19 +724,19 @@ class _WordMatchingLevelsScreenState extends State<WordMatchingLevelsScreen>
                           ),
                           child: TextButton.icon(
                             onPressed: () async {
-                          Navigator.pop(context);
-                          // Navigate to premium purchase screen
-                          await RevenueCatIntegrationService.instance
-                              .goToSubscriptionPage(context);
-                        },
+                              Navigator.pop(context);
+                              // Navigate to premium purchase screen
+                              await RevenueCatIntegrationService.instance
+                                  .goToSubscriptionPage(context);
+                            },
                             icon: const Icon(
                               Icons.star,
                               color: Color(0xFF667eea),
                               size: 20, // Increased icon size
                             ),
-                            label: const Text(
-                              'Premium Al',
-                              style: TextStyle(
+                            label: Text(
+                              AppLocalizations.of(context)!.get_premium,
+                              style: const TextStyle(
                                 color: Color(0xFF667eea),
                                 fontSize: 16, // Increased font size
                                 fontWeight: FontWeight.bold,

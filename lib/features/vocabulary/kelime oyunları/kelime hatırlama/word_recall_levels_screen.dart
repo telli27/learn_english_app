@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io';
 import 'package:revenue_cat_integration/service/revenue_cat_integration_service.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../game_enums.dart';
 import 'professional_word_recall_screen.dart';
 
@@ -24,69 +25,72 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
   bool _isLoadingPremiumStatus = true;
 
   // Modern seviye tanımları
-  static const List<Map<String, dynamic>> _levelOptions = [
-    {
-      'level': 1,
-      'title': 'Başlangıç',
-      'subtitle': 'Temel Kelimeler',
-      'description': 'Günlük hayatın en temel kelimeleri ile başlayın',
-      'exerciseCount': 8,
-      'wordCount': 5,
-      'icon': Icons.school_outlined,
-      'gradientColors': [Color(0xFF4CAF50), Color(0xFF66BB6A)],
-      'difficulty': 'Kolay',
-      'studyTime': '20s',
-      'recallTime': '40s',
-      'difficultyEnum': DifficultyLevel.beginner,
-      'progress': 1.0,
-    },
-    {
-      'level': 2,
-      'title': 'Orta Seviye',
-      'subtitle': 'Günlük Konuşma',
-      'description':
-          'İngilizce öğreniminde en çok kullanılan kelimeleri öğrenin',
-      'exerciseCount': 8,
-      'wordCount': 5,
-      'icon': Icons.trending_up_outlined,
-      'gradientColors': [Color(0xFF2196F3), Color(0xFF42A5F5)],
-      'difficulty': 'Orta',
-      'studyTime': '25s',
-      'recallTime': '50s',
-      'difficultyEnum': DifficultyLevel.intermediate,
-      'progress': 1.0,
-    },
-    {
-      'level': 3,
-      'title': 'İleri Seviye',
-      'subtitle': 'Akademik Kelimeler',
-      'description': 'İngilizce öğreniminde en çok gereken kelimeleri keşfedin',
-      'exerciseCount': 8,
-      'wordCount': 5,
-      'icon': Icons.emoji_events_outlined,
-      'gradientColors': [Color(0xFFFF9800), Color(0xFFFFB74D)],
-      'difficulty': 'Zor',
-      'studyTime': '30s',
-      'recallTime': '60s',
-      'difficultyEnum': DifficultyLevel.advanced,
-      'progress': 1.0,
-    },
-    {
-      'level': 4,
-      'title': 'Uzman Seviye',
-      'subtitle': 'Profesyonel Kelimeler',
-      'description': 'En zorlu kelimelerle kendinizi test edin',
-      'exerciseCount': 6,
-      'wordCount': 5,
-      'icon': Icons.military_tech_outlined,
-      'gradientColors': [Color(0xFFE91E63), Color(0xFFF06292)],
-      'difficulty': 'Uzman',
-      'studyTime': '35s',
-      'recallTime': '70s',
-      'difficultyEnum': DifficultyLevel.expert,
-      'progress': 1.0,
-    },
-  ];
+  List<Map<String, dynamic>> _getLevelOptions(AppLocalizations l10n) {
+    return [
+      {
+        'level': 1,
+        'title': l10n.difficulty_easy,
+        'subtitle': l10n.basic_words,
+        'description': 'Günlük hayatın en temel kelimeleri ile başlayın',
+        'exerciseCount': 8,
+        'wordCount': 5,
+        'icon': Icons.school_outlined,
+        'gradientColors': [Color(0xFF4CAF50), Color(0xFF66BB6A)],
+        'difficulty': l10n.difficulty_easy,
+        'studyTime': '20s',
+        'recallTime': '40s',
+        'difficultyEnum': DifficultyLevel.beginner,
+        'progress': 1.0,
+      },
+      {
+        'level': 2,
+        'title': l10n.difficulty_medium,
+        'subtitle': l10n.daily_conversation,
+        'description':
+            'İngilizce öğreniminde en çok kullanılan kelimeleri öğrenin',
+        'exerciseCount': 8,
+        'wordCount': 5,
+        'icon': Icons.trending_up_outlined,
+        'gradientColors': [Color(0xFF2196F3), Color(0xFF42A5F5)],
+        'difficulty': l10n.difficulty_medium,
+        'studyTime': '25s',
+        'recallTime': '50s',
+        'difficultyEnum': DifficultyLevel.intermediate,
+        'progress': 1.0,
+      },
+      {
+        'level': 3,
+        'title': l10n.difficulty_hard,
+        'subtitle': l10n.academic_words,
+        'description':
+            'İngilizce öğreniminde en çok gereken kelimeleri keşfedin',
+        'exerciseCount': 8,
+        'wordCount': 5,
+        'icon': Icons.emoji_events_outlined,
+        'gradientColors': [Color(0xFFFF9800), Color(0xFFFFB74D)],
+        'difficulty': l10n.difficulty_hard,
+        'studyTime': '30s',
+        'recallTime': '60s',
+        'difficultyEnum': DifficultyLevel.advanced,
+        'progress': 1.0,
+      },
+      {
+        'level': 4,
+        'title': l10n.difficulty_expert,
+        'subtitle': l10n.professional_words,
+        'description': 'En zorlu kelimelerle kendinizi test edin',
+        'exerciseCount': 6,
+        'wordCount': 5,
+        'icon': Icons.military_tech_outlined,
+        'gradientColors': [Color(0xFFE91E63), Color(0xFFF06292)],
+        'difficulty': l10n.difficulty_expert,
+        'studyTime': '35s',
+        'recallTime': '70s',
+        'difficultyEnum': DifficultyLevel.expert,
+        'progress': 1.0,
+      },
+    ];
+  }
 
   @override
   void initState() {
@@ -141,6 +145,8 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -227,9 +233,9 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
           ),
           const SizedBox(height: 20),
           // Main title
-          const Text(
-            'Seviyeni Seç',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.level_select,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 32,
               fontWeight: FontWeight.bold,
@@ -238,7 +244,7 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Kendi seviyende kelime öğrenmeye başla',
+            AppLocalizations.of(context)!.choose_level,
             style: TextStyle(
               color: Colors.white.withOpacity(0.8),
               fontSize: 16,
@@ -293,13 +299,16 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
                   Expanded(
                     child: ListView.builder(
                       physics: const BouncingScrollPhysics(),
-                      itemCount: _levelOptions.length,
+                      itemCount: _getLevelOptions(AppLocalizations.of(context)!)
+                          .length,
                       itemBuilder: (context, index) {
+                        final levels =
+                            _getLevelOptions(AppLocalizations.of(context)!);
                         return Transform.translate(
                           offset: Offset(0,
                               (1 - _fadeAnimation.value.clamp(0.0, 1.0)) * 50),
                           child: _buildModernLevelCard(
-                            _levelOptions[index],
+                            levels[index],
                             index,
                           ),
                         );
@@ -437,7 +446,7 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
                     children: [
                       _buildStatChip(
                         Icons.assignment_outlined,
-                        '${level['exerciseCount']} Alıştırma',
+                        '${level['exerciseCount']} ${AppLocalizations.of(context)!.exercises}',
                       ),
                       const SizedBox(width: 12),
                       _buildStatChip(
@@ -704,13 +713,12 @@ class _WordRecallLevelsScreenState extends State<WordRecallLevelsScreen>
                             ],
                           ),
                           child: TextButton.icon(
-                              onPressed: () async {
-                          Navigator.pop(context);
-                          // Navigate to premium purchase screen
-                          await RevenueCatIntegrationService.instance
-                              .goToSubscriptionPage(context);
-                        },
-                          
+                            onPressed: () async {
+                              Navigator.pop(context);
+                              // Navigate to premium purchase screen
+                              await RevenueCatIntegrationService.instance
+                                  .goToSubscriptionPage(context);
+                            },
                             icon: const Icon(
                               Icons.star,
                               color: Color(0xFF667eea),

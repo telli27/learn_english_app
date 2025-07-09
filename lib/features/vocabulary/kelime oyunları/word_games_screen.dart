@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:revenue_cat_integration/service/revenue_cat_integration_service.dart';
 
+import '../../../core/providers.dart';
 import 'kelime eşleştirme/word_matching_game_screen.dart';
 import 'kelime eşleştirme/word_matching_levels_screen.dart';
 import 'kelime hatırlama/word_recall_levels_screen.dart';
@@ -15,44 +18,52 @@ class WordGamesScreen extends ConsumerStatefulWidget {
 }
 
 class _WordGamesScreenState extends ConsumerState<WordGamesScreen> {
-  // Most valuable language learning games
-  static const List<Map<String, dynamic>> _gameOptions = [
-    {
-      'id': 'word_matching',
-      'title': 'Kelime Eşleştirme',
-      'description':
-          'İngilizce kelimeleri Türkçe anlamlarıyla eşleştirerek daha hızlı öğrenin',
-      'icon': Icons.compare_arrows,
-      'color': Color(0xFF6C5CE7),
-    },
-    {
-      'id': 'word_recall',
-      'title': 'Kelime Hatırlama',
-      'description':
-          'Gösterilen kelimeleri belirli bir süre sonra hatırlayarak kalıcı öğrenme sağlayın',
-      'icon': Icons.psychology,
-      'color': Color(0xFF00B894),
-    },
-    {
-      'id': 'sentence_completion',
-      'title': 'Cümle Tamamlama',
-      'description':
-          'Eksik kelimeleri doldurarak cümle kurma yeteneğinizi geliştirin',
-      'icon': Icons.format_align_left,
-      'color': Color(0xFFFF7675),
-    },
-    {
-      'id': 'sentence_building',
-      'title': 'Cümle Kurma',
-      'description':
-          'Verilen kelimelerden doğru cümle kurarak gramer bilginizi pekiştirin',
-      'icon': Icons.construction,
-      'color': Color(0xFF74B9FF),
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(adServiceProvider).loadBannerAd();
+      }
+    });
+  }
+
+  List<Map<String, dynamic>> _getGameOptions(AppLocalizations l10n) {
+    return [
+      {
+        'id': 'word_matching',
+        'title': l10n.word_matching,
+        'description': l10n.match_words,
+        'icon': Icons.compare_arrows,
+        'color': Color(0xFF6C5CE7),
+      },
+      {
+        'id': 'word_recall',
+        'title': l10n.word_recall,
+        'description': l10n.remember_words,
+        'icon': Icons.psychology,
+        'color': Color(0xFF00B894),
+      },
+      {
+        'id': 'sentence_completion',
+        'title': l10n.sentence_completion,
+        'description': l10n.complete_sentence,
+        'icon': Icons.format_align_left,
+        'color': Color(0xFFFF7675),
+      },
+      {
+        'id': 'sentence_building',
+        'title': l10n.sentence_building,
+        'description': l10n.create_sentence,
+        'icon': Icons.construction,
+        'color': Color(0xFF74B9FF),
+      },
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF2C3550);
     final backgroundColor =
@@ -65,7 +76,7 @@ class _WordGamesScreenState extends ConsumerState<WordGamesScreen> {
         backgroundColor: const Color(0xFFFF6B6B),
         elevation: 0,
         title: Text(
-          'Kelime Oyunları',
+          l10n.word_games,
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -87,8 +98,8 @@ class _WordGamesScreenState extends ConsumerState<WordGamesScreen> {
                 bottomRight: Radius.circular(20),
               ),
             ),
-            child: const Text(
-              'Kelimeleri eğlenceli bir şekilde öğrenin ve pratik yapın',
+            child: Text(
+              l10n.select_words,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 16,
@@ -101,9 +112,9 @@ class _WordGamesScreenState extends ConsumerState<WordGamesScreen> {
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: _gameOptions.length,
+              itemCount: _getGameOptions(l10n).length,
               itemBuilder: (context, index) {
-                final game = _gameOptions[index];
+                final game = _getGameOptions(l10n)[index];
                 return _buildGameCard(
                   game,
                   cardColor,
@@ -114,8 +125,25 @@ class _WordGamesScreenState extends ConsumerState<WordGamesScreen> {
             ),
           ),
 
+          if (RevenueCatIntegrationService.instance.isPremium.value == false)
+            Consumer(
+              builder: (context, ref, child) {
+                final adService = ref.watch(adServiceProvider);
+                final bannerAd = adService.getBannerAdWidget();
+                if (bannerAd != null) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: bannerAd,
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+
           // Coming soon section
-         /* Padding(
+          /* Padding(
             padding: const EdgeInsets.all(16),
             child: Container(
               width: double.infinity,
@@ -247,7 +275,7 @@ class _WordGamesScreenState extends ConsumerState<WordGamesScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Oynamak için dokunun',
+                            AppLocalizations.of(context)!.start,
                             style: TextStyle(
                               color: game['color'],
                               fontWeight: FontWeight.w500,
@@ -309,7 +337,8 @@ class _WordGamesScreenState extends ConsumerState<WordGamesScreen> {
         // Unknown game
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Bilinmeyen oyun: ${game['title']}'),
+            content: Text(
+                '${AppLocalizations.of(context)!.error}: ${game['title']}'),
             behavior: SnackBarBehavior.floating,
           ),
         );

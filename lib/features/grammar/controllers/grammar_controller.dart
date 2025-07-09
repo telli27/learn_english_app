@@ -52,15 +52,27 @@ class GrammarController extends StateNotifier<GrammarState> {
 
   // Tüm dilbilgisi konularını yükler
   // Riverpod state'ini güncelleyerek UI'nın yeniden oluşturulmasını tetikler
-  Future<void> loadGrammarTopics() async {
-    // If already loading or lock is active, return
-    if (state.isLoading || _isLoadLocked) return;
+  Future<void> loadGrammarTopics(
+      {String languageCode = 'tr', bool forceReload = false}) async {
+    print(
+        "📚 GrammarController.loadGrammarTopics called with language: $languageCode, forceReload: $forceReload");
 
-    // If topics are already loaded and no error, return
-    if (state.topics.isNotEmpty && state.errorMessage == null) return;
+    // If already loading or lock is active, return
+    if (state.isLoading || _isLoadLocked) {
+      print("⏳ Already loading or locked, returning");
+      return;
+    }
+
+    // If topics are already loaded and no error, return (unless force reload)
+    if (!forceReload && state.topics.isNotEmpty && state.errorMessage == null) {
+      print("✅ Topics already loaded and no error, returning");
+      return;
+    }
 
     try {
       _isLoadLocked = true;
+      print("🔄 Starting to load grammar topics for language: $languageCode");
+
       // Durum güncellenir - Riverpod bağlı widget'ları bilgilendirir
       state = state.copyWith(
         isLoading: true,
@@ -73,15 +85,22 @@ class GrammarController extends StateNotifier<GrammarState> {
       // Simulate a short delay for loading animation
       await Future.delayed(const Duration(milliseconds: 100));
 
-      // Verileri repository'den yükle
-      final topics = _repository.getGrammarTopics();
+      // Load data from GrammarData with language support
+      print("📥 Loading topics from GrammarData...");
+      await GrammarData.loadTopics(languageCode: languageCode);
+      final topics = GrammarData.topics;
+
+      print("📊 Loaded ${topics.length} topics from GrammarData");
 
       // Başarılı yükleme durumunda state güncellenir
       state = state.copyWith(
         topics: topics,
         isLoading: false,
       );
+
+      print("✅ Grammar topics loaded successfully: ${topics.length} topics");
     } catch (e) {
+      print("❌ Error loading grammar topics: $e");
       // Hata durumunda state güncellenir
       state = state.copyWith(
         isLoading: false,
@@ -90,6 +109,18 @@ class GrammarController extends StateNotifier<GrammarState> {
     } finally {
       _isLoadLocked = false;
     }
+  }
+
+  // Directly update topics without loading - used when topics are already loaded elsewhere
+  void updateTopicsDirectly(List<GrammarTopic> newTopics) {
+    print(
+        "🔄 GrammarController.updateTopicsDirectly called with ${newTopics.length} topics");
+    state = state.copyWith(
+      topics: newTopics,
+      isLoading: false,
+      errorMessage: null,
+    );
+    print("✅ GrammarController state updated with new topics");
   }
 
   // ID'ye göre belirli bir dilbilgisi konusunu yükler

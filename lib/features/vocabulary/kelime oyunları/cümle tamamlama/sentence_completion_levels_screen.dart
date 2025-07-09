@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io';
 import 'package:revenue_cat_integration/service/revenue_cat_integration_service.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'enhanced_sentence_completion_data.dart';
 import 'sentence_completion_game_screen.dart';
@@ -171,10 +172,11 @@ class _SentenceCompletionLevelsScreenState
                       constraints: const BoxConstraints(),
                     ),
                     const SizedBox(width: 8),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Cümle Tamamlama Seviyeleri',
-                        style: TextStyle(
+                        AppLocalizations.of(context)!
+                            .sentence_completion_levels,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -184,9 +186,9 @@ class _SentenceCompletionLevelsScreenState
                   ],
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  'Eksik kelimeleri doldurarak cümle kurma yeteneğinizi geliştirin',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)!.create_complete_sentences,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -198,7 +200,7 @@ class _SentenceCompletionLevelsScreenState
                     _buildStatChip(
                       icon: Icons.quiz,
                       label:
-                          '${levels.fold(0, (sum, level) => sum + level.totalQuestions)} Soru',
+                          '${levels.fold(0, (sum, level) => sum + level.totalQuestions)} ${AppLocalizations.of(context)!.question_count}',
                       color: Colors.white.withOpacity(0.2),
                     ),
                     const SizedBox(width: 12),
@@ -403,13 +405,15 @@ class _SentenceCompletionLevelsScreenState
                         children: [
                           _buildSimpleStatChip(
                             icon: Icons.assignment_outlined,
-                            label: '${level.exerciseCount} Alıştırma',
+                            label:
+                                '${level.exerciseCount} ${AppLocalizations.of(context)!.exercises}',
                             color: isLocked ? Colors.grey : primaryColor,
                           ),
                           const SizedBox(width: 8),
                           _buildSimpleStatChip(
                             icon: Icons.quiz_outlined,
-                            label: '${level.totalQuestions} Soru',
+                            label:
+                                '${level.totalQuestions} ${AppLocalizations.of(context)!.question_count}',
                             color: isLocked ? Colors.grey : primaryColor,
                           ),
                         ],
@@ -620,11 +624,11 @@ class _SentenceCompletionLevelsScreenState
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                          Navigator.pop(context);
-                          // Navigate to premium purchase screen
-                          await RevenueCatIntegrationService.instance
-                              .goToSubscriptionPage(context);
-                        },
+                        Navigator.pop(context);
+                        // Navigate to premium purchase screen
+                        await RevenueCatIntegrationService.instance
+                            .goToSubscriptionPage(context);
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: primaryColor,

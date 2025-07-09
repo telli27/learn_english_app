@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../core/providers.dart';
 import '../utils/constants/colors.dart';
 import '../features/settings/screens/terms_of_use_screen.dart';
 import '../features/settings/screens/privacy_policy_screen.dart';
+import '../features/auth/controllers/theme_controller.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -45,7 +47,7 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Kullanıcı',
+                    AppLocalizations.of(context)!.user,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -54,7 +56,7 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Öğrenme seviyesi: Başlangıç',
+                    AppLocalizations.of(context)!.learning_level_beginner,
                     style: TextStyle(
                       fontSize: 16,
                       color: isDark ? Colors.white70 : AppColors.textSecondary,
@@ -71,24 +73,24 @@ class ProfileScreen extends ConsumerWidget {
                 children: [
                   // Progress section
                   _buildSection(
-                    'İlerleme Durumu',
+                    AppLocalizations.of(context)!.progress_status,
                     [
                       _buildProgressItem(
-                        'Toplam Tamamlanan Ders',
+                        AppLocalizations.of(context)!.total_completed_lessons,
                         '8',
                         Icons.book_rounded,
                         const Color(0xFF4F6CFF),
                         isDark,
                       ),
                       _buildProgressItem(
-                        'Çözülen Alıştırma',
+                        AppLocalizations.of(context)!.solved_exercises,
                         '25',
                         Icons.check_circle_rounded,
                         const Color(0xFF00BFA5),
                         isDark,
                       ),
                       _buildProgressItem(
-                        'Doğruluk Oranı',
+                        AppLocalizations.of(context)!.accuracy_rate,
                         '%72',
                         Icons.trending_up_rounded,
                         const Color(0xFFFF9500),
@@ -102,11 +104,13 @@ class ProfileScreen extends ConsumerWidget {
 
                   // Settings section
                   _buildSection(
-                    'Ayarlar',
+                    AppLocalizations.of(context)!.settings,
                     [
                       _buildSettingItem(
-                        'Tema',
-                        isDark ? 'Karanlık' : 'Aydınlık',
+                        AppLocalizations.of(context)!.theme,
+                        isDark
+                            ? AppLocalizations.of(context)!.dark_theme
+                            : AppLocalizations.of(context)!.light_theme,
                         Icons.brightness_6_rounded,
                         isDark,
                         onTap: () {
@@ -116,13 +120,13 @@ class ProfileScreen extends ConsumerWidget {
                         },
                       ),
                       _buildSettingItem(
-                        'Bildirimler',
-                        'Açık',
+                        AppLocalizations.of(context)!.notifications,
+                        AppLocalizations.of(context)!.on,
                         Icons.notifications_rounded,
                         isDark,
                       ),
                       _buildSettingItem(
-                        'Dil',
+                        AppLocalizations.of(context)!.language,
                         'Türkçe',
                         Icons.language_rounded,
                         isDark,
@@ -135,10 +139,10 @@ class ProfileScreen extends ConsumerWidget {
 
                   // Legal section
                   _buildSection(
-                    'Yasal',
+                    AppLocalizations.of(context)!.legal,
                     [
                       _buildSettingItem(
-                        'Kullanım Şartları',
+                        AppLocalizations.of(context)!.terms_of_use,
                         '',
                         Icons.description_outlined,
                         isDark,
@@ -152,7 +156,7 @@ class ProfileScreen extends ConsumerWidget {
                         },
                       ),
                       _buildSettingItem(
-                        'Gizlilik Politikası',
+                        AppLocalizations.of(context)!.privacy_policy,
                         '',
                         Icons.privacy_tip_outlined,
                         isDark,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:revenue_cat_integration/configs/packages_text_config.dart';
 import 'package:revenue_cat_integration/revenue_cat_integration.dart';
 import 'package:revenue_cat_integration/widgets/feature_item.dart';
@@ -10,24 +11,28 @@ import '../../../core/utils/constants/colors.dart';
 import '../../../features/grammar/screens/grammar_topic_screen.dart';
 import '../../../screens/topic_detail_screen.dart';
 import '../../../core/data/grammar_data.dart';
+import '../../../core/data/grammar_version_checker.dart';
 import '../../../utils/update_dialog.dart';
 import '../../../auth/screens/login_screen.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../core/providers/topic_progress_provider.dart';
+import '../../../core/providers/locale_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'main_screen.dart' show showUserMenu;
 
 // State provider for selected filter
-final selectedFilterProvider = StateProvider<String>((ref) => 'Tümü');
+final selectedFilterProvider = StateProvider<String>((ref) => 'all');
 
-// List of grammar categories for filters
-final List<String> grammarCategories = [
-  'Tümü',
-  'Fiil Zamanları',
-  'Cümle Yapısı',
-  'İsimler & Sıfatlar',
-  'Konuşma Dili'
-];
+// Function to get grammar categories for filters
+List<String> getGrammarCategories(AppLocalizations l10n) {
+  return [
+    l10n.all,
+    l10n.verb_tenses,
+    l10n.sentence_structure,
+    l10n.nouns_adjectives,
+    l10n.spoken_language
+  ];
+}
 
 // State provider for search query
 final searchQueryProvider = StateProvider<String>((ref) => '');
@@ -54,9 +59,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _loadGrammarTopics();
+
+    // Setup search controller listener
+    _searchController.addListener(() {
+      ref.read(searchQueryProvider.notifier).state = _searchController.text;
+    });
+  }
+
+  void _loadGrammarTopics() {
     // Load grammar topics when the screen loads
     Future.microtask(() {
-      ref.read(grammarControllerProvider.notifier).loadGrammarTopics();
+      // Get current locale for loading appropriate language data
+      final currentLocale = ref.read(localeProvider);
+      final languageCode = currentLocale.languageCode;
+
+      print("🏠 HomeScreen loading topics for language: $languageCode");
+      print(
+          "📊 Current GrammarData.topics count: ${GrammarData.topics.length}");
+
+      // Check if we already have topics loaded (from language change)
+      if (GrammarData.topics.isNotEmpty) {
+        print("✅ Topics already available, updating controller directly");
+        ref
+            .read(grammarControllerProvider.notifier)
+            .updateTopicsDirectly(GrammarData.topics);
+      } else {
+        print("📥 No topics available, loading from server");
+        ref
+            .read(grammarControllerProvider.notifier)
+            .loadGrammarTopics(languageCode: languageCode, forceReload: true);
+      }
 
       // Load user progress if user is logged in
       final authState = ref.read(authProvider);
@@ -68,15 +101,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       Future.delayed(const Duration(milliseconds: 500), () {
         // Check for updates and show dialog if needed, but only if not already shown in this session
         if (mounted && !_hasShownUpdateDialogForSession) {
-          GrammarData.showUpdateDialogIfNeeded(context);
+          GrammarData.showUpdateDialogIfNeeded(context,
+              languageCode: languageCode);
           _hasShownUpdateDialogForSession = true;
         }
       });
-    });
-
-    // Setup search controller listener
-    _searchController.addListener(() {
-      ref.read(searchQueryProvider.notifier).state = _searchController.text;
     });
   }
 
@@ -101,9 +130,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Reset the session flag when forcing an update check
     _hasShownUpdateDialogForSession = false;
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('grammar_version_json');
-    await prefs.remove('grammar_data_json');
+    // Get current locale
+    final currentLocale = ref.read(localeProvider);
+    final languageCode = currentLocale.languageCode;
+
+    await GrammarVersionChecker.clearAllData();
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -112,10 +143,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
 
-    // Restart the app or reload grammar data
-    await GrammarData.loadTopics();
+    // Clear GrammarData topics and reload with current language
+    GrammarData.topics.clear();
+    await GrammarData.loadTopics(languageCode: languageCode);
     if (mounted) {
-      GrammarData.showUpdateDialogIfNeeded(context);
+      GrammarData.showUpdateDialogIfNeeded(context, languageCode: languageCode);
       _hasShownUpdateDialogForSession = true;
     }
   }
@@ -129,6 +161,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final selectedFilter = ref.watch(selectedFilterProvider);
     final searchQuery = ref.watch(searchQueryProvider);
     final isSearching = ref.watch(isSearchingProvider);
+    final currentLocale = ref.watch(localeProvider);
+    final l10n = AppLocalizations.of(context)!;
+    final grammarCategories = getGrammarCategories(l10n);
+
+    // Check if we need to load topics for current language on every build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (topics.isEmpty && !isLoading && errorMessage == null) {
+        print(
+            "🔄 Build detected empty topics, checking for language: ${currentLocale.languageCode}");
+        if (GrammarData.topics.isNotEmpty) {
+          print("📥 Found topics in GrammarData, updating controller");
+          ref
+              .read(grammarControllerProvider.notifier)
+              .updateTopicsDirectly(GrammarData.topics);
+        } else {
+          print(
+              "📥 No topics found, loading for language: ${currentLocale.languageCode}");
+          ref.read(grammarControllerProvider.notifier).loadGrammarTopics(
+              languageCode: currentLocale.languageCode, forceReload: true);
+        }
+      }
+    });
+
+    // Listen for locale changes and update grammar controller with new data
+    ref.listen<Locale>(localeProvider, (previous, next) {
+      if (previous != null && previous.languageCode != next.languageCode) {
+        print(
+            "🌍 Locale changed from ${previous.languageCode} to ${next.languageCode}");
+        print("🔄 Updating grammar controller with new language data");
+
+        // Wait a moment for the language loading to complete, then update controller
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (GrammarData.topics.isNotEmpty) {
+            print(
+                "📊 Updating GrammarController with ${GrammarData.topics.length} topics");
+            // Directly update the controller state with the new topics
+            ref
+                .read(grammarControllerProvider.notifier)
+                .updateTopicsDirectly(GrammarData.topics);
+          } else {
+            print(
+                "⚠️ No topics found after language change, force reloading...");
+            ref.read(grammarControllerProvider.notifier).loadGrammarTopics(
+                languageCode: next.languageCode, forceReload: true);
+          }
+        });
+      }
+    });
 
     // Konular boş ve yükleme tamamlanmışsa, loading durumunu doğru göster
     final bool effectiveLoading =
@@ -151,10 +231,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
 
       // If no search query, apply category filter
-      if (selectedFilter != 'Tümü') {
+      if (selectedFilter != l10n.all) {
         bool matchesCategory = false;
         switch (selectedFilter) {
-          case 'Fiil Zamanları':
+          case String filter when filter == l10n.verb_tenses:
             matchesCategory = topic.title.toLowerCase().contains('zaman') ||
                 topic.title.toLowerCase().contains('tense') ||
                 topic.title.toLowerCase().contains('present') ||
@@ -163,7 +243,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 topic.title.toLowerCase().contains('perfect') ||
                 topic.title.toLowerCase().contains('continuous');
             break;
-          case 'Cümle Yapısı':
+          case String filter when filter == l10n.sentence_structure:
             matchesCategory = topic.title.toLowerCase().contains('cümle') ||
                 topic.title.toLowerCase().contains('sentence') ||
                 topic.title.toLowerCase().contains('clause') ||
@@ -175,7 +255,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 topic.title.toLowerCase().contains('conditional') ||
                 topic.title.toLowerCase().contains('şart');
             break;
-          case 'İsimler & Sıfatlar':
+          case String filter when filter == l10n.nouns_adjectives:
             matchesCategory = topic.title.toLowerCase().contains('noun') ||
                 topic.title.toLowerCase().contains('isim') ||
                 topic.title.toLowerCase().contains('adj') ||
@@ -185,7 +265,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 topic.title.toLowerCase().contains('article') ||
                 topic.title.toLowerCase().contains('tanımlık');
             break;
-          case 'Konuşma Dili':
+          case String filter when filter == l10n.spoken_language:
             matchesCategory = topic.title.toLowerCase().contains('speak') ||
                 topic.title.toLowerCase().contains('konuşma') ||
                 topic.title.toLowerCase().contains('dialogue') ||
@@ -221,10 +301,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: Column(
           children: [
             // Custom app bar
-            _buildAppBar(isDark, filteredTopics.length, isLoggedIn),
+            _buildAppBar(isDark, filteredTopics.length, isLoggedIn,
+                grammarCategories, l10n),
 
             // Search field when searching is active
-            if (isSearching) _buildSearchField(isDark),
+            if (isSearching) _buildSearchField(isDark, l10n),
 
             // Error message if there is an error
             if (errorMessage != null)
@@ -249,19 +330,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
 
-          
             // Loading indicator - shows even if topics are empty
             if (effectiveLoading)
-              const Expanded(
+              Expanded(
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 16),
                       Text(
-                        "Konular yükleniyor...",
-                        style: TextStyle(
+                        l10n.loading_topics,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                           color: Colors.grey,
@@ -286,8 +366,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const SizedBox(height: 16),
                       Text(
                         searchQuery.isNotEmpty
-                            ? 'Arama sonucu bulunamadı'
-                            : 'Bu kategoride konu bulunamadı',
+                            ? l10n.no_search_results
+                            : l10n.no_topics_in_category,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
@@ -305,7 +385,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             _searchFocusNode.unfocus();
                           },
                           icon: const Icon(Icons.close),
-                          label: const Text('Aramayı Temizle'),
+                          label: Text(l10n.clear_search),
                           style: ElevatedButton.styleFrom(
                             foregroundColor: Colors.white,
                             backgroundColor: AppColors.primary,
@@ -321,10 +401,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: () async {
+                    // Get current locale for reloading appropriate language data
+                    final currentLocale = ref.read(localeProvider);
+                    final languageCode = currentLocale.languageCode;
+
                     // Reload topics and progress on pull to refresh
                     await ref
                         .read(grammarControllerProvider.notifier)
-                        .loadGrammarTopics();
+                        .loadGrammarTopics(languageCode: languageCode);
                     // Also reload progress if user is logged in
                     if (authState.isLoggedIn) {
                       await ref
@@ -529,7 +613,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildSearchField(bool isDark) {
+  Widget _buildSearchField(bool isDark, AppLocalizations l10n) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -554,7 +638,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           color: isDark ? Colors.white : const Color(0xFF1D2939),
         ),
         decoration: InputDecoration(
-          hintText: 'Tüm kategorilerde ara...',
+          hintText: l10n.search_placeholder,
           hintStyle: TextStyle(
             color: isDark ? Colors.white38 : Colors.black38,
           ),
@@ -592,7 +676,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildAppBar(bool isDark, int resultCount, bool isLoggedIn) {
+  Widget _buildAppBar(bool isDark, int resultCount, bool isLoggedIn,
+      List<String> grammarCategories, AppLocalizations l10n) {
     final isSearching = ref.watch(isSearchingProvider);
     final authState = ref.watch(authProvider);
     final searchQuery = ref.watch(searchQueryProvider);
@@ -653,8 +738,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         const SizedBox(height: 2),
                         Text(
                           isSearching
-                              ? '$resultCount sonuç bulundu'
-                              : 'İngilizce Öğrenmek Artık Daha Kolay',
+                              ? '$resultCount ${l10n.results_found}'
+                              : l10n.app_subtitle,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -669,7 +754,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   _buildPremiumButton(),
                   // Account button - redirects to login/profile
-                /*  GestureDetector(
+                  /*  GestureDetector(
                     onTap: () {
                       final isLoggedIn = ref.read(authProvider).isLoggedIn;
                       if (isLoggedIn) {
@@ -729,9 +814,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           .read(isSearchingProvider.notifier)
                           .update((state) => !state);
                       if (!isSearching) {
-                        // When entering search mode, automatically set filter to "Tümü" (All)
+                        // When entering search mode, automatically set filter to "All"
                         ref.read(selectedFilterProvider.notifier).state =
-                            'Tümü';
+                            l10n.all;
 
                         // Focus the search field immediately
                         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -789,7 +874,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Text(
-                'Tüm kategorilerde "$searchQuery" için $resultCount sonuç',
+                '"$searchQuery" için $resultCount sonuç',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.normal,
@@ -868,7 +953,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   // Add this method to show the authentication dialog
-  void _showAuthDialog(BuildContext context, bool isDark) {
+  void _showAuthDialog(
+      BuildContext context, bool isDark, AppLocalizations l10n) {
     // Get the auth state
     final authState = ref.read(authProvider);
 
@@ -941,7 +1027,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'İngilizce Uygulaması',
+                              l10n.english_app,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: isDark ? Colors.white70 : Colors.black54,

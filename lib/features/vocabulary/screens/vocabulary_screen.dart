@@ -25,6 +25,7 @@ import 'package:intl/intl.dart';
 import 'notification_settings_screen.dart';
 import '../kelime oyunları/word_games_screen.dart';
 import '../listening_practice/screens/listening_practice_screen.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class VocabularyScreen extends ConsumerWidget {
   const VocabularyScreen({Key? key}) : super(key: key);
@@ -58,7 +59,7 @@ class VocabularyScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Kelime Kartları',
+          AppLocalizations.of(context)!.word_cards,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: textColor,
@@ -89,8 +90,8 @@ class VocabularyScreen extends ConsumerWidget {
               // Word Games Card
               _buildMenuCard(
                 context: context,
-                title: 'Kelime Oyunları',
-                subtitle: 'Eğlenerek kelime bilginizi artırın',
+                title: AppLocalizations.of(context)!.word_games,
+                subtitle: AppLocalizations.of(context)!.improve_vocabulary,
                 icon: Icons.sports_esports,
                 gradient: [
                   const Color(0xFFFF6B6B), // Red
@@ -105,15 +106,14 @@ class VocabularyScreen extends ConsumerWidget {
                   );
                 },
               ),
-            
 
               const SizedBox(height: 20),
 
               // Listening Practice Card
               _buildMenuCard(
                 context: context,
-                title: 'Dinleme Pratiği',
-                subtitle: 'İngilizce sesleri ve konuşmaları anlayın',
+                title: AppLocalizations.of(context)!.listening_practice,
+                subtitle: AppLocalizations.of(context)!.listen_english,
                 icon: Icons.headphones,
                 gradient: [
                   const Color(0xFFFD9644), // Orange

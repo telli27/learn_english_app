@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/providers.dart';
 import '../utils/constants/colors.dart';
+import '../core/data/grammar_data.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ExerciseQuizScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> exercise;
@@ -298,8 +300,8 @@ class _ExerciseQuizScreenState extends ConsumerState<ExerciseQuizScreen> {
                             const SizedBox(width: 8),
                             Text(
                               _selectedOptionIndex == question['correctAnswer']
-                                  ? 'Doğru Cevap! 👍'
-                                  : 'Yanlış Cevap! 🤔',
+                                  ? AppLocalizations.of(context)!.correct_answer
+                                  : AppLocalizations.of(context)!.wrong_answer,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -322,7 +324,7 @@ class _ExerciseQuizScreenState extends ConsumerState<ExerciseQuizScreen> {
                         const SizedBox(height: 6),
                         Text(
                           question['explanation'] as String? ??
-                              'Bu türdeki sorularda, verilen gramer yapısını doğru şekilde uygulamanız gerekir.',
+                              AppLocalizations.of(context)!.default_explanation,
                           style: TextStyle(
                             fontSize: 14,
                             height: 1.5,
@@ -413,9 +415,9 @@ class _ExerciseQuizScreenState extends ConsumerState<ExerciseQuizScreen> {
             child: Text(
               _answered
                   ? _currentQuestionIndex == questions.length - 1
-                      ? 'Sonuçları Gör'
-                      : 'Sonraki Soru'
-                  : 'Cevabı Kontrol Et',
+                      ? AppLocalizations.of(context)!.results
+                      : AppLocalizations.of(context)!.next_question
+                  : AppLocalizations.of(context)!.check_answer,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -447,15 +449,15 @@ class _ExerciseQuizScreenState extends ConsumerState<ExerciseQuizScreen> {
   String _getQuestionTypeLabel(String type) {
     switch (type) {
       case 'multiple_choice':
-        return 'Çoktan Seçmeli';
+        return AppLocalizations.of(context)!.multiple_choice;
       case 'fill_in_the_blank':
-        return 'Boşluk Doldurma';
+        return AppLocalizations.of(context)!.fill_in_the_blank;
       case 'true_false':
-        return 'Doğru/Yanlış';
+        return AppLocalizations.of(context)!.true_false;
       case 'matching':
-        return 'Eşleştirme';
+        return AppLocalizations.of(context)!.matching;
       default:
-        return 'Çoktan Seçmeli';
+        return AppLocalizations.of(context)!.multiple_choice;
     }
   }
 
@@ -679,7 +681,9 @@ class _ExerciseQuizScreenState extends ConsumerState<ExerciseQuizScreen> {
             ),
             const SizedBox(width: 16),
             Text(
-              value ? 'Doğru' : 'Yanlış',
+              value
+                  ? AppLocalizations.of(context)!.correct
+                  : AppLocalizations.of(context)!.wrong,
               style: TextStyle(
                 fontSize: 16,
                 color: textColor,
@@ -749,7 +753,7 @@ class _ExerciseQuizScreenState extends ConsumerState<ExerciseQuizScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Cümledeki boşluğa uygun kelimeyi seçin:',
+                  AppLocalizations.of(context)!.select_appropriate_word,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -1031,21 +1035,21 @@ class _ExerciseQuizScreenState extends ConsumerState<ExerciseQuizScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Çıkmak istediğinize emin misiniz?'),
-        content: const Text('İlerlemeniz kaydedilmeyecek.'),
+        title: Text(AppLocalizations.of(context)!.exit_confirmation),
+        content: Text(AppLocalizations.of(context)!.progress_will_be_lost),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context);
             },
-            child: const Text('Hayır'),
+            child: Text(AppLocalizations.of(context)!.no),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('Evet'),
+            child: Text(AppLocalizations.of(context)!.yes),
           ),
         ],
       ),
@@ -1078,7 +1082,9 @@ class _ExerciseQuizScreenState extends ConsumerState<ExerciseQuizScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            isPassed ? 'Tebrikler!' : 'Tekrar Deneyin!',
+            isPassed
+                ? AppLocalizations.of(context)!.congratulations
+                : AppLocalizations.of(context)!.try_again,
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -1087,7 +1093,7 @@ class _ExerciseQuizScreenState extends ConsumerState<ExerciseQuizScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Skorunuz: %${percentage.toInt()}',
+            '${AppLocalizations.of(context)!.your_score}: %${percentage.toInt()}',
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -1095,7 +1101,7 @@ class _ExerciseQuizScreenState extends ConsumerState<ExerciseQuizScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '$_correctAnswers/$totalQuestions doğru cevap',
+            '$_correctAnswers/$totalQuestions ${AppLocalizations.of(context)!.correct_answers_count}',
             style: TextStyle(
               fontSize: 16,
               color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
@@ -1120,9 +1126,9 @@ class _ExerciseQuizScreenState extends ConsumerState<ExerciseQuizScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text(
-              'Tekrar Dene',
-              style: TextStyle(
+            child: Text(
+              AppLocalizations.of(context)!.retry,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -1133,9 +1139,9 @@ class _ExerciseQuizScreenState extends ConsumerState<ExerciseQuizScreen> {
             onPressed: () {
               Navigator.pop(context);
             },
-            child: const Text(
-              'Ana Menüye Dön',
-              style: TextStyle(
+            child: Text(
+              AppLocalizations.of(context)!.return_to_main_menu,
+              style: const TextStyle(
                 fontSize: 16,
               ),
             ),

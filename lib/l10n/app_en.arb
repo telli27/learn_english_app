@@ -1,0 +1,123 @@
+{
+    "@@locale": "en",
+    "progressMessage": "You have made {progress}% progress on this topic",
+    "@progressMessage": {
+        "placeholders": {
+            "progress": {
+                "type": "int"
+            }
+        }
+    },
+    "milestone25": "You're doing great! 25% completed",
+    "milestone50": "You've completed half! Great progress",
+    "milestone75": "Very good! 75% completed",
+    "milestone100": "Congratulations! You have completely finished the topic",
+    "milestoneDefault": "You are doing well!",
+    "topicNotFound": "Topic not found",
+    "noGrammarDetails": "Detailed grammar information has not been added for this topic yet.",
+    "example": "Example",
+    "pronounceEnglish": "Pronounce English",
+    "timeUpMessageWordMatching": "Time is up! Would you like to try the exercise again?",
+    "exercise_complete": "Exercise Complete",
+    "exerciseCompleteMessageWordMatching": "You have successfully completed the exercise.",
+    "level_complete": "Level Complete",
+    "levelCompleteMessageWordMatching": "You have successfully completed the level.",
+    "select_exercise": "Select Exercise",
+    "selectExerciseMessageWordMatching": "Please select an exercise to continue.",
+    "correctMatchToast": "Correct match: +10 points! 🎉",
+    "incorrectMatchToast": "Incorrect match: -2 points! ❌",
+    "levelWithId": "Level {id}",
+    "@levelWithId": {
+        "placeholders": {
+            "id": {
+                "type": "int"
+            }
+        }
+    },
+    "exerciseOrderOfTotal": "Exercise {order}/{total}",
+    "@exerciseOrderOfTotal": {
+        "placeholders": {
+            "order": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "timeLeftInSeconds": "{time} s",
+    "@timeLeftInSeconds": {
+        "placeholders": {
+            "time": {
+                "type": "int"
+            }
+        }
+    },
+    "matchingProgress": "Matched: {matched}/{total}",
+    "@matchingProgress": {
+        "placeholders": {
+            "matched": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "remainingProgress": "Remaining: {remaining}",
+    "@remainingProgress": {
+        "placeholders": {
+            "remaining": {
+                "type": "int"
+            }
+        }
+    },
+    "scoreInPoints": "{score} points",
+    "@scoreInPoints": {
+        "placeholders": {
+            "score": {
+                "type": "int"
+            }
+        }
+    },
+    "exerciseCompletedTitle": "Exercise {order} Completed!",
+    "@exerciseCompletedTitle": {
+        "placeholders": {
+            "order": {
+                "type": "int"
+            }
+        }
+    },
+    "nextExerciseReadyMessage": "Are you ready to move on to the next exercise in Level {levelId}?",
+    "@nextExerciseReadyMessage": {
+        "placeholders": {
+            "levelId": {
+                "type": "int"
+            }
+        }
+    },
+    "correctMatchesStat": "Correct Matches:",
+    "timeBonusStat": "Time Bonus:",
+    "exerciseScoreStat": "Exercise Score:",
+    "congratsGameCompletedTitle": "Congratulations! You have completed the game!",
+    "levelCompletedTitle": "Level {id} Completed!",
+    "@levelCompletedTitle": {
+        "placeholders": {
+            "id": {
+                "type": "int"
+            }
+        }
+    },
+    "completedExercisesStat": "Completed Exercises:",
+    "lastExerciseBonusStat": "Last Exercise Bonus:",
+    "totalLevelScoreStat": "Total Level Score:",
+    "allLevelsCompletedMessage": "You have successfully completed all levels!",
+    "nextLevelReadyMessage": "Are you ready to move on to the next level?",
+    "nextLevelButton": "Next Level",
+    "selectExerciseTitle": "Select Exercise",
+    "exerciseLabel": "Exercise",
+    "exerciseStartingMessage": "The exercise is starting...",
+    "startingMessage": "Starting!",
+    "timeUpTitle": "Time's Up!",
+    "pointsAbbreviation": "pts"
+} 

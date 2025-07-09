@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../game_enums.dart';
 import '../game_models.dart';
 import 'professional_game_data.dart';
@@ -10,12 +11,12 @@ import '../game_audio_service.dart';
 import '../../services/achievement_service.dart';
 
 /// Provider for the professional word recall game controller
-final professionalWordRecallControllerProvider = StateNotifierProvider
-    .autoDispose
-    .family<ProfessionalWordRecallController, RecallGameState, DifficultyLevel>(
-  (ref, difficulty) => ProfessionalWordRecallController(
-    difficulty: difficulty,
-    gameDataRepository: ref.watch(professionalGameDataProvider),
+final professionalWordRecallControllerProvider =
+    StateNotifierProvider.autoDispose.family<ProfessionalWordRecallController,
+        RecallGameState, ({DifficultyLevel difficulty, AppLocalizations l10n})>(
+  (ref, params) => ProfessionalWordRecallController(
+    difficulty: params.difficulty,
+    gameDataRepository: ref.watch(professionalGameDataProvider(params.l10n)),
     audioService: ref.watch(gameAudioServiceProvider),
     achievementService: ref.watch(achievementServiceProvider),
   ),

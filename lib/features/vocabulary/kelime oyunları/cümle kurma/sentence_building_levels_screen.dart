@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io';
 import 'package:revenue_cat_integration/service/revenue_cat_integration_service.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'dart:math' as math;
 
 import '../game_enums.dart';
@@ -153,7 +154,9 @@ class _SentenceBuildingLevelsScreenState
     final backgroundColor =
         isDarkMode ? const Color(0xFF0F0F23) : const Color(0xFFF8FAFC);
 
-    final levels = SentenceBuildingDataRepository.getAllLevels();
+    final repository =
+        SentenceBuildingDataRepository(AppLocalizations.of(context)!);
+    final levels = repository.getAllLevels();
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -188,7 +191,6 @@ class _SentenceBuildingLevelsScreenState
                       final delay = index * 0.1;
                       final animationValue = math.max(0.0,
                           math.min(1.0, (_cardsAnimation.value - delay) / 0.3));
-                          
 
                       return Transform.translate(
                         offset: Offset(0, 30 * (1 - animationValue)),
@@ -291,9 +293,9 @@ class _SentenceBuildingLevelsScreenState
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Cümle Kurma',
-                              style: TextStyle(
+                            Text(
+                              AppLocalizations.of(context)!.sentence_building,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
@@ -301,7 +303,8 @@ class _SentenceBuildingLevelsScreenState
                               ),
                             ),
                             Text(
-                              'Seviyeleri',
+                              AppLocalizations.of(context)!
+                                  .word_matching_levels,
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.9),
                                 fontSize: 20,
@@ -380,7 +383,8 @@ class _SentenceBuildingLevelsScreenState
                       Expanded(
                         child: _buildEnhancedStatChip(
                           icon: Icons.quiz,
-                          label: '$totalExercises Alıştırma',
+                          label:
+                              '$totalExercises ${AppLocalizations.of(context)!.exercises}',
                           color: Colors.white.withOpacity(0.2),
                         ),
                       ),
@@ -449,7 +453,7 @@ class _SentenceBuildingLevelsScreenState
     required int index,
   }) {
     final isLocked = _shouldLockPremiumFeatures() && level.id != 'level_1';
-    
+
     final cardColor = isDarkMode ? const Color(0xFF1A1D29) : Colors.white;
     final textColor = isDarkMode ? Colors.white : const Color(0xFF1F2937);
 
@@ -670,7 +674,7 @@ class _SentenceBuildingLevelsScreenState
                             Expanded(
                               child: _buildEnhancedStatItem(
                                 icon: Icons.quiz,
-                                label: 'Alıştırma',
+                                label: AppLocalizations.of(context)!.exercises,
                                 value: '${level.exercises.length}',
                                 color: primaryColor,
                                 isDarkMode: isDarkMode,
@@ -969,9 +973,9 @@ class _SentenceBuildingLevelsScreenState
                             isDarkMode ? Colors.white70 : Colors.grey[600],
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: const Text(
-                        'İptal',
-                        style: TextStyle(fontSize: 16),
+                      child: Text(
+                        AppLocalizations.of(context)!.cancel,
+                        style: const TextStyle(fontSize: 16),
                       ),
                     ),
                   ),

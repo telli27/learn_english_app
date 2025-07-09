@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'dart:math' as math;
+import 'package:revenue_cat_integration/service/revenue_cat_integration_service.dart';
+import '../../../../core/providers.dart';
 import 'sentence_building_models.dart';
 import 'sentence_building_controller.dart';
 
@@ -22,11 +25,28 @@ class SentenceBuildingGameScreen extends ConsumerStatefulWidget {
 class _SentenceBuildingGameScreenState
     extends ConsumerState<SentenceBuildingGameScreen> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(adServiceProvider).loadBannerAd();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final gameState =
         ref.watch(sentenceBuildingControllerProvider(widget.levelId));
     final controller =
         ref.read(sentenceBuildingControllerProvider(widget.levelId).notifier);
+
+    // Initialize controller with context if needed
+    if (gameState.phase == SentenceBuildingPhase.loading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        controller.initializeWithContext(AppLocalizations.of(context)!);
+      });
+    }
 
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
@@ -83,7 +103,7 @@ class _SentenceBuildingGameScreenState
           ),
           const SizedBox(height: 24),
           Text(
-            'Hazırlanıyor...',
+            AppLocalizations.of(context)!.loading,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -129,6 +149,25 @@ class _SentenceBuildingGameScreenState
             ),
           ),
         ),
+
+        // Banner Ad
+        if (RevenueCatIntegrationService.instance.isPremium.value == false)
+          Consumer(
+            builder: (context, ref, child) {
+              final adService = ref.watch(adServiceProvider);
+              final bannerAd = adService.getBannerAdWidget();
+              if (bannerAd != null) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: bannerAd,
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+
         // Fixed bottom action buttons
         if (gameState.phase != SentenceBuildingPhase.feedback)
           Container(
@@ -552,7 +591,7 @@ class _SentenceBuildingGameScreenState
               Icon(Icons.translate, color: primaryColor, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Türkçe Çeviri:',
+                AppLocalizations.of(context)!.turkish_translation,
                 style: TextStyle(
                   color: primaryColor,
                   fontWeight: FontWeight.bold,
@@ -614,7 +653,7 @@ class _SentenceBuildingGameScreenState
               Icon(Icons.edit, color: primaryColor, size: 16),
               const SizedBox(width: 6),
               Text(
-                'Cümlenizi Kurun:',
+                AppLocalizations.of(context)!.build_sentence,
                 style: TextStyle(
                   color: primaryColor,
                   fontWeight: FontWeight.bold,
@@ -646,7 +685,7 @@ class _SentenceBuildingGameScreenState
           ),
           const SizedBox(width: 8),
           Text(
-            'Kelimelere dokunarak cümle kurun',
+            AppLocalizations.of(context)!.build_sentence,
             style: TextStyle(
               color: isDarkMode ? Colors.white54 : Colors.grey[600],
               fontSize: 13,
@@ -773,7 +812,7 @@ class _SentenceBuildingGameScreenState
               Icon(Icons.apps, color: primaryColor, size: 16),
               const SizedBox(width: 6),
               Text(
-                'Kelimeler',
+                AppLocalizations.of(context)!.words_section,
                 style: TextStyle(
                   color: primaryColor,
                   fontSize: 14,
@@ -1999,7 +2038,8 @@ class _SentenceBuildingGameScreenState
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Seviye Tamamlandı!'),
+        title: Text(AppLocalizations.of(context)!
+            .level_completed(gameState.currentLevel.id)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -2014,14 +2054,14 @@ class _SentenceBuildingGameScreenState
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('Ana Menü'),
+            child: Text(AppLocalizations.of(context)!.main_menu),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('Devam Et'),
+            child: Text(AppLocalizations.of(context)!.continue_button),
           ),
         ],
       ),
@@ -2159,9 +2199,9 @@ class _SentenceBuildingGameScreenState
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  exercise.title.length > 10
-                                      ? '${exercise.title.substring(0, 10)}...'
-                                      : exercise.title,
+                                  _getLocalizedText(exercise.title).length > 10
+                                      ? '${_getLocalizedText(exercise.title).substring(0, 10)}...'
+                                      : _getLocalizedText(exercise.title),
                                   style: TextStyle(
                                     color: isCurrentExercise
                                         ? Colors.white.withOpacity(0.9)
@@ -2189,7 +2229,8 @@ class _SentenceBuildingGameScreenState
 
               // Info text
               Text(
-                'Şu anda ${currentExerciseIndex + 1}. alıştırmadasınız',
+                AppLocalizations.of(context)!
+                    .currently_at_exercise(currentExerciseIndex + 1),
                 style: TextStyle(
                   color: isDarkMode ? Colors.white70 : Colors.grey[600],
                   fontSize: 14,
@@ -2222,7 +2263,7 @@ class _SentenceBuildingGameScreenState
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Alıştırmayı Yeniden Başlat',
+                AppLocalizations.of(context)!.restart_exercise,
                 style: TextStyle(
                   color: textColor,
                   fontSize: 18,
@@ -2233,7 +2274,7 @@ class _SentenceBuildingGameScreenState
           ],
         ),
         content: Text(
-          'Bu alıştırmayı yeniden başlatmak istediğinizden emin misiniz? Mevcut ilerlemeniz sıfırlanacak.',
+          AppLocalizations.of(context)!.restart_exercise_confirmation,
           style: TextStyle(
             color: isDarkMode ? Colors.white70 : Colors.grey[600],
             fontSize: 16,
@@ -2245,7 +2286,7 @@ class _SentenceBuildingGameScreenState
             style: TextButton.styleFrom(
               foregroundColor: isDarkMode ? Colors.white70 : Colors.grey[600],
             ),
-            child: const Text('İptal'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -2261,9 +2302,9 @@ class _SentenceBuildingGameScreenState
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text(
-              'Yeniden Başlat',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            child: Text(
+              AppLocalizations.of(context)!.restart,
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -2469,5 +2510,43 @@ class _SentenceBuildingGameScreenState
         ),
       ),
     );
+  }
+
+  /// Get localized text for a given key
+  String _getLocalizedText(String key) {
+    final l10n = AppLocalizations.of(context)!;
+
+    switch (key) {
+      case 'basic_sentence_structures':
+        return l10n.basic_sentence_structures;
+      case 'complex_structures':
+        return l10n.complex_structures;
+      case 'advanced_grammar':
+        return l10n.advanced_grammar;
+      case 'simple_sentence_word_order':
+        return l10n.simple_sentence_word_order;
+      case 'past_future_tense_sentences':
+        return l10n.past_future_tense_sentences;
+      case 'complex_time_structures_conditionals':
+        return l10n.complex_time_structures_conditionals;
+      case 'present_tense_positive':
+        return l10n.present_tense_positive;
+      case 'present_tense_third_person':
+        return l10n.present_tense_third_person;
+      case 'question_sentences':
+        return l10n.question_sentences;
+      case 'negative_sentences':
+        return l10n.negative_sentences;
+      case 'build_simple_present_sentences':
+        return l10n.build_simple_present_sentences;
+      case 'build_sentences_third_person':
+        return l10n.build_sentences_third_person;
+      case 'build_questions_do_does':
+        return l10n.build_questions_do_does;
+      case 'build_negative_sentences':
+        return l10n.build_negative_sentences;
+      default:
+        return key; // Return the key itself if not found
+    }
   }
 }

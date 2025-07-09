@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:revenue_cat_integration/service/revenue_cat_integration_service.dart';
 import '../models/ad_config.dart';
@@ -13,10 +14,13 @@ class AdService {
   // Reklam gösterim sayacı
   int _interstitialAdCount = 0;
   int _rewardedAdCount = 0;
+  int _bannerAdCount = 0;
 
   // Hazır reklamlar
   InterstitialAd? _interstitialAd;
   RewardedAd? _rewardedAd;
+  BannerAd? _bannerAd;
+  Widget? bannerAdWidget;
 
   // Singleton pattern
   static final AdService _instance = AdService._internal();
@@ -50,6 +54,9 @@ class AdService {
         debugPrint('  - Real Rewarded ID: ${_adConfig.realRewardedAdUnitId}');
         debugPrint('  - Test Rewarded ID: ${_adConfig.testRewardedAdUnitId}');
         debugPrint('  - Using Rewarded ID: ${_adConfig.rewardedAdUnitId}');
+        debugPrint('  - Real Banner ID: ${_adConfig.realBannerAdUnitId}');
+        debugPrint('  - Test Banner ID: ${_adConfig.testBannerAdUnitId}');
+        debugPrint('  - Using Banner ID: ${_adConfig.bannerAdUnitId}');
       } else {
         debugPrint(
             '❌ Ad config document not found in Firebase, using default values');
@@ -59,6 +66,53 @@ class AdService {
       debugPrint('❌ Error loading ad config from Firebase: $e');
     }
     debugPrint('=== AD CONFIG LOADING COMPLETED ===');
+  }
+
+  // Banner reklamı yükle
+  Future<void> loadBannerAd() async {
+    if (RevenueCatIntegrationService.instance.isPremium.value) return;
+
+    final adUnitId = _adConfig.bannerAdUnitId;
+    if (adUnitId.isEmpty) {
+      debugPrint('Banner ad unit ID is empty.');
+      return;
+    }
+
+    _bannerAd = BannerAd(
+      adUnitId: adUnitId,
+      request: const AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          debugPrint('Banner ad loaded.');
+          _bannerAd = ad as BannerAd;
+          bannerAdWidget = AdWidget(ad: _bannerAd!);
+          _bannerAdCount++;
+        },
+        onAdFailedToLoad: (ad, error) {
+          debugPrint('Banner ad failed to load: $error');
+          ad.dispose();
+          bannerAdWidget = null;
+        },
+      ),
+    );
+    await _bannerAd!.load();
+  }
+
+  // Banner reklam widget'ını al
+  Widget? getBannerAdWidget() {
+    if (RevenueCatIntegrationService.instance.isPremium.value) {
+      return null;
+    }
+    if (_bannerAd == null) {
+      loadBannerAd();
+      return null; // Yüklenirken null dönebilir veya bir yükleme göstergesi
+    }
+    return SizedBox(
+      width: _bannerAd!.size.width.toDouble(),
+      height: _bannerAd!.size.height.toDouble(),
+      child: AdWidget(ad: _bannerAd!),
+    );
   }
 
   // Geçiş reklamı yükle

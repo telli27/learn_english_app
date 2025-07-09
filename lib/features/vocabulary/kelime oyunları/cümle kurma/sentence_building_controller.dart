@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../game_enums.dart';
 import '../game_audio_service.dart';
 import '../../../../core/services/ad_service.dart';
@@ -23,6 +24,7 @@ class SentenceBuildingController
   final String levelId;
   final GameAudioService audioService;
   final AdService _adService = AdService();
+  late final SentenceBuildingDataRepository _repository;
 
   Timer? _gameTimer;
   Timer? _feedbackTimer;
@@ -34,7 +36,9 @@ class SentenceBuildingController
   SentenceBuildingController({
     required this.levelId,
     required this.audioService,
+    AppLocalizations? l10n,
   }) : super(_createInitialState()) {
+    // We'll initialize repository in _initializeGame when we have context
     _initializeGame();
     _preloadAds(); // Pre-load ads when controller is created
   }
@@ -77,7 +81,26 @@ class SentenceBuildingController
     try {
       _sessionStartTime = DateTime.now();
 
-      final level = SentenceBuildingDataRepository.getLevelById(levelId);
+      // Just set to loading state, UI will call initializeWithContext
+      state = state.copyWith(
+        phase: SentenceBuildingPhase.loading,
+        isLoading: true,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        phase: SentenceBuildingPhase.error,
+        errorMessage: 'Failed to initialize game: $e',
+        isLoading: false,
+      );
+    }
+  }
+
+  /// Initialize with context (called from UI)
+  Future<void> initializeWithContext(AppLocalizations l10n) async {
+    try {
+      _repository = SentenceBuildingDataRepository(l10n);
+
+      final level = _repository.getLevelById(levelId);
       if (level == null || level.exercises.isEmpty) {
         state = state.copyWith(
           phase: SentenceBuildingPhase.error,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../core/providers.dart';
 import '../utils/constants/colors.dart';
 import 'exercise_detail_screen.dart';
@@ -15,30 +16,37 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
   // Seçili seviye
   int _selectedLevel = 0;
 
-  // Seviye kategorileri
-  final List<Map<String, dynamic>> _levels = [
-    {
-      'title': 'Başlangıç Seviyesi (A1-A2)',
-      'icon': Icons.school_outlined,
-      'color': const Color(0xFF4F6CFF),
-      'description':
-          'İngilizce öğrenmeye yeni başlayanlar için temel kavramlar ve yapılar',
-    },
-    {
-      'title': 'Orta Seviye (B1-B2)',
-      'icon': Icons.psychology_outlined,
-      'color': const Color(0xFF00BFA5),
-      'description':
-          'Günlük konuşmada akıcılık kazanmak için orta seviye kavramlar',
-    },
-    {
-      'title': 'İleri Seviye (C1-C2)',
-      'icon': Icons.auto_awesome,
-      'color': const Color(0xFFFF375F),
-      'description':
-          'Profesyonel ve akademik ortamlarda kullanılacak ileri seviye İngilizce',
-    },
-  ];
+  // Seviye kategorileri - Will be initialized in initState
+  List<Map<String, dynamic>> _levels = [];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _initializeLevels();
+  }
+
+  void _initializeLevels() {
+    _levels = [
+      {
+        'title': AppLocalizations.of(context)!.beginner_level,
+        'icon': Icons.school_outlined,
+        'color': const Color(0xFF4F6CFF),
+        'description': AppLocalizations.of(context)!.basic_concepts,
+      },
+      {
+        'title': AppLocalizations.of(context)!.intermediate_level,
+        'icon': Icons.psychology_outlined,
+        'color': const Color(0xFF00BFA5),
+        'description': AppLocalizations.of(context)!.intermediate_concepts,
+      },
+      {
+        'title': AppLocalizations.of(context)!.advanced_level,
+        'icon': Icons.auto_awesome,
+        'color': const Color(0xFFFF375F),
+        'description': AppLocalizations.of(context)!.advanced_concepts,
+      },
+    ];
+  }
 
   // Her seviye için alıştırma kategorileri
   final List<List<Map<String, dynamic>>> _exerciseCategories = [
@@ -298,7 +306,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
               padding: const EdgeInsets.only(
                   left: 16, right: 16, top: 16, bottom: 8),
               child: Text(
-                'Alıştırma Kategorileri',
+                AppLocalizations.of(context)!.exercise_categories,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -342,7 +350,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'İngilizce Alıştırmalar',
+            AppLocalizations.of(context)!.english_exercises,
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -351,7 +359,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Seviyenize uygun alıştırmalarla İngilizce öğrenin',
+            AppLocalizations.of(context)!.learn_with_exercises,
             style: TextStyle(
               fontSize: 14,
               color: isDark ? Colors.white70 : AppColors.textSecondary,

@@ -1,14 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../game_enums.dart';
 import '../game_models.dart';
 
-/// Provider for the professional game data repository
-final professionalGameDataProvider = Provider<ProfessionalGameDataRepository>(
-  (ref) => ProfessionalGameDataRepository(),
+/// Provider for the professional game data repository - needs context for localization
+final professionalGameDataProvider =
+    Provider.family<ProfessionalGameDataRepository, AppLocalizations>(
+  (ref, l10n) => ProfessionalGameDataRepository(l10n),
 );
 
 /// Professional game data repository for managing vocabulary data
 class ProfessionalGameDataRepository {
+  final AppLocalizations _l10n;
+
+  ProfessionalGameDataRepository(this._l10n);
+
   /// Get levels for a specific difficulty
   Future<List<GameLevel>> getLevelsForDifficulty(
       DifficultyLevel difficulty) async {
@@ -32,8 +38,8 @@ class ProfessionalGameDataRepository {
     return [
       GameLevel(
         id: 'beginner_1',
-        title: 'Temel Kelimeler',
-        description: 'Günlük hayatın temel kelimeleri',
+        title: 'basic_words',
+        description: 'basic_vocabulary',
         difficulty: DifficultyLevel.beginner,
         isUnlocked: true,
         exercises: [
@@ -41,8 +47,8 @@ class ProfessionalGameDataRepository {
             id: 'beg_ex_1',
             levelId: 'beginner_1',
             order: 1,
-            title: 'Renkler',
-            description: 'Temel renk isimleri',
+            title: _l10n.colors,
+            description: _l10n.basic_color_names,
             difficulty: DifficultyLevel.beginner,
             studyTimeSeconds: 20,
             recallTimeSeconds: 40,
@@ -103,8 +109,8 @@ class ProfessionalGameDataRepository {
             id: 'beg_ex_2',
             levelId: 'beginner_1',
             order: 2,
-            title: 'Aile',
-            description: 'Aile üyeleri',
+            title: _l10n.family,
+            description: _l10n.family_members,
             difficulty: DifficultyLevel.beginner,
             studyTimeSeconds: 25,
             recallTimeSeconds: 45,
@@ -165,8 +171,8 @@ class ProfessionalGameDataRepository {
             id: 'beg_ex_3',
             levelId: 'beginner_1',
             order: 3,
-            title: 'Hayvanlar',
-            description: 'Temel hayvan isimleri',
+            title: _l10n.animals,
+            description: _l10n.basic_animal_names,
             difficulty: DifficultyLevel.beginner,
             studyTimeSeconds: 20,
             recallTimeSeconds: 40,
@@ -227,8 +233,8 @@ class ProfessionalGameDataRepository {
             id: 'beg_ex_4',
             levelId: 'beginner_1',
             order: 4,
-            title: 'Sayılar',
-            description: 'Temel sayılar',
+            title: _l10n.numbers,
+            description: _l10n.basic_numbers,
             difficulty: DifficultyLevel.beginner,
             studyTimeSeconds: 20,
             recallTimeSeconds: 40,
@@ -289,8 +295,8 @@ class ProfessionalGameDataRepository {
             id: 'beg_ex_5',
             levelId: 'beginner_1',
             order: 5,
-            title: 'Vücut',
-            description: 'Vücut bölümleri',
+            title: _l10n.body,
+            description: _l10n.body_parts,
             difficulty: DifficultyLevel.beginner,
             studyTimeSeconds: 25,
             recallTimeSeconds: 45,
@@ -351,8 +357,8 @@ class ProfessionalGameDataRepository {
             id: 'beg_ex_6',
             levelId: 'beginner_1',
             order: 6,
-            title: 'Ev Eşyaları',
-            description: 'Temel ev eşyaları',
+            title: _l10n.household_items,
+            description: _l10n.basic_household_items,
             difficulty: DifficultyLevel.beginner,
             studyTimeSeconds: 20,
             recallTimeSeconds: 40,
@@ -413,8 +419,8 @@ class ProfessionalGameDataRepository {
             id: 'beg_ex_7',
             levelId: 'beginner_1',
             order: 7,
-            title: 'Kıyafetler',
-            description: 'Temel giyim eşyaları',
+            title: _l10n.clothes,
+            description: _l10n.basic_clothing_items,
             difficulty: DifficultyLevel.beginner,
             studyTimeSeconds: 25,
             recallTimeSeconds: 45,
@@ -543,8 +549,8 @@ class ProfessionalGameDataRepository {
     return [
       GameLevel(
         id: 'intermediate_1',
-        title: 'Orta Seviye',
-        description: 'Daha karmaşık kelimeler ve kavramlar',
+        title: 'intermediate_title',
+        description: 'intermediate_vocabulary',
         difficulty: DifficultyLevel.intermediate,
         isUnlocked: false,
         exercises: [
@@ -1054,8 +1060,8 @@ class ProfessionalGameDataRepository {
     return [
       GameLevel(
         id: 'advanced_1',
-        title: 'İleri Seviye',
-        description: 'Akademik ve profesyonel kelimeler',
+        title: 'advanced_title',
+        description: 'advanced_vocabulary',
         difficulty: DifficultyLevel.advanced,
         isUnlocked: false,
         exercises: [

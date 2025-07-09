@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:confetti/confetti.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:revenue_cat_integration/service/revenue_cat_integration_service.dart';
 
+import '../../../../core/providers.dart';
 import 'sentence_completion_controller.dart';
 import 'enhanced_sentence_completion_data.dart';
 import '../../../../core/services/ad_service.dart';
@@ -87,6 +90,7 @@ class _SentenceCompletionGameScreenState
 
     // Start opening animation and countdown
     _startOpeningSequence();
+    ref.read(adServiceProvider).loadBannerAd();
   }
 
   @override
@@ -175,7 +179,7 @@ class _SentenceCompletionGameScreenState
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      'Soru ${gameState.currentQuestionIndex + 1}/${currentExercise.questionCount}',
+                      '${AppLocalizations.of(context)!.question_counter} ${gameState.currentQuestionIndex + 1}/${currentExercise.questionCount}',
                       style: TextStyle(
                         color: accentColor,
                         fontWeight: FontWeight.bold,
@@ -210,6 +214,22 @@ class _SentenceCompletionGameScreenState
               ),
             ),
           ),
+          if (RevenueCatIntegrationService.instance.isPremium.value == false)
+            Consumer(
+              builder: (context, ref, child) {
+                final adService = ref.watch(adServiceProvider);
+                final bannerAd = adService.getBannerAdWidget();
+                if (bannerAd != null) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: bannerAd,
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
         ],
       ),
     );
@@ -259,9 +279,9 @@ class _SentenceCompletionGameScreenState
                 constraints: const BoxConstraints(),
               ),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Cümle Tamamlama',
+                  AppLocalizations.of(context)!.sentence_completion,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -429,7 +449,7 @@ class _SentenceCompletionGameScreenState
                 Row(
                   children: [
                     Text(
-                      'İlerleme: ${gameState.currentQuestionIndex}/${gameState.currentExercise.questionCount}',
+                      '${AppLocalizations.of(context)!.progress}: ${gameState.currentQuestionIndex}/${gameState.currentExercise.questionCount}',
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         color: textColor,
@@ -445,7 +465,7 @@ class _SentenceCompletionGameScreenState
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        'Doğru: ${gameState.correctAnswersCount}',
+                        '${AppLocalizations.of(context)!.correct}: ${gameState.correctAnswersCount}',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
@@ -535,7 +555,7 @@ class _SentenceCompletionGameScreenState
               ),
               const SizedBox(width: 8),
               Text(
-                'Cümleyi tamamlayın',
+                AppLocalizations.of(context)!.complete_sentence,
                 style: TextStyle(
                   color: accentColor,
                   fontWeight: FontWeight.bold,
@@ -608,7 +628,7 @@ class _SentenceCompletionGameScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Seçenekler:',
+          '${AppLocalizations.of(context)!.options}:',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -750,7 +770,7 @@ class _SentenceCompletionGameScreenState
           elevation: isActive ? 4 : 0,
         ),
         child: Text(
-          'CEVABI ONAYLA',
+          AppLocalizations.of(context)!.confirm_answer,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -795,7 +815,9 @@ class _SentenceCompletionGameScreenState
               ),
               const SizedBox(width: 8),
               Text(
-                isCorrect ? 'Doğru Cevap!' : 'Yanlış Cevap',
+                isCorrect
+                    ? AppLocalizations.of(context)!.correct_answer
+                    : AppLocalizations.of(context)!.wrong_answer,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -815,7 +837,7 @@ class _SentenceCompletionGameScreenState
           ),
           const SizedBox(height: 16),
           Text(
-            'Doğru cevap: ${gameState.currentQuestion.correctAnswer}',
+            '${AppLocalizations.of(context)!.correct_answer}: ${gameState.currentQuestion.correctAnswer}',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
@@ -837,8 +859,8 @@ class _SentenceCompletionGameScreenState
               ),
               child: Text(
                 gameState.isExerciseComplete
-                    ? 'Alıştırmayı Bitir'
-                    : 'Sonraki Soru',
+                    ? AppLocalizations.of(context)!.complete_exercise
+                    : AppLocalizations.of(context)!.next_question,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -857,7 +879,8 @@ class _SentenceCompletionGameScreenState
 
     if (isCorrect) {
       Fluttertoast.showToast(
-        msg: "Doğru cevap! +10 puan! 🎉",
+        msg:
+            "${AppLocalizations.of(context)!.correct_answer}! +10 ${AppLocalizations.of(context)!.exercise_points}! 🎉",
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.TOP,
         timeInSecForIosWeb: 2,
@@ -867,7 +890,8 @@ class _SentenceCompletionGameScreenState
       );
     } else {
       Fluttertoast.showToast(
-        msg: "Yanlış cevap! -3 puan! ❌",
+        msg:
+            "${AppLocalizations.of(context)!.wrong_answer}! -3 ${AppLocalizations.of(context)!.exercise_points}! ❌",
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.TOP,
         timeInSecForIosWeb: 2,
@@ -942,7 +966,7 @@ class _SentenceCompletionGameScreenState
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Alıştırma ${gameState.currentExercise.orderInLevel} Tamamlandı!',
+                    '${AppLocalizations.of(context)!.exercise_info} ${gameState.currentExercise.orderInLevel} ${AppLocalizations.of(context)!.exercise_completed}',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -963,7 +987,7 @@ class _SentenceCompletionGameScreenState
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Doğru Cevaplar:',
+                              '${AppLocalizations.of(context)!.correct}:',
                               style: TextStyle(color: secondaryTextColor),
                             ),
                             Text(
@@ -980,7 +1004,7 @@ class _SentenceCompletionGameScreenState
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Zaman Bonusu:',
+                              '${AppLocalizations.of(context)!.time_bonus}:',
                               style: TextStyle(color: secondaryTextColor),
                             ),
                             Text(
@@ -997,7 +1021,7 @@ class _SentenceCompletionGameScreenState
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Alıştırma Puanı:',
+                              AppLocalizations.of(context)!.exercise_score,
                               style: TextStyle(color: secondaryTextColor),
                             ),
                             Text(
@@ -1116,8 +1140,9 @@ class _SentenceCompletionGameScreenState
                 children: [
                   Text(
                     gameState.isGameCompleted
-                        ? 'Tebrikler! Oyunu Tamamladınız!'
-                        : 'Seviye ${gameState.currentLevel.id} Tamamlandı!',
+                        ? AppLocalizations.of(context)!.game_completed
+                        : AppLocalizations.of(context)!.level_completed(
+                            gameState.currentLevel.id.toString()),
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -1138,7 +1163,7 @@ class _SentenceCompletionGameScreenState
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Tamamlanan Alıştırmalar:',
+                              AppLocalizations.of(context)!.completed_exercises,
                               style: TextStyle(color: secondaryTextColor),
                             ),
                             Text(
@@ -1155,7 +1180,7 @@ class _SentenceCompletionGameScreenState
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Son Alıştırma Bonusu:',
+                              AppLocalizations.of(context)!.last_exercise_bonus,
                               style: TextStyle(color: secondaryTextColor),
                             ),
                             Text(
@@ -1172,7 +1197,7 @@ class _SentenceCompletionGameScreenState
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Toplam Seviye Puanı:',
+                              '${AppLocalizations.of(context)!.total_level_score}:',
                               style: TextStyle(color: secondaryTextColor),
                             ),
                             Text(
@@ -1191,8 +1216,8 @@ class _SentenceCompletionGameScreenState
                   const SizedBox(height: 30),
                   Text(
                     gameState.isGameCompleted
-                        ? 'Tüm seviyeleri başarıyla tamamladınız!'
-                        : 'Bir sonraki seviyeye geçmeye hazır mısınız?',
+                        ? AppLocalizations.of(context)!.all_levels_completed
+                        : AppLocalizations.of(context)!.ready_for_next_level,
                     style: TextStyle(color: textColor),
                     textAlign: TextAlign.center,
                   ),
@@ -1206,7 +1231,7 @@ class _SentenceCompletionGameScreenState
                           Navigator.pop(context);
                         },
                         child: Text(
-                          'Ana Menü',
+                          AppLocalizations.of(context)!.main_menu,
                           style: TextStyle(color: secondaryTextColor),
                         ),
                       ),
@@ -1234,9 +1259,9 @@ class _SentenceCompletionGameScreenState
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 20, vertical: 12),
                           ),
-                          child: const Text(
-                            'Sonraki Seviye',
-                            style: TextStyle(
+                          child: Text(
+                            AppLocalizations.of(context)!.next_level,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
@@ -1256,9 +1281,9 @@ class _SentenceCompletionGameScreenState
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 20, vertical: 12),
                           ),
-                          child: const Text(
-                            'Bitir',
-                            style: TextStyle(
+                          child: Text(
+                            AppLocalizations.of(context)!.finish,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
@@ -1677,7 +1702,7 @@ class _SentenceCompletionGameScreenState
                         ),
                         const SizedBox(height: 20),
                         Text(
-                          'Alıştırma başlıyor...',
+                          AppLocalizations.of(context)!.exercise_starting,
                           style: TextStyle(
                             fontSize: 18,
                             color: Colors.white.withOpacity(0.8),
@@ -1698,9 +1723,9 @@ class _SentenceCompletionGameScreenState
                               color: Colors.white.withOpacity(0.3),
                             ),
                           ),
-                          child: const Text(
-                            'Başlıyor!',
-                            style: TextStyle(
+                          child: Text(
+                            AppLocalizations.of(context)!.starting,
+                            style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -1750,7 +1775,7 @@ class _SentenceCompletionGameScreenState
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Süre Bitti!',
+                    AppLocalizations.of(context)!.time_up,
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -1771,7 +1796,7 @@ class _SentenceCompletionGameScreenState
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Doğru Cevaplar:',
+                              AppLocalizations.of(context)!.correct_answers,
                               style: TextStyle(color: secondaryTextColor),
                             ),
                             Text(
@@ -1788,7 +1813,7 @@ class _SentenceCompletionGameScreenState
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Alıştırma Puanı:',
+                              AppLocalizations.of(context)!.exercise_score,
                               style: TextStyle(color: secondaryTextColor),
                             ),
                             Text(
@@ -1806,7 +1831,7 @@ class _SentenceCompletionGameScreenState
                   ),
                   const SizedBox(height: 30),
                   Text(
-                    'Süre doldu! Alıştırmayı tekrar denemek ister misiniz?',
+                    AppLocalizations.of(context)!.time_up_retry,
                     style: TextStyle(color: textColor),
                     textAlign: TextAlign.center,
                   ),
@@ -1820,7 +1845,7 @@ class _SentenceCompletionGameScreenState
                           Navigator.pop(context);
                         },
                         child: Text(
-                          'Ana Menü',
+                          AppLocalizations.of(context)!.main_menu,
                           style: TextStyle(color: secondaryTextColor),
                         ),
                       ),
@@ -1845,9 +1870,9 @@ class _SentenceCompletionGameScreenState
                           padding: const EdgeInsets.symmetric(
                               horizontal: 20, vertical: 12),
                         ),
-                        child: const Text(
-                          'Tekrar Dene',
-                          style: TextStyle(
+                        child: Text(
+                          AppLocalizations.of(context)!.retry,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),

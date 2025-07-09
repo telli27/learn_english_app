@@ -3,9 +3,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
 import 'package:confetti/confetti.dart';
+import 'dart:async';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:revenue_cat_integration/service/revenue_cat_integration_service.dart';
 import '../game_enums.dart';
 import '../game_models.dart';
+import '../game_audio_service.dart';
+
+import '../../../../core/providers.dart';
 import 'professional_word_recall_controller.dart';
+import 'professional_game_data.dart';
 import '../../../../core/services/ad_service.dart';
 
 /// Professional Word Recall Game Screen with modern design
@@ -59,6 +66,7 @@ class _ProfessionalWordRecallScreenState
 
     // Load interstitial ad when screen initializes
     _loadInterstitialAdForGame();
+    ref.read(adServiceProvider).loadBannerAd();
   }
 
   void _initializeAnimations() {
@@ -121,10 +129,12 @@ class _ProfessionalWordRecallScreenState
 
   @override
   Widget build(BuildContext context) {
+    final params =
+        (difficulty: widget.difficulty, l10n: AppLocalizations.of(context)!);
     final gameState =
-        ref.watch(professionalWordRecallControllerProvider(widget.difficulty));
-    final controller = ref.read(
-        professionalWordRecallControllerProvider(widget.difficulty).notifier);
+        ref.watch(professionalWordRecallControllerProvider(params));
+    final controller =
+        ref.read(professionalWordRecallControllerProvider(params).notifier);
 
     return Scaffold(
       body: Container(
@@ -152,6 +162,23 @@ class _ProfessionalWordRecallScreenState
                   Expanded(
                     child: _buildGameContent(gameState, controller),
                   ),
+                  if (RevenueCatIntegrationService.instance.isPremium.value ==
+                      false)
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final adService = ref.watch(adServiceProvider);
+                        final bannerAd = adService.getBannerAdWidget();
+                        if (bannerAd != null) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: bannerAd,
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
                 ],
               ),
 
@@ -231,7 +258,7 @@ class _ProfessionalWordRecallScreenState
                               ),
                             ),
                             Text(
-                              '${gameState.currentWords.length} kelime • ${widget.difficulty.displayName}',
+                              '${gameState.currentWords.length} ${AppLocalizations.of(context)!.words_count} • ${widget.difficulty.displayName}',
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.8),
                                 fontSize: 12,
@@ -288,11 +315,11 @@ class _ProfessionalWordRecallScreenState
                             : Icons.psychology,
                         label: gameState.phase == RecallGamePhase.review ||
                                 gameState.phase == RecallGamePhase.complete
-                            ? 'Değerlendirme'
+                            ? AppLocalizations.of(context)!.evaluation
                             : gameState.phase.displayName,
                         value: gameState.phase == RecallGamePhase.review ||
                                 gameState.phase == RecallGamePhase.complete
-                            ? 'Tamamlandı'
+                            ? AppLocalizations.of(context)!.completed
                             : _getPhaseProgress(gameState),
                       ),
                     ),
@@ -305,8 +332,8 @@ class _ProfessionalWordRecallScreenState
                             : Icons.timer,
                         label: gameState.phase == RecallGamePhase.review ||
                                 gameState.phase == RecallGamePhase.complete
-                            ? 'Doğruluk'
-                            : 'Süre',
+                            ? AppLocalizations.of(context)!.accuracy
+                            : AppLocalizations.of(context)!.time,
                         value: gameState.phase == RecallGamePhase.review ||
                                 gameState.phase == RecallGamePhase.complete
                             ? '${(gameState.accuracy * 100).toInt()}%'
@@ -317,7 +344,7 @@ class _ProfessionalWordRecallScreenState
                     Expanded(
                       child: _buildInfoCard(
                         icon: Icons.star,
-                        label: 'Skor',
+                        label: AppLocalizations.of(context)!.score,
                         value: '${gameState.score}',
                       ),
                     ),
@@ -388,22 +415,24 @@ class _ProfessionalWordRecallScreenState
     String progressText = '';
     switch (gameState.phase) {
       case RecallGamePhase.preparation:
-        progressText = 'Hazırlanıyor';
+        progressText = context.mounted
+            ? AppLocalizations.of(context)!.preparing
+            : 'Preparing...';
         break;
       case RecallGamePhase.study:
-        progressText = 'Kelime İnceleme Aşaması';
+        progressText = AppLocalizations.of(context)!.word_study_phase;
         break;
       case RecallGamePhase.transition:
-        progressText = 'Hatırlama Aşamasına Geçiliyor';
+        progressText = AppLocalizations.of(context)!.recall_phase_starting;
         break;
       case RecallGamePhase.recall:
-        progressText = 'Kelime Hatırlama Aşaması';
+        progressText = AppLocalizations.of(context)!.word_recall_phase;
         break;
       case RecallGamePhase.review:
-        progressText = 'Sonuçlar Hazır';
+        progressText = AppLocalizations.of(context)!.results_ready;
         break;
       case RecallGamePhase.complete:
-        progressText = 'Alıştırma Tamamlandı';
+        progressText = AppLocalizations.of(context)!.completed;
         break;
     }
 
@@ -457,7 +486,7 @@ class _ProfessionalWordRecallScreenState
             ),
             const SizedBox(height: 20),
             Text(
-              'Reklam gösteriliyor...',
+              AppLocalizations.of(context)!.ad_loading,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.white,
@@ -535,7 +564,7 @@ class _ProfessionalWordRecallScreenState
           ),
           const SizedBox(height: 30),
           Text(
-            'Hazırlanıyor...',
+            AppLocalizations.of(context)!.preparing,
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -544,7 +573,7 @@ class _ProfessionalWordRecallScreenState
           ),
           const SizedBox(height: 12),
           Text(
-            '${gameState.currentWords.length} kelime ile çalışacaksınız',
+            '${gameState.currentWords.length} ${AppLocalizations.of(context)!.words_to_study}',
             style: TextStyle(
               fontSize: 16,
               color: Colors.white.withOpacity(0.8),
@@ -580,7 +609,7 @@ class _ProfessionalWordRecallScreenState
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Kelimeleri inceleyin, sonra hatırlamanız istenecek',
+                      AppLocalizations.of(context)!.review_words_instruction,
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.white.withOpacity(0.9),
@@ -645,7 +674,7 @@ class _ProfessionalWordRecallScreenState
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Hazırım',
+                    AppLocalizations.of(context)!.ready,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -910,7 +939,7 @@ class _ProfessionalWordRecallScreenState
           ),
           const SizedBox(height: 30),
           Text(
-            'Hatırlama Aşaması',
+            AppLocalizations.of(context)!.recall_phase_title,
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -919,7 +948,7 @@ class _ProfessionalWordRecallScreenState
           ),
           const SizedBox(height: 12),
           Text(
-            '${gameState.timeLeft} saniye sonra başlıyor...',
+            '${gameState.timeLeft} ${AppLocalizations.of(context)!.seconds_remaining}',
             style: TextStyle(
               fontSize: 16,
               color: Colors.white.withOpacity(0.8),
@@ -962,7 +991,7 @@ class _ProfessionalWordRecallScreenState
                   ),
                 ),
                 Text(
-                  'Doğru: ${gameState.correctWords.length}',
+                  '${AppLocalizations.of(context)!.correct}: ${gameState.correctWords.length}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -1108,7 +1137,8 @@ class _ProfessionalWordRecallScreenState
                 }
               },
               decoration: InputDecoration(
-                hintText: 'Türkçe karşılığını yazın...',
+                hintText:
+                    AppLocalizations.of(context)!.enter_turkish_equivalent,
                 hintStyle: TextStyle(
                   color: Colors.grey[400],
                   fontSize: 16,
@@ -1180,8 +1210,8 @@ class _ProfessionalWordRecallScreenState
                   },
                   icon:
                       const Icon(Icons.send_rounded, size: 20), // Reduced size
-                  label: const Text(
-                    'CEVABI GÖNDER',
+                  label: Text(
+                    AppLocalizations.of(context)!.submit_answer,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 15, // Reduced font size
@@ -1224,7 +1254,7 @@ class _ProfessionalWordRecallScreenState
                           color: Colors.amber[700],
                         ),
                         label: Text(
-                          'İpucu Al',
+                          AppLocalizations.of(context)!.get_hint,
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 13, // Reduced font size
@@ -1265,7 +1295,7 @@ class _ProfessionalWordRecallScreenState
                           color: Colors.grey[600],
                         ),
                         label: Text(
-                          'Atla',
+                          AppLocalizations.of(context)!.skip_word,
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 13, // Reduced font size
@@ -1317,26 +1347,26 @@ class _ProfessionalWordRecallScreenState
       primaryColor = Colors.amber[600]!;
       accentColor = Colors.amber[100]!;
       resultIcon = Icons.emoji_events_rounded;
-      motivationText = "Mükemmel!";
-      subtitleText = "Harika bir performans sergilediydiniz";
+      motivationText = AppLocalizations.of(context)!.excellent;
+      subtitleText = AppLocalizations.of(context)!.great_performance;
     } else if (accuracy >= 0.7) {
       primaryColor = Colors.green[600]!;
       accentColor = Colors.green[100]!;
       resultIcon = Icons.thumb_up_rounded;
-      motivationText = "Çok İyi!";
-      subtitleText = "Başarılı bir çalışma yaptınız";
+      motivationText = AppLocalizations.of(context)!.very_good;
+      subtitleText = AppLocalizations.of(context)!.successful_study;
     } else if (accuracy >= 0.5) {
       primaryColor = Colors.blue[600]!;
       accentColor = Colors.blue[100]!;
       resultIcon = Icons.trending_up_rounded;
-      motivationText = "İyi Gidiyorsunuz!";
-      subtitleText = "Gelişim gösteriyorsunuz";
+      motivationText = AppLocalizations.of(context)!.good_progress;
+      subtitleText = AppLocalizations.of(context)!.showing_improvement;
     } else {
       primaryColor = Colors.orange[600]!;
       accentColor = Colors.orange[100]!;
       resultIcon = Icons.psychology_rounded;
-      motivationText = "Çalışmaya Devam!";
-      subtitleText = "Her çalışma sizi ileriye taşır";
+      motivationText = AppLocalizations.of(context)!.keep_studying;
+      subtitleText = AppLocalizations.of(context)!.every_study_helps;
     }
 
     return Column(
@@ -1459,7 +1489,7 @@ class _ProfessionalWordRecallScreenState
                   children: [
                     Expanded(
                       child: _buildQuickStatCard(
-                        'Doğru',
+                        AppLocalizations.of(context)!.correct,
                         '${gameState.correctWords.length}',
                         Colors.green,
                         Icons.check_circle_rounded,
@@ -1468,7 +1498,7 @@ class _ProfessionalWordRecallScreenState
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildQuickStatCard(
-                        'Yanlış',
+                        AppLocalizations.of(context)!.incorrect,
                         '${gameState.incorrectWords.length}',
                         Colors.red,
                         Icons.cancel_rounded,
@@ -1477,7 +1507,7 @@ class _ProfessionalWordRecallScreenState
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildQuickStatCard(
-                        'Atlandı',
+                        AppLocalizations.of(context)!.skip,
                         '${gameState.skippedWords.length}',
                         Colors.orange,
                         Icons.skip_next_rounded,
@@ -1516,7 +1546,7 @@ class _ProfessionalWordRecallScreenState
                             ),
                             const SizedBox(width: 12),
                             Text(
-                              'Doğru Cevaplar',
+                              AppLocalizations.of(context)!.correct_answers,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
@@ -1566,7 +1596,7 @@ class _ProfessionalWordRecallScreenState
                                     color: Colors.green[600]),
                                 const SizedBox(width: 8),
                                 Text(
-                                  '+${gameState.correctWords.length - 3} doğru cevap daha',
+                                  '+${gameState.correctWords.length - 3} ${AppLocalizations.of(context)!.more_correct_answers}',
                                   style: TextStyle(
                                     color: Colors.green[600],
                                     fontWeight: FontWeight.w500,
@@ -1611,7 +1641,7 @@ class _ProfessionalWordRecallScreenState
                             ),
                             const SizedBox(width: 12),
                             Text(
-                              'Tekrar Çalışılacak Kelimeler',
+                              AppLocalizations.of(context)!.words_to_review,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
@@ -1628,7 +1658,7 @@ class _ProfessionalWordRecallScreenState
                             .take(3)
                             .map((word) => _buildDetailedWordReviewItem(
                                   word,
-                                  'Yanlış',
+                                  AppLocalizations.of(context)!.incorrect,
                                   Colors.red,
                                   Icons.close_rounded,
                                   controller,
@@ -1636,7 +1666,10 @@ class _ProfessionalWordRecallScreenState
 
                         // Show skipped words
                         ...gameState.skippedWords.take(3).map((word) =>
-                            _buildWordReviewItem(word, 'Atlandı', Colors.orange,
+                            _buildWordReviewItem(
+                                word,
+                                AppLocalizations.of(context)!.skip,
+                                Colors.orange,
                                 Icons.skip_next_rounded)),
 
                         // Show remaining count if more words exist
@@ -1656,7 +1689,7 @@ class _ProfessionalWordRecallScreenState
                                 Icon(Icons.more_horiz, color: Colors.grey[600]),
                                 const SizedBox(width: 8),
                                 Text(
-                                  '+${(gameState.incorrectWords.length + gameState.skippedWords.length) - 6} kelime daha',
+                                  '+${(gameState.incorrectWords.length + gameState.skippedWords.length) - 6} ${AppLocalizations.of(context)!.more_words}',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontWeight: FontWeight.w500,
@@ -1701,7 +1734,8 @@ class _ProfessionalWordRecallScreenState
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            'Öğrenme Önerileri',
+                            AppLocalizations.of(context)!
+                                .learning_recommendations,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -1715,21 +1749,21 @@ class _ProfessionalWordRecallScreenState
                         accuracy >= 0.7 ? Icons.trending_up : Icons.lightbulb,
                         accuracy >= 0.7 ? Colors.green : Colors.orange,
                         accuracy >= 0.7
-                            ? 'Harika ilerleme! Bu tempoda devam edin.'
-                            : 'Düzenli çalışma ile gelişiminizi hızlandırabilirsiniz.',
+                            ? AppLocalizations.of(context)!.great_progress_msg
+                            : AppLocalizations.of(context)!.regular_study_helps,
                       ),
                       const SizedBox(height: 12),
                       _buildInsightRow(
                         Icons.schedule,
                         Colors.purple,
-                        'Günde 15 dakika kelime çalışması öneriyoruz.',
+                        AppLocalizations.of(context)!.daily_15_minutes,
                       ),
                       if (gameState.incorrectWords.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         _buildInsightRow(
                           Icons.replay,
                           Colors.blue,
-                          'Yanlış kelimeleri 3 kez tekrar edin.',
+                          AppLocalizations.of(context)!.repeat_incorrect_words,
                         ),
                       ],
                     ],
@@ -2079,11 +2113,11 @@ class _ProfessionalWordRecallScreenState
       Color color, IconData icon, ProfessionalWordRecallController controller) {
     // Get user's actual answer from controller
     final attempt = controller.getAttemptForWord(word.id);
-    String userAnswer = 'Cevap verilmedi';
+    String userAnswer = AppLocalizations.of(context)!.no_answer_provided;
 
     if (attempt != null) {
       if (attempt.wasSkipped) {
-        userAnswer = 'Atlandı';
+        userAnswer = AppLocalizations.of(context)!.skip;
       } else if (attempt.userInput.isNotEmpty) {
         userAnswer = attempt.userInput;
       }
@@ -2162,7 +2196,7 @@ class _ProfessionalWordRecallScreenState
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Verdiğiniz cevap:',
+                      AppLocalizations.of(context)!.user_answer,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -2177,8 +2211,11 @@ class _ProfessionalWordRecallScreenState
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: Colors.red[700],
-                          fontStyle: userAnswer == 'Cevap verilmedi' ||
-                                  userAnswer == 'Atlandı'
+                          fontStyle: userAnswer ==
+                                      AppLocalizations.of(context)!
+                                          .no_answer_provided ||
+                                  userAnswer ==
+                                      AppLocalizations.of(context)!.skip
                               ? FontStyle.italic
                               : FontStyle.normal,
                         ),
@@ -2206,7 +2243,7 @@ class _ProfessionalWordRecallScreenState
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Doğru cevap:',
+                      AppLocalizations.of(context)!.correct_answer_label,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -2246,7 +2283,7 @@ class _ProfessionalWordRecallScreenState
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'İpucu kullanıldı',
+                        AppLocalizations.of(context)!.hint_used_label,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
@@ -2330,8 +2367,8 @@ class _ProfessionalWordRecallScreenState
           const SizedBox(height: 20), // Reduced spacing
 
           // Title with beautiful typography - smaller
-          const Text(
-            'Alıştırma Tamamlandı!',
+          Text(
+            AppLocalizations.of(context)!.exercise_completed_title,
             style: TextStyle(
               fontSize: 22, // Reduced font size
               fontWeight: FontWeight.w800,
@@ -2353,7 +2390,7 @@ class _ProfessionalWordRecallScreenState
               border: Border.all(color: Colors.white.withOpacity(0.3)),
             ),
             child: Text(
-              'Toplam Skorunuz: ${gameState.score}',
+              '${AppLocalizations.of(context)!.total_score}: ${gameState.score}',
               style: const TextStyle(
                 fontSize: 16, // Reduced font size
                 fontWeight: FontWeight.w700,
@@ -2404,8 +2441,8 @@ class _ProfessionalWordRecallScreenState
                           ),
                         ),
                         icon: const Icon(Icons.emoji_events_rounded, size: 18),
-                        label: const Text(
-                          'SEVİYE TAMAMLANDI!',
+                        label: Text(
+                          AppLocalizations.of(context)!.level_completed_title,
                           style: TextStyle(
                             fontSize: 13, // Reduced font size
                             fontWeight: FontWeight.w700,
@@ -2438,8 +2475,8 @@ class _ProfessionalWordRecallScreenState
                           ),
                         ),
                         icon: const Icon(Icons.home_rounded, size: 16),
-                        label: const Text(
-                          'Ana Menüye Dön',
+                        label: Text(
+                          AppLocalizations.of(context)!.return_to_main_menu,
                           style: TextStyle(
                             fontSize: 12, // Reduced font size
                             fontWeight: FontWeight.w600,
@@ -2478,12 +2515,12 @@ class _ProfessionalWordRecallScreenState
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 mainAxisSize: MainAxisSize.min,
-                                children: const [
+                                children: [
                                   Icon(Icons.home_rounded, size: 14),
                                   SizedBox(width: 3),
                                   Flexible(
                                     child: Text(
-                                      'Ana Menü',
+                                      AppLocalizations.of(context)!.main_menu,
                                       style: TextStyle(
                                         fontSize: 11, // Reduced font size
                                         fontWeight: FontWeight.w600,
@@ -2533,12 +2570,13 @@ class _ProfessionalWordRecallScreenState
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 mainAxisSize: MainAxisSize.min,
-                                children: const [
+                                children: [
                                   Icon(Icons.arrow_forward_rounded, size: 14),
                                   SizedBox(width: 3),
                                   Flexible(
                                     child: Text(
-                                      'Sonraki Alıştırma',
+                                      AppLocalizations.of(context)!
+                                          .next_exercise,
                                       style: TextStyle(
                                         fontSize: 11, // Reduced font size
                                         fontWeight: FontWeight.w700,
@@ -2589,17 +2627,27 @@ class _ProfessionalWordRecallScreenState
   String _getPhaseProgress(RecallGameState gameState) {
     switch (gameState.phase) {
       case RecallGamePhase.preparation:
-        return 'Hazırlanıyor';
+        return context.mounted
+            ? AppLocalizations.of(context)!.preparing
+            : 'Preparing...';
       case RecallGamePhase.study:
-        return 'İnceleme';
+        return context.mounted
+            ? AppLocalizations.of(context)!.study_status
+            : 'Study';
       case RecallGamePhase.transition:
-        return 'Geçiş';
+        return context.mounted
+            ? AppLocalizations.of(context)!.transition_phase
+            : 'Transition';
       case RecallGamePhase.recall:
         return '${gameState.currentWordIndex + 1}/${gameState.currentWords.length}';
       case RecallGamePhase.review:
-        return 'Değerlendirme';
+        return context.mounted
+            ? AppLocalizations.of(context)!.evaluation
+            : 'Review';
       case RecallGamePhase.complete:
-        return 'Tamamlandı';
+        return context.mounted
+            ? AppLocalizations.of(context)!.completed
+            : 'Complete';
     }
   }
 
@@ -2674,9 +2722,9 @@ class _ProfessionalWordRecallScreenState
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Alıştırma Seç',
+                        AppLocalizations.of(context)!.select_exercise,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -2798,8 +2846,8 @@ class _ProfessionalWordRecallScreenState
                                           borderRadius:
                                               BorderRadius.circular(6),
                                         ),
-                                        child: const Text(
-                                          'Aktif',
+                                        child: Text(
+                                          AppLocalizations.of(context)!.active,
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 10,
@@ -2838,8 +2886,8 @@ class _ProfessionalWordRecallScreenState
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: const Text(
-                      'İptal',
+                    child: Text(
+                      AppLocalizations.of(context)!.cancel,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey,
@@ -2880,7 +2928,8 @@ class _ProfessionalWordRecallScreenState
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Alıştırma ${exerciseIndex + 1} başlatıldı'),
+          content: Text(
+              '${AppLocalizations.of(context)!.exercise_info} ${exerciseIndex + 1} ${AppLocalizations.of(context)!.exercise_started}'),
           backgroundColor: Color(widget.difficulty.colorValue),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -3000,7 +3049,7 @@ class _ProfessionalWordRecallScreenState
                       Icon(Icons.lightbulb, color: Colors.amber[600], size: 10),
                       const SizedBox(width: 2),
                       Text(
-                        'İpucu',
+                        AppLocalizations.of(context)!.hint_tip,
                         style: TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w500,
@@ -3018,7 +3067,7 @@ class _ProfessionalWordRecallScreenState
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'Doğru',
+                  AppLocalizations.of(context)!.correct,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,

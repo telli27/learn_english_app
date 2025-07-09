@@ -7,23 +7,23 @@ class RecallGameData {
     return [
       RecallGameLevel(
         id: 1,
-        title: 'Başlangıç',
-        description: 'Temel kelimeler',
-        difficulty: 'Kolay',
+        title: 'beginner_title',
+        description: 'basic_vocabulary',
+        difficulty: 'easy_level',
         exercises: _generateLevel1Exercises(),
       ),
       RecallGameLevel(
         id: 2,
-        title: 'Orta Seviye',
-        description: 'Günlük kelimeler',
-        difficulty: 'Orta',
+        title: 'intermediate_title',
+        description: 'intermediate_vocabulary',
+        difficulty: 'medium_level',
         exercises: _generateLevel2Exercises(),
       ),
       RecallGameLevel(
         id: 3,
-        title: 'İleri',
-        description: 'Kompleks kelimeler',
-        difficulty: 'Zor',
+        title: 'advanced_title',
+        description: 'complex_words',
+        difficulty: 'hard_level',
         exercises: _generateLevel3Exercises(),
       ),
     ];

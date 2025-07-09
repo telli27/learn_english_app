@@ -7,6 +7,8 @@ class AdConfig {
   final String realRewardedAdUnitId;
   final String testInterstitialAdUnitId;
   final String testRewardedAdUnitId;
+  final String realBannerAdUnitId;
+  final String testBannerAdUnitId;
 
   AdConfig({
     required this.maxImpression,
@@ -15,6 +17,8 @@ class AdConfig {
     required this.realRewardedAdUnitId,
     required this.testInterstitialAdUnitId,
     required this.testRewardedAdUnitId,
+    required this.realBannerAdUnitId,
+    required this.testBannerAdUnitId,
   });
 
   factory AdConfig.fromFirestore(DocumentSnapshot doc) {
@@ -26,6 +30,8 @@ class AdConfig {
       realRewardedAdUnitId: data['realRewardedAdUnitId'] ?? "",
       testInterstitialAdUnitId: data['testInterstitialAdUnitId'] ?? "",
       testRewardedAdUnitId: data['testRewardedAdUnitId'] ?? "",
+      realBannerAdUnitId: data['realBannerAdUnitId'] ?? "",
+      testBannerAdUnitId: data['testBannerAdUnitId'] ?? "",
     );
   }
 
@@ -38,6 +44,9 @@ class AdConfig {
   String get rewardedAdUnitId =>
       isTestMode ? testRewardedAdUnitId : realRewardedAdUnitId;
 
+  String get bannerAdUnitId =>
+      isTestMode ? testBannerAdUnitId : realBannerAdUnitId;
+
   // Default test config
   static AdConfig get defaultConfig => AdConfig(
         maxImpression: 10,
@@ -46,5 +55,7 @@ class AdConfig {
         realRewardedAdUnitId: "",
         testInterstitialAdUnitId: "",
         testRewardedAdUnitId: "",
+        realBannerAdUnitId: "",
+        testBannerAdUnitId: "",
       );
 }
