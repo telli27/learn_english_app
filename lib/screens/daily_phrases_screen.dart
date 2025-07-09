@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:revenue_cat_integration/service/revenue_cat_integration_service.dart';
 
 class DailyPhrasesScreen extends ConsumerStatefulWidget {
   const DailyPhrasesScreen({Key? key}) : super(key: key);
@@ -523,6 +524,16 @@ class _DailyPhrasesScreenState extends ConsumerState<DailyPhrasesScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(adServiceProvider).loadBannerAd();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = ref.watch(isDarkModeProvider);
 
@@ -668,6 +679,21 @@ class _DailyPhrasesScreenState extends ConsumerState<DailyPhrasesScreen> {
           },
         ),
       ),
+      bottomNavigationBar: RevenueCatIntegrationService.instance.isPremium.value
+          ? null
+          : Consumer(
+              builder: (context, ref, child) {
+                final adService = ref.watch(adServiceProvider);
+                final bannerAd = adService.getBannerAdWidget();
+                return Container(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  height: 60,
+                  child: bannerAd != null
+                      ? Center(child: bannerAd)
+                      : const SizedBox.shrink(),
+                );
+              },
+            ),
     );
   }
 }
@@ -698,6 +724,11 @@ class _PhraseDetailScreenState extends ConsumerState<PhraseDetailScreen> {
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
     _initTts();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(adServiceProvider).loadBannerAd();
+      }
+    });
   }
 
   void _initTts() async {
@@ -1137,6 +1168,21 @@ class _PhraseDetailScreenState extends ConsumerState<PhraseDetailScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: RevenueCatIntegrationService.instance.isPremium.value
+          ? null
+          : Consumer(
+              builder: (context, ref, child) {
+                final adService = ref.watch(adServiceProvider);
+                final bannerAd = adService.getBannerAdWidget();
+                return Container(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  height: 60,
+                  child: bannerAd != null
+                      ? Center(child: bannerAd)
+                      : const SizedBox.shrink(),
+                );
+              },
+            ),
     );
   }
 }

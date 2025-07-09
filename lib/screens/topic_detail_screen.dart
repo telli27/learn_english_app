@@ -275,6 +275,22 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
       },
       child: Scaffold(
         backgroundColor: isDark ? Colors.black : Colors.white,
+        bottomNavigationBar:
+            RevenueCatIntegrationService.instance.isPremium.value
+                ? null
+                : Consumer(
+                    builder: (context, ref, child) {
+                      final adService = ref.watch(adServiceProvider);
+                      final bannerAd = adService.getBannerAdWidget();
+                      return Container(
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        height: 80, // Banner yüksekliği kadar sabit bırak!
+                        child: bannerAd != null
+                            ? Center(child: bannerAd)
+                            : const SizedBox.shrink(),
+                      );
+                    },
+                  ),
         body: CustomScrollView(
           controller: _scrollController,
           physics: const BouncingScrollPhysics(),
@@ -294,23 +310,6 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
                   const SizedBox(height: 50),
 
                   // Banner Ad
-                  RevenueCatIntegrationService.instance.isPremium.value == true
-                      ? Container()
-                      : Consumer(
-                          builder: (context, ref, child) {
-                            final adService = ref.watch(adServiceProvider);
-                            final bannerAd = adService.getBannerAdWidget();
-                            if (bannerAd != null) {
-                              return Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 16.0),
-                                  child: bannerAd,
-                                ),
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                        ),
                 ]),
               ),
             ),
