@@ -4,6 +4,8 @@ import 'dart:math';
 import 'dart:async';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:confetti/confetti.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:revenue_cat_integration/revenue_cat_integration.dart';
 
 import 'word_matching_game_controller.dart';
 import '../../models/word_models.dart';
@@ -94,6 +96,7 @@ class _WordMatchingGameScreenState extends ConsumerState<WordMatchingGameScreen>
 
     // Load interstitial ad for game
     _loadInterstitialAdForGame();
+    _adService.loadBannerAd();
 
     // Debug: Print ad service status
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -251,7 +254,10 @@ class _WordMatchingGameScreenState extends ConsumerState<WordMatchingGameScreen>
                                   },
                                 ),
                               ),
-                              const SizedBox(width: 20),
+
+                              // Spacer between columns
+                              const SizedBox(width: 15),
+
                               // Turkish words column
                               Expanded(
                                 child: ListView.builder(
@@ -277,8 +283,8 @@ class _WordMatchingGameScreenState extends ConsumerState<WordMatchingGameScreen>
                           ),
                         ),
                       ),
-                      // Match button
-                      _buildMatchButton(gameState, controller, accentColor),
+                      if (_adService.getBannerAdWidget() != null)
+                        _adService.getBannerAdWidget()!,
                     ],
                   ),
                 ),

@@ -31,6 +31,7 @@ import 'core/screens/weak_connection_screen.dart';
 import 'features/settings/screens/terms_of_use_screen.dart';
 import 'features/settings/screens/privacy_policy_screen.dart';
 import 'features/settings/screens/language_selection_screen.dart';
+import 'auth/screens/initial_language_selection_screen.dart';
 
 Future<void> checkForUpdate() async {
   try {
@@ -62,6 +63,9 @@ Future<void> _configureRevenueCatSDK() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  final prefs = await SharedPreferences.getInstance();
+  final isLanguageSelected = prefs.getBool('language_selected') ?? false;
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -73,7 +77,6 @@ void main() async {
   print("⚡ App starting, loading initial language data...");
   try {
     // Get saved locale or default to Turkish
-    final prefs = await SharedPreferences.getInstance();
     final localeString = prefs.getString('selected_locale');
     String languageCode = 'tr'; // default
 
@@ -106,8 +109,8 @@ void main() async {
   runApp(
     // ProviderScope: Riverpod provider'larını tüm uygulamada erişilebilir kılar
     // Tüm Riverpod uygulamaları için gereklidir
-    const ProviderScope(
-      child: MyApp(),
+    ProviderScope(
+      child: MyApp(isLanguageSelected: isLanguageSelected),
     ),
   );
 }
@@ -115,7 +118,8 @@ void main() async {
 // ConsumerWidget: Riverpod provider'larını kullanmak için özel widget sınıfı
 // Normal StatelessWidget yerine kullanılır ve WidgetRef alır
 class MyApp extends ConsumerStatefulWidget {
-  const MyApp({super.key});
+  final bool isLanguageSelected;
+  const MyApp({super.key, required this.isLanguageSelected});
 
   @override
   ConsumerState<MyApp> createState() => _MyAppState();
@@ -239,41 +243,43 @@ class _MyAppState extends ConsumerState<MyApp> {
       ],
       supportedLocales: const [
         Locale('tr', ''), // Turkish
+        Locale('en', ''), // English
         Locale('es', ''), // Spanish
         Locale('fr', ''), // French
+        Locale('de', ''), // German
         Locale('pt', ''), // Portuguese
         Locale('it', ''), // Italian
       ],
-      home: connectivityStatus.when(
-        data: (isConnected) {
-          // If there's no internet, show no internet screen
-          if (!isConnected) {
-            return const NoInternetScreen();
-          }
+      home: widget.isLanguageSelected
+          ? connectivityStatus.when(
+              data: (isConnected) {
+                // If there's no internet, show no internet screen
+                if (!isConnected) {
+                  return const NoInternetScreen();
+                }
 
-          // If showing weak connection warning
-          if (_isWeakConnection) {
-            return WeakConnectionScreen(onRetry: _retryLoading);
-          }
+                // While initializing and connected, show loading screen
+                if (_isInitializing) {
+                  return LoadingScreen(
+                    message: _loadingMessage,
+                  );
+                }
 
-          // If initializing, show loading screen
-          if (_isInitializing) {
-            return LoadingScreen(message: _loadingMessage);
-          }
+                // If loading is complete but topics are not loaded (e.g., weak connection)
+                if (!_topicsLoaded) {
+                  return WeakConnectionScreen(onRetry: _retryLoading);
+                }
 
-          // If topics are not loaded, try loading them again
-          if (!_topicsLoaded) {
-            _initializeApp();
-            return LoadingScreen(message: 'Konular yükleniyor...');
-          }
-
-          // If everything is good, show the AuthWrapper that will handle auth flow
-          return const MainScreen(); //AuthWrapper();
-        },
-        loading: () => const LoadingScreen(
-            message: 'İnternet bağlantısı kontrol ediliyor...'),
-        error: (_, __) => const NoInternetScreen(),
-      ),
+                // If everything is fine, show AuthWrapper
+                return const AuthWrapper();
+              },
+              loading: () => LoadingScreen(
+                message: _loadingMessage,
+              ),
+              error: (err, stack) =>
+                  WeakConnectionScreen(onRetry: _retryLoading),
+            )
+          : const InitialLanguageSelectionScreen(),
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
